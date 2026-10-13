@@ -10,7 +10,8 @@
  * WebGL does the rendering; without WebGL, or with prefers-reduced-motion, a DOM
  * renderer with CSS transitions is used instead.
  *
- * Form handling (/subscribe, /client-message) lives in script.js.
+ * Form handling (/subscribe, /client-message) lives in script.js; the header (menu, solid look
+ * on scroll) in site-chrome.js.
  */
 (function () {
     'use strict';
@@ -911,68 +912,6 @@
         document.querySelectorAll('.reveal').forEach(function (el) { revealObserver.observe(el); });
     }
 
-    function initHeader() {
-        const header = document.querySelector('[data-header]');
-        const toggle = document.querySelector('[data-menu-toggle]');
-        const label = document.querySelector('[data-menu-label]');
-        const nav = document.querySelector('[data-nav]');
-
-        const onScroll = function () { header.classList.toggle('is-solid', window.scrollY > 40); };
-        onScroll();
-        window.addEventListener('scroll', onScroll, { passive: true });
-
-        function setMenu(open) {
-            document.documentElement.classList.toggle('menu-open', open);
-            toggle.setAttribute('aria-expanded', String(open));
-            label.textContent = open ? i18n.closeMenu : i18n.openMenu;
-        }
-        toggle.addEventListener('click', function () {
-            setMenu(toggle.getAttribute('aria-expanded') !== 'true');
-        });
-        nav.addEventListener('click', function (e) { if (e.target.closest('a')) setMenu(false); });
-        document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') {
-                setMenu(false);
-                toggle.focus();
-            }
-        });
-        window.matchMedia('(min-width: 900px)').addEventListener('change', function (e) { if (e.matches) setMenu(false); });
-
-        // Highlight the section in view.
-        const links = Array.from(document.querySelectorAll('[data-nav-link]'));
-        if ('IntersectionObserver' in window) {
-            const observer = new IntersectionObserver(function (entries) {
-                entries.forEach(function (entry) {
-                    if (!entry.isIntersecting) return;
-                    links.forEach(function (link) {
-                        const active = link.getAttribute('href') === '#' + entry.target.id;
-                        link.classList.toggle('is-active', active);
-                        if (active) link.setAttribute('aria-current', 'true'); else link.removeAttribute('aria-current');
-                    });
-                });
-            }, { rootMargin: '-45% 0px -50% 0px' });
-            document.querySelectorAll('main section[id]').forEach(function (section) { observer.observe(section); });
-        }
-    }
-
-    function initLanguages() {
-        let langs = [];
-        try { langs = typeof config.langs === 'string' ? JSON.parse(config.langs) : config.langs; } catch (e) { langs = []; }
-        if (!Array.isArray(langs) || langs.length < 2) return;
-        document.querySelectorAll('[data-lang-switch]').forEach(function (box) {
-            langs.forEach(function (lang) {
-                const a = document.createElement('a');
-                a.className = 'lang-switch__item';
-                a.href = '/setlang?lang=' + encodeURIComponent(lang.Prefix);
-                a.lang = lang.Prefix;
-                a.title = lang.Language;
-                a.textContent = lang.Prefix === 'hy' ? 'Հայ' : lang.Prefix.toUpperCase();
-                if (lang.Prefix === config.locale) a.setAttribute('aria-current', 'true');
-                box.appendChild(a);
-            });
-        });
-    }
-
     // /events, /activities, /about and /contacts render this page with a section to scroll to.
     function scrollToSection() {
         const target = config.scrollTo && document.getElementById(config.scrollTo);
@@ -980,8 +919,6 @@
         target.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
     }
 
-    initHeader();
-    initLanguages();
     initReveal();
     initHero();
     initJourneys(scrollToSection);

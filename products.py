@@ -765,10 +765,13 @@ def productDetails(RefKey, productStatus, Language_ID=''):
                         `product`.`LongDescription`,
                         `product`.`DateModified`,
                         `product`.`DatePublished`,
-                        `product`.`Product_Status`
+                        `product`.`Product_Status`,
+                        `product_category`.`Product_Category_Name` AS `CategoryName`
                     FROM `product`
                     LEFT JOIN `product_relatives` 
                         ON `product_relatives`.`P_ID` = `product`.`ID`
+                    LEFT JOIN `product_category`
+                        ON `product_category`.`Product_Category_ID` = `product`.`Product_Category_ID`
                     WHERE `product_relatives`.`P_Ref_Key` = %s 
                     AND `product`.`Language_ID` = %s
                     {productStatus}
@@ -792,6 +795,7 @@ def constructPrData(RefKey, productStatus, languageID=''):
             'Product_ID': row['ID'], 
             'Order': row['Order'], 
             'Product_Category_ID': row['Product_Category_ID'], 
+            'CategoryName': row['CategoryName'], 
             'Url': row['Url'], 
             'Title': row['Title'], 
             'Text': sanitize_html(row['Text']), 
@@ -827,6 +831,33 @@ def constructPrData(RefKey, productStatus, languageID=''):
             content['ID'] = result['data'][0]['P_ID']
 
     return content
+
+
+def productHeaderData(productID, thumbnail, languageID):
+    """Header of the public product page (product_client.html): its photo and the lowest price.
+    image: first photo of the product's gallery, else its thumbnail, else None.
+    minPrice / priceCount: active price options in this language (None / 0 when there are none)."""
+    image = None
+    resultImg = sqlSelect("""SELECT `Name` FROM `slider`
+                             WHERE `ProductID` = %s AND `Type` = 1
+                             ORDER BY `Order` ASC LIMIT 1;""", (productID,), True)
+    if resultImg['length'] > 0 and resultImg['data'][0]['Name']:
+        image = 'images/product_slider/' + resultImg['data'][0]['Name']
+    elif thumbnail:
+        image = 'images/pr_thumbnails/' + thumbnail
+
+    resultPrice = sqlSelect("""SELECT MIN(`product_type`.`Price`) AS `minPrice`, COUNT(*) AS `priceCount`
+                               FROM `product_type`
+                               LEFT JOIN `product_type_relatives` ON `product_type_relatives`.`PT_ID` = `product_type`.`ID`
+                               WHERE `product_type`.`Product_ID` = %s
+                                   AND `product_type_relatives`.`Language_ID` = %s
+                                   AND `product_type`.`Status` = 1;""", (productID, languageID), True)
+    minPrice, priceCount = None, 0
+    if resultPrice['length'] > 0 and resultPrice['data'][0]['minPrice'] is not None:
+        minPrice = resultPrice['data'][0]['minPrice']
+        priceCount = resultPrice['data'][0]['priceCount']
+
+    return {'image': image, 'minPrice': minPrice, 'priceCount': priceCount}
 
 
 def constructArData(RefKey, articleStatus):

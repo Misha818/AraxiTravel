@@ -56,6 +56,7 @@
         {% set ns.selectedOption = '<div class="selected-option" data-value="' ~ supportedLangsData[0]["Prefix"] ~ '"><img src="https://cdn.jsdelivr.net/npm/flag-icons@6.6.6/flags/4x3/' ~ supportedLangsData[0]["Flag"] ~ '" alt="Armenia" class="lang-flag"></div>' %}
       {% endif %}
 
+{% block site_header %}{# product_client.html replaces this with the landing-page header (_site_header.html) #}
       <!-- Header Section -->
       <header class="header_public">
 
@@ -78,6 +79,7 @@
         
         <span class="notification" style="display: none;">0</span>
       </header>
+{% endblock %}
       
       <script nonce="{{ csp_nonce() }}" type="text/javascript" src="{{ url_for('static', filename='JS/cookie.umd.min.js') }}"></script>
       <script nonce="{{ csp_nonce() }}" type="text/javascript" src="{{ url_for('static', filename='JS/header.js') }}"></script>
@@ -86,6 +88,7 @@
     {% block content %}
 
     {% endblock %}
+{% block site_footer %}{# product_client.html replaces this with the landing-page footer (_site_footer.html) #}
       <div style="background-color: #ffffff;
                   padding: 3px 0px;
                   width: 100%;
@@ -187,6 +190,7 @@
         </select>
       </nav>
     </div>
+{% endblock %}
     
     <script nonce="{{ csp_nonce() }}">
       let xhr = new XMLHttpRequest();
@@ -246,6 +250,7 @@
 
 
 
+{% block site_scripts %}{# behaviour of the header and footer above; empty when they are replaced #}
       // Define an array of language objects
       // let languages = [
       //     { value: "en", text: "En", selected: true }
@@ -701,9 +706,7 @@
                 });
             });
         }
-
-
-
+{% endblock %}
       </script>
 
     </body>

@@ -1,38 +1,144 @@
+    // ---- Photo gallery (templates/slideshow.html, static/css/product-gallery.css): one photo at a
+    // time on the stage, a strip of thumbnails under it and a full-screen viewer. The price
+    // thumbnails open a photo by its position (showImage), so these names stay as they were
+    const gallery = document.querySelector('[data-gallery]');
+    const galleryStage = gallery ? gallery.querySelector('[data-gallery-stage]') : null;
+    const gallerySlides = gallery ? Array.from(gallery.querySelectorAll('.pg__slide')) : [];
+    const galleryThumbs = gallery ? Array.from(gallery.querySelectorAll('.pg__thumb')) : [];
+    const galleryStrip = gallery ? gallery.querySelector('[data-gallery-thumbs]') : null;
+    const lightbox = gallery ? gallery.querySelector('[data-gallery-lightbox]') : null;
+    const lightboxImg = lightbox ? lightbox.querySelector('[data-gallery-lightbox-img]') : null;
+    const galleryCounters = gallery ? Array.from(gallery.querySelectorAll('[data-gallery-counter]')) : [];
     let currentImageIndex = 0;
-    const thumbnails = document.querySelectorAll('.thumbnails img');
-    const images = [];
-    const imagesSRC = [];
 
-    thumbnails.forEach(thumbnail => {
-        const src = thumbnail.getAttribute('src');
-        const imageName = src.split('/').pop();
-        imagesSRC.push(src);
-        images.push(imageName);
-    });
+    const pad2 = n => String(n).padStart(2, '0');
 
-    let maxShownThumbnails = 5;
-
-    if (images.length < 5) {
-        document.querySelector('.thumbnails-wrapper').style.width = '100%';
-        maxShownThumbnails = images.length;
+    // Scrolls only the strip, sideways, so the thumbnail is in view (scrollIntoView would also
+    // scroll the page)
+    function revealThumbnail(thumb) {
+        if (!galleryStrip || !thumb) {
+            return;
+        }
+        const left = thumb.offsetLeft - galleryStrip.offsetLeft;
+        const right = left + thumb.offsetWidth;
+        if (left < galleryStrip.scrollLeft) {
+            galleryStrip.scrollTo({ left: left - 2, behavior: 'smooth' });
+        } else if (right > galleryStrip.scrollLeft + galleryStrip.clientWidth) {
+            galleryStrip.scrollTo({ left: right - galleryStrip.clientWidth + 2, behavior: 'smooth' });
+        }
     }
-    let returnChecker = false;
-    let scrollPosition = 0;
-    let scrollCounter = 1
-    let scrollNumber = Math.floor(images.length / maxShownThumbnails) +  (images.length % maxShownThumbnails === 0 ? 0 : 1);
 
-    let thumbnailImage = document.querySelector('.thumbnails img');
-    let imgHeight = thumbnailImage ? thumbnailImage.offsetHeight : 0;
-    let imgStyle = window.getComputedStyle(thumbnailImage);
-    let marginBottom = imgStyle.marginBottom;
-    // the gap between thumbnails can be fractional (it's sized from the column's height in CSS)
-    marginBottom = parseFloat(marginBottom);
+    function showImage(num) {
+        if (!gallerySlides.length) {
+            return;
+        }
+        const count = gallerySlides.length;
+        num = Number(num) || 0;
+        currentImageIndex = ((num % count) + count) % count;
 
-    let itemHeight = imgHeight + marginBottom;
-    let scrollTo = 0;
-    // let thumbnailsWrapperHeight = itemHeight * maxShownThumbnails;
-    let thumbnailsWrapperHeight = document.querySelector('.thumbnails-wrapper').offsetHeight;
+        gallerySlides.forEach((slide, i) => {
+            const active = i === currentImageIndex;
+            slide.classList.toggle('is-active', active);
+            if (active) slide.removeAttribute('aria-hidden'); else slide.setAttribute('aria-hidden', 'true');
+        });
+        galleryThumbs.forEach((thumb, i) => {
+            const active = i === currentImageIndex;
+            thumb.classList.toggle('is-active', active);
+            if (active) thumb.setAttribute('aria-current', 'true'); else thumb.removeAttribute('aria-current');
+        });
+        revealThumbnail(galleryThumbs[currentImageIndex]);
 
+        const text = pad2(currentImageIndex + 1) + ' / ' + pad2(count);
+        galleryCounters.forEach(counter => { counter.textContent = text; });
+
+        if (lightboxImg) {
+            const img = gallerySlides[currentImageIndex].querySelector('img');
+            lightboxImg.src = img.getAttribute('src');
+            lightboxImg.alt = img.alt;
+        }
+    }
+
+    function nextImage() {
+        showImage(currentImageIndex + 1);
+    }
+
+    function prevImage() {
+        showImage(currentImageIndex - 1);
+    }
+
+    // The thumbnails now sit in a strip that showImage keeps in view: kept for the price thumbnails'
+    // and older pages' calls
+    function scrollThumbnailsFromPrice(num) {
+        revealThumbnail(galleryThumbs[Number(num) || 0]);
+    }
+
+    function scrollThumbnails(direction) {
+        if (galleryStrip) {
+            const step = galleryStrip.clientWidth * (direction === 'left' ? -1 : 1);
+            galleryStrip.scrollBy({ left: step, behavior: 'smooth' });
+        }
+    }
+
+    // Full-screen viewer. It's moved to the end of the page, so nothing around the gallery
+    // (a hidden block, a stacking context) can hide or clip it
+    let lightboxOpener = null;
+
+    function openLightbox() {
+        if (!lightbox) {
+            return;
+        }
+        if (lightbox.parentNode !== document.body) {
+            document.body.appendChild(lightbox);
+        }
+        lightboxOpener = document.activeElement;
+        lightbox.classList.add('is-open');
+        document.documentElement.classList.add('pg-locked');
+        lightbox.querySelector('[data-gallery-close]').focus({ preventScroll: true });
+    }
+
+    function closeLightbox() {
+        if (!lightbox || !lightbox.classList.contains('is-open')) {
+            return;
+        }
+        lightbox.classList.remove('is-open');
+        document.documentElement.classList.remove('pg-locked');
+        if (lightboxOpener && lightboxOpener.focus) {
+            lightboxOpener.focus({ preventScroll: true });
+        }
+    }
+
+    if (gallery) {
+        gallery.querySelector('[data-gallery-open]').addEventListener('click', openLightbox);
+        lightbox.querySelector('[data-gallery-close]').addEventListener('click', closeLightbox);
+        lightbox.addEventListener('click', e => { if (e.target === lightbox) closeLightbox(); });
+        galleryStage.addEventListener('dblclick', e => { if (!e.target.closest('button')) openLightbox(); });
+
+        // Arrow keys while the stage (or a button on it) has focus, or in the viewer; Escape closes it
+        document.addEventListener('keydown', e => {
+            const inLightbox = lightbox.classList.contains('is-open');
+            if (!inLightbox && !galleryStage.contains(document.activeElement)) {
+                return;
+            }
+            if (e.key === 'ArrowLeft') { prevImage(); e.preventDefault(); }
+            else if (e.key === 'ArrowRight') { nextImage(); e.preventDefault(); }
+            else if (e.key === 'Escape' && inLightbox) { closeLightbox(); e.preventDefault(); }
+        });
+
+        // Swipe on the stage and in the viewer
+        [galleryStage, lightbox].forEach(area => {
+            let startX = null, startY = null;
+            area.addEventListener('pointerdown', e => { startX = e.clientX; startY = e.clientY; });
+            area.addEventListener('pointercancel', () => { startX = null; });
+            area.addEventListener('pointerup', e => {
+                if (startX === null) return;
+                const dx = e.clientX - startX, dy = e.clientY - startY;
+                startX = null;
+                if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) && gallerySlides.length > 1) {
+                    if (dx < 0) nextImage(); else prevImage();
+                }
+            });
+        });
+    }
 
     // Price thumbnails
     
@@ -83,24 +189,7 @@
         
 
     function displaySize() {
-        // The thumbnail column follows the main image's height, so its window and the thumbnail
-        // spacing change with the screen width: update the sizes the scrolling uses, and keep the
-        // column on the same thumbnails
-        // (on narrow screens the column is hidden and measures 0: keep the last sizes for when it's back)
-        let newWrapperHeight = document.querySelector('.thumbnails-wrapper').offsetHeight;
-        if (thumbnailImage && newWrapperHeight > 0) {
-            if (thumbnailsWrapperHeight > 0 && scrollTo > 0) {
-                scrollTo = scrollTo * newWrapperHeight / thumbnailsWrapperHeight;
-                thumbnailContainer.style.transform = `translateY(-${scrollTo}px)`;
-            }
-            thumbnailsWrapperHeight = newWrapperHeight;
-            imgHeight = thumbnailImage.offsetHeight;
-            imgStyle = window.getComputedStyle(thumbnailImage);
-            marginBottom = parseFloat(imgStyle.marginBottom);
-            itemHeight = imgHeight + marginBottom;
-        }
-
-        // Price Thumbnails
+        // Price thumbnails: how many the strip shows, and their size
         if (screen.width < 475) {
             maxShownThumbnailsP = 3;
         } else {
@@ -125,178 +214,6 @@
       // Event listener for resize events
       window.addEventListener('resize', displaySize);
 
-
-    function scrollThumbnailsFromPrice(num) {
-        let scrollChecker = Math.ceil((num + 1) / maxShownThumbnails);
-            if (scrollChecker === scrollNumber) { // shows last group of images
-                scrollCounter = scrollChecker;
-                if (images.length % maxShownThumbnails > 0) { // if num of last image group is less then maxShownThumbnails
-                    scrollTo = thumbnailsWrapperHeight * (scrollCounter - 2) + itemHeight * (images.length % maxShownThumbnails); // + marginBottom * (scrollCounter - 1);
-                } else {
-                    scrollTo = thumbnailsWrapperHeight * (scrollCounter - 1); // + marginBottom * (scrollCounter - 1);
-                }
-            } else {           
-                    scrollCounter = scrollChecker;
-                    scrollTo = thumbnailsWrapperHeight * (scrollCounter - 1); // + marginBottom * (scrollCounter - 1);
-            }
-
-        thumbnailContainer.style.transform = `translateY(-${scrollTo}px)`; // Adjust based on thumbnail size and gap    
-    } 
-
-
-    function showImage(num) {
-        currentImageIndex = num;
-        // section = Math.ceil((currentImageIndex + 1) / maxShownThumbnails)
-        const imageSrc = imagesSRC[num]; // Ռեալում սա պետք չի գա
-        const image = document.getElementById('main-image');
-        const thumbnails = document.querySelectorAll('.thumbnails img');
-        thumbnails.forEach(thumbnail => thumbnail.classList.remove('selectedThumbnail'));
-        image.classList.remove('fade');  // Reset animation
-        void image.offsetWidth;  // Trigger reflow to restart the animation
-        image.src = imageSrc;  // Update the source
-        image.classList.add('fade');  // Add the fade class for transition
-        
-        const img = document.querySelector(`.thumbnails img[src="${imageSrc}"]`);
-        if (img) {
-            img.classList.add('selectedThumbnail')
-            scrollPosition = num;
-        } else {
-            console.log('Image not found');
-        }
-
-    }
-
-    function nextImage() {
-        if (typeof currentImageIndex === "string") {
-            currentImageIndex = Number(currentImageIndex);
-        }
-
-        if (currentImageIndex === images.length - 1) {
-            currentImageIndex = 0;
-        } else {
-            currentImageIndex = currentImageIndex + 1;
-            currentImageIndex = Math.min(currentImageIndex, images.length - 1);
-        }
-
-        showImage(currentImageIndex);
-        scrollThumbnails('right', true);
-    }
-
-    function prevImage() {
-        // currentImageIndex = (currentImageIndex - 1 + images.length) % images.length;
-        if (typeof currentImageIndex === "string") {
-            currentImageIndex = Number(currentImageIndex);
-        }
-
-        if (currentImageIndex === 0) {
-            currentImageIndex = images.length - 1;
-        } else {
-            currentImageIndex = currentImageIndex - 1;
-            // currentImageIndex = Math.min(currentImageIndex, images.length - 1);
-        }
-        showImage(currentImageIndex);
-        scrollThumbnails('left', true);
-    }
-
-
-    // let nextScroll = maxShownThumbnails;
-
-    const thumbnailContainer = document.querySelector('.thumbnails');
-
-
-
-
-
-    function scrollThumbnails(direction, stop) {
-        // Scroll up
-        if (direction === 'left') {
-            
-            let scrollChecker = Math.ceil((scrollPosition + 1) / maxShownThumbnails);
-            if (stop === true) { // Sliders
-                if (scrollChecker === scrollNumber) { // shows last group of images
-                    scrollCounter = scrollChecker;
-                    if (images.length % maxShownThumbnails > 0) { // if num of last image group is less then maxShownThumbnails
-                        scrollTo = thumbnailsWrapperHeight * (scrollCounter - 2) + itemHeight * (images.length % maxShownThumbnails);
-                    } else {
-                        scrollTo = thumbnailsWrapperHeight * (scrollCounter - 1); // + marginBottom * (scrollCounter - 1)
-                    }
-                } else {
-                        scrollCounter = scrollChecker;
-                        scrollTo = thumbnailsWrapperHeight * (scrollCounter - 1); //  + marginBottom * (scrollCounter - 1)
-                }
-
-            }
-            
-        
-            if (stop === false) { // Thumbnails
-                scrollCounter = scrollCounter - 1;
-                if (scrollCounter === 0) { // In this case we are heading to the last section of thumbnails
-                    scrollCounter = scrollNumber;
-                } 
-                if (scrollCounter === scrollNumber) {
-                    if (images.length % maxShownThumbnails > 0) { // if num of last image group is less then maxShownThumbnails
-                        scrollTo = thumbnailsWrapperHeight * (scrollCounter - 2) + itemHeight * (images.length % maxShownThumbnails); // + marginBottom * (scrollCounter - 2);
-                    } else {
-                        scrollTo = thumbnailsWrapperHeight * (scrollCounter - 1); // + marginBottom * (scrollCounter - 1);
-                    }
-                } else {
-                    scrollTo = thumbnailsWrapperHeight * (scrollCounter - 1); // + marginBottom * (scrollCounter - 1);
-                }
-                
-                
-            }
-
-
-        } else {
-            // Scroll down
-            if (stop === true) { // Sliders
-                let scrollChecker = Math.floor(scrollPosition / maxShownThumbnails) + 1;
-                if (scrollChecker !== scrollCounter) {
-                    if (scrollChecker === scrollNumber) { // shows last group of images
-                        if (images.length % maxShownThumbnails > 0) { // if num of last image group is less then maxShownThumbnails
-                            scrollTo = thumbnailsWrapperHeight * (scrollCounter - 1) + itemHeight * (images.length % maxShownThumbnails);
-                        } else {
-                            scrollTo = thumbnailsWrapperHeight * scrollCounter + marginBottom * scrollCounter;
-                        }
-
-                        scrollCounter = scrollChecker;
-                    } else {
-                        if (scrollChecker * maxShownThumbnails === scrollPosition + 1) {
-                            scrollCounter = scrollChecker;
-                            scrollTo = thumbnailsWrapperHeight * (scrollCounter - 1);
-                        }
-                        scrollCounter = scrollChecker;
-                        scrollTo = thumbnailsWrapperHeight * (scrollCounter - 1);
-                    }
-                }
-
-            }
-
-            if (stop === false) { // Thumbnails
-                if (scrollCounter === scrollNumber) {
-                    scrollCounter = 1;
-                    scrollTo = 0;       
-                    
-                } else if (scrollCounter === scrollNumber - 1) { 
-                    if (images.length % maxShownThumbnails > 0) { // if num of last image group is less then maxShownThumbnails
-                        
-                        scrollTo = thumbnailsWrapperHeight * (scrollCounter - 1) + itemHeight * (images.length % maxShownThumbnails); // + marginBottom * (scrollCounter - 1);
-                        scrollCounter = scrollCounter + 1;
-                    } else {
-                        
-                        scrollTo = thumbnailsWrapperHeight * scrollCounter; // + marginBottom * scrollCounter;
-                        scrollCounter = scrollCounter + 1;
-                    }
-                } else {
-                    scrollTo = thumbnailsWrapperHeight * scrollCounter; // + marginBottom * scrollCounter;
-                    scrollCounter = scrollCounter + 1;
-                }
-                
-            }    
-        }
-        
-        thumbnailContainer.style.transform = `translateY(-${scrollTo}px)`; // Adjust based on thumbnail size and gap
-    }
 
     //Price thumbnails 
     function scrollThumbnailsPrice(direction, stop) {

@@ -4,7 +4,7 @@ from mysql.connector.pooling import PoolError
 from flask_babel import Babel, _, lazy_gettext as _l, gettext
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-from products import email_text, submit_notes_text, get_pr_order, slidesToEdit, checkCategoryName, checkProductCategoryName, get_RefKey_LangID_by_link, get_article_category_images, get_product_category_images, edit_p_h, submit_reach_text, submit_product_text, add_p_c_sql, edit_p_c_view, edit_a_c_view, edit_p_c_sql, get_product_categories, get_ar_thumbnail_images, get_pr_thumbnail_images, add_product, productDetails, constructPrData, add_product_lang
+from products import productHeaderData, email_text, submit_notes_text, get_pr_order, slidesToEdit, checkCategoryName, checkProductCategoryName, get_RefKey_LangID_by_link, get_article_category_images, get_product_category_images, edit_p_h, submit_reach_text, submit_product_text, add_p_c_sql, edit_p_c_view, edit_a_c_view, edit_p_c_sql, get_product_categories, get_ar_thumbnail_images, get_pr_thumbnail_images, add_product, productDetails, constructPrData, add_product_lang
 from sysadmin import sanitize_html, sanitize_text_format, jsonSanitaizer, get_pt_payment_methods, get_payment_methods, is_valid_url, validate_request, send_confirmation_email, get_create_email_id, inline_css, init_sysadmin_context, check_rol_id, check_delivery_status, send_email_mailgun, getSupportedLangIDs, getLangdata, check_alias, get_order_status_list, get_affiliates, get_affiliate_reward_progress, get_promo_code_id_affiliateID, deletePUpdateP, reservePUpdateP, insertPUpdateP, insertIntoBuffer, calculate_price_promo, clientID_contactID, checkSPSSDataLen, replace_spaces_in_text_nodes, totalNumRows, countRows, filter_multy_dict, getLangdatabyID, supported_langs, get_full_website_name, generate_random_unique_string, get_meta_tags, removeRedundantFiles, checkForRedundantFiles, getFileName, fileUpload, get_ar_id_by_lang, get_pr_id_by_lang, getDefLang, getSupportedLangs, getLangID, sqlSelect, sqlInsert, sqlUpdate, sqlDelete, get_pc_id_by_lang, get_pc_ref_key, login_required
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
@@ -541,6 +541,11 @@ def inject_locale():
 
 def contact_urls():
     return {'TG': os.getenv('TG_URL'), 'FB': os.getenv('FB_URL'), 'INS': os.getenv('INS_URL'), 'IN': os.getenv('IN_URL')}
+
+@app.context_processor
+def inject_site_contacts():
+    # Social links of the shared site footer (templates/_site_footer.html)
+    return {'site_contacts': contact_urls()}
 
 @app.route('/')
 @validate_request
@@ -2905,6 +2910,17 @@ def editprice():
     return jsonify({'status': '1', 'answer': answer, 'newCSRFtoken': newCSRFtoken})
 
 
+# Header of the product pages (product_client.html, product.html): photo, lowest price and how
+# many prices there are; 'price' is the lowest one ready to show, e.g. "֏ 12,000"
+def product_header(prData, languageID):
+    prHeader = productHeaderData(prData['Product_ID'], prData['Thumbnail'], languageID)
+    if prHeader['minPrice'] is not None:
+        price = float(prHeader['minPrice'])
+        amount = f"{price:,.0f}" if price.is_integer() else f"{price:,.2f}"
+        prHeader['price'] = MAIN_CURRENCY + ' ' + amount
+    return prHeader
+
+
 # View and Edit Product 
 @app.route('/product/<RefKey>', methods=['GET'])
 @login_required
@@ -2917,6 +2933,7 @@ def pd(RefKey):
     toBeTranslated = {'length': 0}
     productCategoriesToBeTranslated = []
     slideShow = []
+    prHeader = {}
 
     if RefKey is None:
          errorMessage = True
@@ -2953,6 +2970,7 @@ def pd(RefKey):
             if prData['content'] == True == prData['headers']: 
                 productTemplate = 'product.html' 
                 slideShow = getSlides(prData['Product_ID'], languageID)
+                prHeader = product_header(prData, languageID)
                                         
             if prData['content'] == True and prData['headers'] == False:
                 
@@ -2994,7 +3012,7 @@ def pd(RefKey):
         sideBar = side_bar_stuff()
         emptyCategory = gettext('To continue, please, add at least one product category.')
     
-    return render_template(productTemplate, prData=prData, ordering=get_pr_order(), slideShow=slideShow, sideBar=sideBar, productCategory=productCategory, productCategoriesToBeTranslated=productCategoriesToBeTranslated, defLangProductCategory=defLangProductCategory, supportedLangsData=supportedLangsData, errorMessage=errorMessage, root_url=root_url, languageID=languageID, emptyCategory=emptyCategory, current_locale=get_locale()) # current_locale is babel variable for multilingual purposes
+    return render_template(productTemplate, prData=prData, prHeader=prHeader, ordering=get_pr_order(), slideShow=slideShow, sideBar=sideBar, productCategory=productCategory, productCategoriesToBeTranslated=productCategoriesToBeTranslated, defLangProductCategory=defLangProductCategory, supportedLangsData=supportedLangsData, errorMessage=errorMessage, root_url=root_url, languageID=languageID, emptyCategory=emptyCategory, current_locale=get_locale()) # current_locale is babel variable for multilingual purposes
 
 
 def product_categories_translate(defLangID, defLangPrCategory, productCategory):
@@ -7428,6 +7446,7 @@ def index(path):
     supportedLangsData = []
     metaTags = ''
     ptID = ''
+    prHeader = {}
     
     if content is not None:  
         langData = getLangdatabyID(content['LanguageID'])
@@ -7445,6 +7464,9 @@ def index(path):
 
             if productStatusResult == 2:
                 myHtml = 'product_client.html'
+
+                # Header of the page: photo and "From <lowest price>" (templates/product_client.html)
+                prHeader = product_header(prData, content['LanguageID'])
                             
                 metaContent = prData
                 prData['SiteName'] = gettext("site name")
@@ -7487,7 +7509,7 @@ def index(path):
 
     languageID = getLangID()
     jsonifiedSupportedLangsData = json.dumps(supportedLangsData, ensure_ascii=False)
-    return render_template(myHtml, cartMessage=cartMessage, prData=prData, ptID=ptID, languageID=languageID, slideShow=slideShow, supportedLangsData=supportedLangsData, jsonifiedSupportedLangsData=jsonifiedSupportedLangsData, metaTags=metaTags, current_locale=get_locale())
+    return render_template(myHtml, cartMessage=cartMessage, prData=prData, prHeader=prHeader, ptID=ptID, languageID=languageID, slideShow=slideShow, supportedLangsData=supportedLangsData, jsonifiedSupportedLangsData=jsonifiedSupportedLangsData, metaTags=metaTags, current_locale=get_locale())
 
 
 @app.route("/get_langs", methods=["POST"])

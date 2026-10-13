@@ -34,6 +34,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Marcellus&family=Noto+Sans+Armenian:wght@400;500;600&family=Noto+Serif+Armenian:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/site-chrome.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
 </head>
 
@@ -41,31 +42,7 @@
     <a class="skip-link" href="#activities">{{ _('Skip to journeys') }}</a>
 
     <!-- Header -->
-    <header class="site-header" id="header" data-header>
-        <div class="site-header__inner">
-            <a href="{{ url_for('home') }}" class="brand" aria-label="{{ _('company') }}">
-                <span class="brand__tile"><img src="{{ url_for('static', filename='images/logo-mark.png') }}" width="360" height="218" alt=""></span>
-                <span class="brand__word">
-                    <span class="brand__name">Araxi</span>
-                    <span class="brand__sub">Travel</span>
-                </span>
-            </a>
-
-            <nav class="site-nav" id="site-nav" aria-label="{{ _('Main navigation') }}" data-nav>
-                <ul class="site-nav__list">
-                    <li><a href="#activities" class="site-nav__link" data-nav-link>{{ _('Journeys') }}</a></li>
-                    <li><a href="#about" class="site-nav__link" data-nav-link>{{ _('About') }}</a></li>
-                    <li><a href="#contacts" class="site-nav__link" data-nav-link>{{ _('Contacts') }}</a></li>
-                </ul>
-                <div class="lang-switch" data-lang-switch aria-label="{{ _('Language') }}"></div>
-            </nav>
-
-            <button class="menu-toggle" type="button" aria-controls="site-nav" aria-expanded="false" data-menu-toggle>
-                <span class="sr-only" data-menu-label>{{ _('Open menu') }}</span>
-                <span class="menu-toggle__bars" aria-hidden="true"></span>
-            </button>
-        </div>
-    </header>
+    {% with chrome_nav = 'landing' %}{% include '_site_header.html' %}{% endwith %}
 
     <main>
         <!-- Hero slider: slides come from /get_home_slides (Staff > Slides) -->
@@ -194,12 +171,12 @@
                     <div class="newsletter">
                         <h3 class="newsletter__title">{{ _('Newsletter') }}</h3>
                         <p>{{ _('Get news about new journeys in your inbox.') }}</p>
+                        <div class="form-status hidden" id="subscribe-message" role="status"></div>
                         <form id="subscribe-form" class="newsletter__form" novalidate>
                             <label class="sr-only" for="subscribe-email">{{ _('Your Email') }}</label>
                             <input type="email" id="subscribe-email" name="email" autocomplete="email" placeholder="{{ _('Your Email') }}" required>
                             <button type="button" class="btn btn--primary" id="subscribe">{{ _('Subscribe') }}</button>
                         </form>
-                        <div class="form-status hidden" id="subscribe-message" role="status"></div>
                     </div>
                 </div>
 
@@ -233,68 +210,21 @@
     </main>
 
     <!-- Footer -->
-    <footer class="site-footer">
-        <svg class="site-footer__river" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden="true">
-            <path d="M0 52 C 240 8, 420 78, 720 44 S 1180 6, 1440 36"/>
-            <path d="M0 64 C 260 24, 440 88, 740 56 S 1200 20, 1440 50"/>
-        </svg>
-        <div class="container site-footer__grid">
-            <div class="site-footer__brand">
-                <a href="{{ url_for('home') }}" class="brand brand--footer" aria-label="{{ _('company') }}">
-                    <span class="brand__tile"><img src="{{ url_for('static', filename='images/logo-mark.png') }}" width="360" height="218" alt="" loading="lazy"></span>
-                    <span class="brand__word">
-                        <span class="brand__name">Araxi</span>
-                        <span class="brand__sub">Travel</span>
-                    </span>
-                </a>
-                <p>{{ _('Journeys across Armenia') }}</p>
-            </div>
-
-            <nav class="site-footer__col" aria-label="{{ _('Footer navigation') }}">
-                <h3>{{ _('Explore') }}</h3>
-                <ul>
-                    <li><a href="#activities">{{ _('Journeys') }}</a></li>
-                    <li><a href="#about">{{ _('About') }}</a></li>
-                    <li><a href="#contacts">{{ _('Contacts') }}</a></li>
-                </ul>
-            </nav>
-
-            <div class="site-footer__col">
-                <h3>{{ _('Follow us') }}</h3>
-                <ul>
-                    <li><a href="mailto:info@araxitravel.am">info@araxitravel.am</a></li>
-                    {% for key, label in [('TG', 'Telegram'), ('INS', 'Instagram'), ('FB', 'Facebook'), ('IN', 'LinkedIn')] %}
-                        {% if contacts[key] %}
-                        <li><a href="{{ contacts[key] }}" target="_blank" rel="noopener">{{ label }}</a></li>
-                        {% endif %}
-                    {% endfor %}
-                </ul>
-            </div>
-        </div>
-
-        <div class="container site-footer__bottom">
-            <p>&copy; {{ current_year }} {{ _('Your Company. All rights reserved.') }}</p>
-            <div class="lang-switch lang-switch--footer" data-lang-switch aria-label="{{ _('Language') }}"></div>
-        </div>
-    </footer>
+    {% with chrome_nav = 'landing' %}{% include '_site_footer.html' %}{% endwith %}
 
     <input type="hidden" id="emailRequired" value="{{ _('Invalid email address!') }}">
     <input type="hidden" id="invalidEmail" value="{{ _('Invalid email format') }}">
-    <input type="hidden" id="redFields" value="{{ _('Please improve all field marked in red') }}">
+    <input type="hidden" id="redFields" value="{{ _('Please check and correct all highlighted fields.') }}">
 
     <script nonce="{{ csp_nonce() }}" type="application/json" id="landing-config">
         {{ {
             'slidesDir': url_for('static', filename='images/uploads/home_slides/'),
             'thumbsDir': url_for('static', filename='images/pr_thumbnails/'),
-            'langs': supported_langs or '[]',
-            'locale': current_locale,
             'scrollTo': scrollTo or '',
             'i18n': {
                 'goToSlide': _('Go to slide'),
                 'pause': _('Pause slideshow'),
                 'play': _('Play slideshow'),
-                'openMenu': _('Open menu'),
-                'closeMenu': _('Close menu'),
                 'viewDetails': _('View details'),
                 'empty': _('New journeys are coming soon.'),
                 'loadError': _('We could not load the journeys. Please refresh the page.'),
@@ -307,6 +237,7 @@
         let csrfToken = "{{ newCSRFtoken }}";
         let languageID = "{{ languageID }}";
     </script>
+    <script nonce="{{ csp_nonce() }}" type="text/javascript" src="{{ url_for('static', filename='JS/site-chrome.js') }}"></script>
     <script nonce="{{ csp_nonce() }}" type="text/javascript" src="{{ url_for('static', filename='JS/landing.js') }}"></script>
     <script nonce="{{ csp_nonce() }}" type="text/javascript" src="{{ url_for('static', filename='JS/script.js') }}"></script>
 </body>

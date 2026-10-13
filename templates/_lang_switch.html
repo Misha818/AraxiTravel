@@ -1,0 +1,7 @@
+{#- Language links for the site header and footer (styles: .lang-switch in static/css/site-chrome.css).
+    chrome_refkey: product RefKey, so /setlang opens the same product in the other language. -#}
+{%- if supportedLangsData | length > 1 -%}
+    {%- for lang in supportedLangsData -%}
+        <a class="lang-switch__item" href="/setlang?lang={{ lang['Prefix'] | urlencode }}{% if chrome_refkey %}&RefKey={{ chrome_refkey | urlencode }}{% endif %}" lang="{{ lang['Prefix'] }}" title="{{ lang['Language'] }}"{% if lang['Prefix'] == current_locale %} aria-current="true"{% endif %}>{{ 'Հայ' if lang['Prefix'] == 'hy' else lang['Prefix'] | upper }}</a>
+    {%- endfor -%}
+{%- endif -%}

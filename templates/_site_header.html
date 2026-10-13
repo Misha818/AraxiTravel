@@ -1,0 +1,36 @@
+{#- Site header shared by the landing page and the client product page
+    (styles: static/css/site-chrome.css, behaviour: static/JS/site-chrome.js).
+    chrome_nav = 'landing': links scroll to the sections of the landing page; otherwise they open them.
+    chrome_solid: always the solid (scrolled) look, for pages without a hero image.
+    chrome_refkey: see _lang_switch.html. -#}
+{%- if chrome_nav == 'landing' -%}
+    {%- set nav_journeys, nav_about, nav_contacts = '#activities', '#about', '#contacts' -%}
+{%- else -%}
+    {%- set nav_journeys, nav_about, nav_contacts = url_for('activities'), url_for('about'), url_for('contacts') -%}
+{%- endif -%}
+<header class="site-header{% if chrome_solid %} site-header--solid{% endif %}" id="header" data-header>
+    <div class="site-header__inner">
+        <a href="{{ url_for('home') }}" class="brand" aria-label="{{ _('company') }}">
+            <span class="brand__tile"><img src="{{ url_for('static', filename='images/logo-mark.png') }}" width="360" height="218" alt=""></span>
+            <span class="brand__word">
+                <span class="brand__name">Araxi</span>
+                <span class="brand__sub">Travel</span>
+            </span>
+        </a>
+
+        <nav class="site-nav" id="site-nav" aria-label="{{ _('Main navigation') }}" data-nav>
+            <ul class="site-nav__list">
+                <li><a href="{{ nav_journeys }}" class="site-nav__link" data-nav-link>{{ _('Journeys') }}</a></li>
+                <li><a href="{{ nav_about }}" class="site-nav__link" data-nav-link>{{ _('About') }}</a></li>
+                <li><a href="{{ nav_contacts }}" class="site-nav__link" data-nav-link>{{ _('Contacts') }}</a></li>
+            </ul>
+            <div class="lang-switch" aria-label="{{ _('Language') }}">{% include '_lang_switch.html' %}</div>
+        </nav>
+
+        <button class="menu-toggle" type="button" aria-controls="site-nav" aria-expanded="false" data-menu-toggle
+                data-label-open="{{ _('Open menu') }}" data-label-close="{{ _('Close menu') }}">
+            <span class="sr-only" data-menu-label>{{ _('Open menu') }}</span>
+            <span class="menu-toggle__bars" aria-hidden="true"></span>
+        </button>
+    </div>
+</header>

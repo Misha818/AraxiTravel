@@ -729,8 +729,8 @@ VALUES
 INSERT INTO `store` (`Name`, `Address`, `userID`, `Status`) Values('Գլխամասային', '', 1, 1);
 
 INSERT INTO `sub_product_specification` (`Name`, `User_ID`, `Status`) 
-    VALUES ('Միջոցառում', 0, 1),
-           ('Events', 0, 1);
+    VALUES ('Տուրեր', 0, 1),
+           ('Տրանսֆերներ', 0, 1);
 INSERT INTO `sps_relatives` (`SPS_ID`, `Ref_Key`, `Language_ID`, `User_ID`, `Status`) 
     VALUES  (1, 0, 1, 0, 1), 
             (2, 0, 2, 0, 1);
@@ -749,10 +749,10 @@ INSERT INTO `spss_relatives` (`SPSS_ID`, `Ref_Key`, `Language_ID`, `User_ID`, `S
 
 INSERT INTO `product_category` (`Product_Category_Name`, `User_ID`, `Product_Category_Status`, `spsID`, `xRatio`, `yRatio`) 
     VALUES  
-        ('Միջոցառումներ', 0, 1, 1, 16, 9),
-        ('Նախաձեռնություններ', 0, 1, 1, 4, 3),
-        ('Events', 0, 1, 2, 16, 9),
-        ('Activities', 0, 1, 2, 4, 3);
+        ('Տուրեր', 0, 1, 1, 16, 9),
+        ('Տրանսֆերներ', 0, 1, 1, 4, 3),
+        ('Tours', 0, 1, 2, 16, 9),
+        ('Transfers', 0, 1, 2, 4, 3);
 
 
 INSERT INTO `product_c_relatives` (`PC_Ref_Key`, `PC_ID`, `Language_ID`, `User_ID`) 
@@ -761,10 +761,7 @@ INSERT INTO `product_c_relatives` (`PC_Ref_Key`, `PC_ID`, `Language_ID`, `User_I
 INSERT INTO `languages` (`Language`, `Prefix`) VALUES
 ('Հայերեն', 'hy'),
 ('English', 'en'),
-('中文 (普通话)', 'zh'),
 ('Español', 'es'),
-('हिन्दी', 'hi'),
-('বাংলা', 'bn'),
 ('Português', 'pt'),
 ('Русский', 'ru')
 ;

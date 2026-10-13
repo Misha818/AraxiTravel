@@ -9,6 +9,56 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
+    <!-- Landing-page look for the header and the footer (templates/_site_footer.html) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Marcellus&family=Noto+Sans+Armenian:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/site-chrome.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/product-header.css') }}">
+    <style>
+        /* the site's standard background (styles.css sets a grey one with !important) */
+        body {
+            background-color: #fbf9f4 !important;
+            min-height: 100vh;
+        }
+
+        /* Header: the landing-page header in its solid look (site-chrome.css); the tools button
+           and the Dashboard link stay. The height stays 75px: the editor is laid out below it. */
+        .stuff-header {
+            height: 75px;
+            padding: 0 var(--gutter);
+            border-bottom: 0;
+            background-color: rgba(251, 249, 244, .92);
+            -webkit-backdrop-filter: saturate(1.4) blur(14px);
+            backdrop-filter: saturate(1.4) blur(14px);
+            box-shadow: 0 1px 0 rgba(7, 35, 57, .08);
+            color: var(--navy-900);
+            font-family: var(--font-body);
+        }
+        .stuff-header .toggle-btn {
+            color: var(--navy-900);
+        }
+        /* Dashboard: the landing-page navigation link at every width (below 900px site-chrome.css
+           turns those links into large menu items) */
+        .stuff-header .site-nav__link {
+            color: var(--navy-900);
+            text-decoration: none;
+            font-family: var(--font-body);
+            font-size: .92rem;
+            letter-spacing: .04em;
+        }
+
+        /* main content area: same background as the page (styles.css gives it a grey one); on
+           short pages it fills the window so the footer stays at the bottom */
+        .containerZ {
+            background-color: #fbf9f4;
+            flex: 1 0 auto;
+        }
+        .site-footer {
+            margin-top: auto;
+        }
+    </style>
+
     <script nonce="{{ csp_nonce() }}" type="text/javascript" src="{{ url_for('static', filename='JS/cookie.umd.min.js') }}"></script>
     <script nonce="{{ csp_nonce() }}">
 
@@ -259,16 +309,53 @@
         overflow-x: clip;
     }
 
-    /* ---- Editor layout: fills the screen width up to 800px, below the fixed header ---- */
+    /* ---- Editor layout: the same box as the product text on the public page (#editorContentParent
+       in styles.css): centred, at most 960px wide, right below the 75px header ---- */
     #myReachTextEditor {
-        width: min(800px, calc(100% - 24px));
-        margin: 110px auto 90px auto;
+        width: min(calc(100% - 24px), 960px);
+        margin: 75px auto 90px auto;
         box-sizing: border-box;
+    }
+
+    /* after a slideshow the text follows it directly, as on the public page */
+    #slides ~ #myReachTextEditor {
+        margin-top: 0;
+    }
+
+    @media screen and (min-width: 1366px) {
+        /* with prices the text lines up with the slideshow's thumbnails and image (public page) */
+        #slides:not(.no-price) ~ #myReachTextEditor {
+            width: min(calc(100% - 24px), 1346px);
+            padding: 0 16px;
+        }
+
+        #slides:not(.no-price) ~ #myReachTextEditor #editor-wrapper {
+            max-width: 882px;
+        }
+    }
+
+    @media screen and (max-width: 650px) {
+        #myReachTextEditor {
+            width: calc(100% - 16px);
+        }
     }
 
     /* Pickr's own trigger buttons: the toolbar's colour buttons open the pickers instead */
     #myReachTextEditor .pickr {
         display: none !important;
+    }
+
+    /* Submit / Saving...: right under the editor, and kept at the bottom of the window while the
+       text is longer than the screen. (.pcButton fixes buttons to the window's bottom-left corner,
+       where the open tools menu and the footer covered it.) */
+    #myReachTextEditor #submit-btn,
+    #myReachTextEditor #saving-btn {
+        position: sticky;
+        bottom: 16px;
+        left: auto;
+        margin-top: 16px;
+        z-index: 6;
+        box-shadow: 0 6px 18px -8px rgba(7, 35, 57, .45);
     }
 
     /* Same build as the Send Email editor: toolbar and text area are one bordered block of
@@ -290,18 +377,13 @@
     }
 
     @media (max-width: 600px) {
-        #myReachTextEditor {
-            width: calc(100% - 16px);
-            margin-top: 96px;
-        }
 
-        /* full-width Submit, without the 5px offset pushing it past the screen edge */
+        /* full-width Submit */
         #myReachTextEditor #submit-btn,
         #myReachTextEditor #saving-btn {
-            left: 8px;
-            right: 8px;
-            width: auto;
+            width: 100%;
             box-sizing: border-box;
+            text-align: center;
         }
     }
 
@@ -439,6 +521,22 @@
     --product-header-h: 75px;
 }
 
+/* The product's photo header sits right under the fixed admin header; what follows it starts
+   with the same space as on the public page (product-gallery.css) instead of clearing the header */
+.pr-hero {
+    margin-top: 75px;
+}
+
+.pr-hero ~ #editorContentParent {
+    margin-top: 0 !important;   /* the page's script also sets it inline */
+}
+
+.pr-hero ~ #myReachTextEditor,
+.pr-hero ~ #mySlideShow,
+.pr-hero ~ #slides[style*="none"] ~ #myReachTextEditor {   /* the gallery hidden by the editor menu */
+    margin-top: clamp(2.5rem, 6vw, 4rem);
+}
+
 </style>
 <link rel="stylesheet" href="{{ url_for('static', filename='rte.css') }}">
 
@@ -502,7 +600,7 @@ document.addEventListener('DOMContentLoaded', function(){
     </div>
     <div style="position: relative; display: inline-block;">
         <nav>
-            <a href="{{ url_for('home', _external=True) }}stuff" style="margin: 0 15px; color: #4a4a4a; text-decoration: none;">{{ _('Dashboard') }}</a>
+            <a href="{{ url_for('home', _external=True) }}stuff" class="site-nav__link">{{ _('Dashboard') }}</a>
         </nav>
     </div>
 </header>
@@ -581,6 +679,9 @@ document.addEventListener('DOMContentLoaded', function(){
 
 <!-- Client -->
 <div class="containerZ"> 
+
+<!-- Product header: photo, category, title, description, price, as on the public page (static/css/product-header.css) -->
+{% include '_product_hero.html' %}
     
     <div id="mistakes" style="width: 80%; color: red; display: flex; margin-bottom: -100px; margin-top: 130px; display: none;"></div>
     <!-- Slide Show and image uploader -->
@@ -2088,6 +2189,8 @@ document.querySelector('.changePrOrder').onchange = function(event) {
         xhr.send(formData);
 };
 </script>
+
+{% include '_site_footer.html' %}
 
     </body>
 </html>

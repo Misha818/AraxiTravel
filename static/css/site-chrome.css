@@ -1,0 +1,363 @@
+/*
+ * Site header and footer shared by the landing page (templates/index.html) and the client and
+ * staff product pages (product_client.html, product.html): colour tokens, header, footer.
+ * Markup: templates/_site_header.html, _site_footer.html. Behaviour: static/JS/site-chrome.js.
+ * Colours are taken from the logo (static/images/logo.png).
+ */
+
+:root {
+    --navy-950: #04182a;
+    --navy-900: #072339;
+    --navy-800: #0a3150;
+    --navy-700: #0c4464;   /* logo "A" */
+    --river-600: #15698a;  /* logo river */
+    --river-400: #4596b2;
+    --river-200: #b5d8e3;
+    --sand-300: #ddbf98;   /* logo mountains */
+    --sand-200: #ecdcc4;
+    --ochre-500: #c59054;  /* logo ochre */
+    --ochre-600: #a9733a;
+    --cream-50: #fbf9f4;
+    --cream-100: #f8f5ed;  /* logo snow */
+    --cream-200: #efe8da;
+    --ink-900: #0e2233;
+    --ink-600: #4a5b69;
+    --ink-400: #7b8893;
+    --white: #fff;
+
+    --font-display: "Marcellus", "Noto Serif Armenian", Georgia, "Times New Roman", serif;
+    --font-body: "Inter", "Noto Sans Armenian", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+    --header-h: 76px;
+    --container: 1240px;
+    --gutter: clamp(1.25rem, 4vw, 3rem);
+    --radius: 18px;
+    --radius-sm: 10px;
+    --ease-out: cubic-bezier(.22, .61, .36, 1);
+    --ease-in-out: cubic-bezier(.65, 0, .35, 1);
+    --shadow-card: 0 1px 2px rgba(7, 35, 57, .06), 0 12px 32px -12px rgba(7, 35, 57, .18);
+    --shadow-card-hover: 0 2px 4px rgba(7, 35, 57, .08), 0 28px 50px -18px rgba(7, 35, 57, .32);
+}
+
+@media (max-width: 899px) {
+    :root { --header-h: 64px; }
+}
+
+/* ---------- Base for the header and footer ---------- */
+/* The landing page resets elements globally (.landing in landing.css); other pages do not, and
+   styles.css styles some footer elements, so the header and footer carry their own base. */
+
+html { scroll-padding-top: var(--header-h); }
+html.menu-open { overflow: hidden; }
+
+.site-header,
+.site-footer {
+    box-sizing: border-box;
+    font-family: var(--font-body);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    text-align: left;
+}
+.site-footer {
+    width: 100%;
+    align-self: stretch;           /* styles.css centres the body's children */
+}
+.site-header *,
+.site-footer *,
+.site-header *::before,
+.site-footer *::before,
+.site-header *::after,
+.site-footer *::after { box-sizing: border-box; }
+.site-header :where(ul),
+.site-footer :where(ul) { margin: 0; padding: 0; list-style: none; }
+.site-header :where(a),
+.site-footer :where(a) { color: inherit; }
+.site-header :where(img),
+.site-footer :where(img) { max-width: 100%; display: block; }
+.site-footer :where(h3, p) { margin: 0; }
+.site-header :where(button) { font: inherit; }
+.site-header :focus-visible,
+.site-footer :focus-visible { outline: 2px solid var(--ochre-500); outline-offset: 3px; }
+
+/* styles.css: ".container" is 80% wide with a 60px top padding, and on phones "footer div",
+   "footer span" and "footer h3" are re-laid out; keep the footer as on the landing page */
+.site-footer .container {
+    width: 100%;
+    max-width: calc(var(--container) + 2 * var(--gutter));
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: var(--gutter);
+    padding-right: var(--gutter);
+}
+.site-footer .site-footer__grid { margin-top: 0; padding-top: 0; padding-bottom: 0; }
+.site-footer .site-footer__bottom { padding-bottom: 0; }
+.site-footer div { flex: 0 1 auto; max-width: none; text-align: inherit; }
+.site-footer span { text-align: inherit; }
+.site-footer .container p { text-align: inherit; }    /* styles.css: "p:not(.ql-editor p)" is centred up to 1365px */
+.site-footer h3 { text-align: left !important; }
+
+.sr-only {
+    position: absolute !important;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0);
+    white-space: nowrap; border: 0;
+}
+
+.icon {
+    width: 1.15em; height: 1.15em;
+    flex: none;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* ---------- Header ---------- */
+
+.site-header {
+    position: fixed;
+    inset: 0 0 auto 0;
+    z-index: 50;
+    height: var(--header-h);
+    color: var(--white);
+    transition: background-color .35s, color .35s, box-shadow .35s, height .35s;
+}
+.site-header::before {      /* legibility over bright skies */
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: 0 0 -40px 0;
+    background: linear-gradient(to bottom, rgba(4, 24, 42, .55), rgba(4, 24, 42, 0));
+    pointer-events: none;
+    transition: opacity .35s;
+}
+/* The solid background lives on a pseudo-element: backdrop-filter on the header itself
+   would make it the containing block of the fixed mobile menu. */
+.site-header::after {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    background: rgba(251, 249, 244, .92);
+    -webkit-backdrop-filter: saturate(1.4) blur(14px);
+    backdrop-filter: saturate(1.4) blur(14px);
+    box-shadow: 0 1px 0 rgba(7, 35, 57, .08);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .35s;
+}
+.site-header.is-solid { color: var(--navy-900); }
+.site-header.is-solid::before { opacity: 0; }
+.site-header.is-solid::after { opacity: 1; }
+
+.site-header__inner {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    height: 100%;
+    max-width: calc(var(--container) + 2 * var(--gutter));
+    margin: 0 auto;
+    padding: 0 var(--gutter);
+}
+
+.brand {
+    display: inline-flex;
+    align-items: center;
+    gap: .75rem;
+    text-decoration: none;
+    color: inherit;
+    position: relative;
+    z-index: 2;
+}
+.brand__tile {
+    display: grid;
+    place-items: center;
+    width: 46px; height: 46px;
+    border-radius: 12px;
+    background: var(--cream-100);
+    box-shadow: 0 6px 18px -8px rgba(4, 24, 42, .5);
+}
+.brand__tile img { width: 36px; height: auto; }
+.brand__word { display: flex; flex-direction: column; line-height: 1; }
+.brand__name {
+    font-family: var(--font-display);
+    font-size: 1.45rem;
+    letter-spacing: .26em;
+    text-transform: uppercase;
+    margin-right: -.26em;
+}
+.brand__sub {
+    margin-top: .3rem;
+    font-size: .62rem;
+    font-weight: 600;
+    letter-spacing: .52em;
+    text-transform: uppercase;
+    opacity: .8;
+}
+
+.site-nav { display: flex; align-items: center; gap: 2rem; }
+.site-nav__list { display: flex; gap: 2rem; }
+.site-nav__link {
+    position: relative;
+    padding: .4rem 0;
+    font-size: .92rem;
+    font-weight: 500;
+    letter-spacing: .04em;
+    text-decoration: none;
+}
+.site-nav__link::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 1px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform .35s var(--ease-out);
+}
+.site-nav__link:hover::after,
+.site-nav__link.is-active::after { transform: scaleX(1); transform-origin: left; }
+
+.lang-switch { display: inline-flex; padding: 3px; border: 1px solid currentColor; border-radius: 999px; }
+.lang-switch:empty { display: none; }
+.lang-switch__item {
+    min-width: 2.6rem;
+    padding: .25rem .65rem;
+    border-radius: 999px;
+    font-size: .78rem;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-align: center;
+    text-decoration: none;
+    opacity: .75;
+    transition: background-color .25s, color .25s, opacity .25s;
+}
+.lang-switch__item:hover { opacity: 1; }
+.lang-switch__item[aria-current] { background: var(--ochre-500); color: var(--navy-950); opacity: 1; }
+
+.menu-toggle {
+    display: none;
+    position: relative;
+    z-index: 2;
+    width: 46px; height: 46px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+}
+.menu-toggle__bars,
+.menu-toggle__bars::before,
+.menu-toggle__bars::after {
+    position: absolute;
+    left: 12px;
+    width: 22px; height: 2px;
+    border-radius: 2px;
+    background: currentColor;
+    transition: transform .35s var(--ease-out), opacity .2s;
+}
+.menu-toggle__bars { top: 22px; }
+.menu-toggle__bars::before, .menu-toggle__bars::after { content: ""; left: 0; }
+.menu-toggle__bars::before { top: -7px; }
+.menu-toggle__bars::after { top: 7px; }
+.menu-open .menu-toggle__bars { background: transparent; }
+.menu-open .menu-toggle__bars::before { transform: translateY(7px) rotate(45deg); }
+.menu-open .menu-toggle__bars::after { transform: translateY(-7px) rotate(-45deg); }
+
+@media (max-width: 899px) {
+    .menu-toggle { display: block; }
+    .site-nav {
+        position: fixed;
+        inset: 0;
+        z-index: 1;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 2.5rem;
+        padding: calc(var(--header-h) + 2rem) var(--gutter) 3rem;
+        background: var(--navy-900) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 400'%3E%3Cg fill='none' stroke='%23f8f5ed' stroke-opacity='.06'%3E%3Cpath d='M-20 300 C 80 220 140 260 200 200 S 330 120 420 160'/%3E%3Cpath d='M-20 330 C 80 250 150 290 210 230 S 340 150 420 190'/%3E%3Cpath d='M-20 360 C 90 280 160 320 220 260 S 350 180 420 220'/%3E%3C/g%3E%3C/svg%3E") center / cover;
+        color: var(--cream-100);
+        visibility: hidden;
+        opacity: 0;
+        transition: opacity .35s var(--ease-out), visibility 0s .35s;
+    }
+    .menu-open .site-nav { visibility: visible; opacity: 1; transition: opacity .35s var(--ease-out); }
+    .menu-open .site-header { color: var(--cream-100); }
+    .menu-open .site-header::before,
+    .menu-open .site-header::after { opacity: 0; }
+    .site-nav__list { flex-direction: column; gap: 1.25rem; }
+    .site-nav__link { font-family: var(--font-display); font-size: clamp(2rem, 8vw, 2.75rem); letter-spacing: .01em; }
+    .lang-switch__item { font-size: .9rem; padding: .45rem .9rem; }
+}
+
+@media (max-width: 899px) and (prefers-reduced-motion: no-preference) {
+    .site-nav__list li { opacity: 0; transform: translateY(16px); transition: opacity .4s, transform .5s var(--ease-out); }
+    .menu-open .site-nav__list li { opacity: 1; transform: none; }
+    .menu-open .site-nav__list li:nth-child(2) { transition-delay: .06s; }
+    .menu-open .site-nav__list li:nth-child(3) { transition-delay: .12s; }
+}
+
+/* Pages without a hero image: the header always has its solid (scrolled) look */
+.site-header--solid { color: var(--navy-900); }
+.site-header--solid::before { opacity: 0; }
+.site-header--solid::after { opacity: 1; }
+
+/* ---------- Footer ---------- */
+
+.site-footer {
+    position: relative;
+    padding: 5.5rem 0 2rem;
+    background: var(--navy-950);
+    color: rgba(248, 245, 237, .72);
+}
+.site-footer__river {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 56px;
+    fill: none;
+    stroke-width: 1.5;
+}
+.site-footer__river path:first-child { stroke: var(--river-600); }
+.site-footer__river path:last-child { stroke: var(--ochre-500); stroke-opacity: .5; }
+
+.site-footer__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) repeat(2, minmax(0, 1fr));
+    gap: 2.5rem;
+}
+.site-footer .brand { color: var(--cream-100); }
+.site-footer__brand p { margin-top: 1.2rem; max-width: 22rem; }
+.site-footer__col h3 {
+    margin-bottom: 1rem;
+    font-size: .75rem;
+    font-weight: 600;
+    letter-spacing: .24em;
+    text-transform: uppercase;
+    color: var(--sand-300);
+}
+.site-footer__col ul { display: grid; gap: .55rem; }
+.site-footer__col a { text-decoration: none; overflow-wrap: anywhere; transition: color .2s; }
+.site-footer__col a:hover { color: var(--cream-100); text-decoration: underline; text-underline-offset: 4px; }
+
+.site-footer__bottom {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 4rem;
+    padding-top: 1.75rem;
+    border-top: 1px solid rgba(248, 245, 237, .12);
+    font-size: .88rem;
+}
+.lang-switch--footer { color: rgba(248, 245, 237, .8); }
+
+@media (max-width: 760px) {
+    .site-footer__grid { grid-template-columns: 1fr 1fr; }
+    .site-footer__brand { grid-column: 1 / -1; }
+}

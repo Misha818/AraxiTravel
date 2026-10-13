@@ -1,0 +1,143 @@
+/*
+ * Header of the product pages (templates/_product_hero.html, on the public page and the staff
+ * editor view): the product's photo under the
+ * site header with a slow pan, its category, title, short description, price and a Book Now button.
+ * Colours and fonts come from site-chrome.css.
+ */
+
+.pr-hero {
+    position: relative;
+    align-self: stretch;               /* .containerZ centres its children */
+    width: 100%;
+    height: clamp(420px, 72vh, 760px);
+    overflow: hidden;
+    isolation: isolate;
+    background: radial-gradient(ellipse at 50% 60%, var(--navy-800), var(--navy-950) 70%);
+    color: var(--white);
+    font-family: var(--font-body);
+    text-align: left;
+}
+
+.pr-hero__img {
+    position: absolute;
+    inset: -4%;
+    background-size: cover;
+    background-position: center;
+    will-change: transform;
+}
+@media (prefers-reduced-motion: no-preference) {
+    .pr-hero__img { animation: pr-hero-pan 26s ease-in-out infinite alternate; }
+}
+@keyframes pr-hero-pan {
+    from { transform: scale(1.04) translate3d(-2%, 0, 0); }
+    to { transform: scale(1.1) translate3d(2%, -1%, 0); }
+}
+
+.pr-hero__shade {
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(to top, rgba(4, 24, 42, .85) 0%, rgba(4, 24, 42, .35) 38%, rgba(4, 24, 42, 0) 65%),
+        linear-gradient(to right, rgba(4, 24, 42, .45) 0%, rgba(4, 24, 42, 0) 55%);
+}
+
+.pr-hero__content {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: clamp(2rem, 7vh, 4.5rem);
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 2rem;
+    max-width: calc(var(--container) + 2 * var(--gutter));
+    margin: 0 auto;
+    padding: 0 var(--gutter);
+    box-sizing: border-box;
+}
+
+/* styles.css centres paragraphs and sets heading sizes on this page: keep the header's own */
+.pr-hero .pr-hero__category,
+.pr-hero .pr-hero__title,
+.pr-hero .pr-hero__desc { text-align: left; }
+
+.pr-hero .pr-hero__category {
+    margin: 0 0 1rem;
+    font-size: .78rem;
+    font-weight: 600;
+    letter-spacing: .24em;
+    text-transform: uppercase;
+    color: var(--sand-200);
+}
+
+.pr-hero .pr-hero__title {
+    margin: 0;
+    max-width: 16ch;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(2.3rem, 1.2rem + 3.6vw, 4.6rem);
+    line-height: 1.04;
+    color: var(--white);
+    text-wrap: balance;
+    overflow-wrap: break-word;
+    text-shadow: 0 2px 30px rgba(4, 24, 42, .35);
+}
+
+.pr-hero .pr-hero__desc {
+    margin: 1rem 0 0;
+    max-width: 36rem;
+    font-size: clamp(1rem, .9rem + .4vw, 1.2rem);
+    line-height: 1.5;
+    color: rgba(255, 255, 255, .88);
+}
+
+.pr-hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .75rem;
+    margin-top: 1.75rem;
+}
+
+.pr-hero__book {
+    display: inline-flex;
+    align-items: center;
+    gap: .6rem;
+    min-height: 48px;
+    padding: .8rem 1.6rem;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background: var(--ochre-500);
+    color: var(--navy-950);
+    font: 600 .95rem/1 var(--font-body);
+    letter-spacing: .02em;
+    cursor: pointer;
+    box-shadow: 0 10px 30px -10px rgba(197, 144, 84, .7);
+    transition: background-color .25s, transform .25s var(--ease-out);
+}
+.pr-hero__book:hover { background: var(--sand-300); }
+.pr-hero__book:active { transform: scale(.97); }
+.pr-hero__book:focus-visible { outline: 2px solid var(--white); outline-offset: 3px; }
+
+.pr-hero .pr-hero__price {
+    flex: none;
+    margin: 0;
+    padding: .55rem 1rem;
+    border: 1px solid rgba(255, 255, 255, .3);
+    border-radius: 999px;
+    background: rgba(4, 24, 42, .35);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    font-size: .95rem;
+    font-weight: 600;
+    letter-spacing: .02em;
+    white-space: nowrap;
+}
+
+@media (max-width: 650px) {
+    .pr-hero { height: clamp(380px, 64vh, 560px); }
+    .pr-hero__content {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+}

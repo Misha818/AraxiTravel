@@ -1,0 +1,26 @@
+{# Header of the product pages (product_client.html, product.html): photo, category, title,
+   description, Book Now and the lowest price. Needs prData and prHeader (app.py product_header) #}
+<section class="pr-hero" aria-labelledby="pr-hero-title">
+    {% if prHeader.image %}
+    <div class="pr-hero__img" style="background-image: url('{{ url_for('static', filename=prHeader.image) }}');" role="img" aria-label="{{ prData.Title }}"></div>
+    {% endif %}
+    <div class="pr-hero__shade" aria-hidden="true"></div>
+    <div class="pr-hero__content">
+        <div>
+            {% if prData.CategoryName %}
+            <p class="pr-hero__category">{{ prData.CategoryName }}</p>
+            {% endif %}
+            <h1 class="pr-hero__title" id="pr-hero-title">{{ prData.Title }}</h1>
+            {% if prData.ShortDescription %}
+            <p class="pr-hero__desc">{{ prData.ShortDescription }}</p>
+            {% endif %}
+            <div class="pr-hero__actions">
+                {# What Book Now does is decided later #}
+                <button type="button" class="pr-hero__book" data-book-now>{{ _('Book Now') }}</button>
+            </div>
+        </div>
+        {% if prHeader.price %}
+        <p class="pr-hero__price">{{ _('From %(price)s', price=prHeader.price) if prHeader.priceCount > 1 else prHeader.price }}</p>
+        {% endif %}
+    </div>
+</section>

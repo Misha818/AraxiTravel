@@ -9,96 +9,77 @@
 
 
 {% if result.length > 0 or resultSubPr.length > 0 %}
-{% set display = '' %}
-{% if result.length + resultSubPr.length < 6 %} {% set display='display:none' %} {% endif %} 
-{% if result.length > 0 %}
-  {% set mainImgUrl = 'images/product_slider/' + result.data[0]['Name'] %}
-  {% set mainImgAlt = result.data[0]['AltText'] %}
-{% else %}
-  {% set mainImgUrl = 'images/sub_product_slider/' + resultSubPr.data[0]['Name'] %}
-  {% set mainImgAlt = resultSubPr.data[0]['AltText'] %}
-{% endif %}
 
-{%set thumbnailsWrapperHeight = '' %}
-{% set imgMarginBottom = '' %}
-{% set totalSlides = result.length + resultSubPr.length %}
-
-{% if totalSlides < 6 %}
-  
-  {%set thumbnailsWrapperHeight = 'height: 560px' %}
-  {% if totalSlides == 5 %}
-    {% set imgMarginBottom = 'img5' %}
-  {% elif totalSlides == 4 %}
-      {% set imgMarginBottom = 'img4' %}
-  {% endif %}
-
-
-{% endif %}
+{# Every photo of the gallery: the product's slides, then the photos of its prices
+   (the price thumbnails open these by their position in this list) #}
+{% set photos = [] %}
+{% for row in result.data %}
+  {% set _ = photos.append({'src': 'images/product_slider/' + row['Name'], 'alt': row['AltText']}) %}
+{% endfor %}
+{% for row in resultSubPr.data %}
+  {% set _ = photos.append({'src': 'images/sub_product_slider/' + row['Name'], 'alt': row['AltText']}) %}
+{% endfor %}
+{% set totalSlides = photos | length %}
 
 <!-- Bootstrap CSS -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<style>
-.product-container {
-  margin-top: 100px;
-}
-</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/product-gallery.css') }}">
 
 
-<!-- Left Errow &#10094 -->
-<!-- Right Errow &#10095 -->
 <div class="product-container blocks{% if resultSpss.length == 0 %} no-price{% endif %}" id="slides">
 
   <input type="hidden" id="no-spot-left" value="{{ _('No spot left') }}">
 
-  <div class="thumbnail-container">
-    <button class="thumb-prev" style="{{ display }}" data-onclick='["scrollThumbnails", "left", false]'>&#11165;</button>
-    <div class="thumbnails-wrapper" style="{{ thumbnailsWrapperHeight }}">
-      <div class="thumbnails {{ imgMarginBottom }}">
+  <!-- Photo gallery (static/css/product-gallery.css, static/JS/slideshow.js) -->
+  <section class="pg{% if totalSlides < 2 %} pg--single{% endif %}" aria-label="{{ _('Gallery') }}" data-gallery>
+    <div class="pg__head">
+      <span class="pg__eyebrow">{{ _('Gallery') }}</span>
+      <span class="pg__counter" data-gallery-counter>01 / {{ '%02d' % totalSlides }}</span>
+    </div>
 
-        {% set ns = namespace(i=0) %}
-        
-        {% for row in result.data %}
-
-        {% set fileDir = 'images/product_slider/' + row['Name'] %}
-
-        {% if ns.i == 0 %}
-        {% set selectedThumbnail = 'selectedThumbnail'%}
-        {% else %}
-        {% set selectedThumbnail = ''%}
-        {% endif %}
-
-        <img src="{{ url_for('static', filename='') + fileDir }}" alt="{{ row['AltText'] }}"
-            data-onclick='{{ ["showImage", ns.i | string] | tojson }}' class="{{ selectedThumbnail }}">
-
-        {% set ns.i = ns.i + 1 %}
-        {% endfor %}
-
-        {% for row in resultSubPr.data %}
-
-        {% set fileDir = 'images/sub_product_slider/' + row['Name'] %}
-
-        {% if ns.i == 0 %}
-        {% set selectedThumbnail = 'selectedThumbnail'%}
-        {% else %}
-        {% set selectedThumbnail = ''%}
-        {% endif %}
-        <img src="{{ url_for('static', filename='') + fileDir}} " alt='{{ row["AltText"] }}'
-          data-onclick='{{ ["showImage", ns.i | string] | tojson }}' class='{{ selectedThumbnail }}'>
-        {% set ns.i = ns.i + 1 %}
-        {% endfor %}
+    <div class="pg__stage" tabindex="0" role="region" aria-roledescription="carousel" aria-label="{{ _('Gallery') }}" data-gallery-stage>
+      {% for photo in photos %}
+      <div class="pg__slide{% if loop.first %} is-active{% endif %}"{% if not loop.first %} aria-hidden="true"{% endif %}>
+        <div class="pg__slide-bg" style="background-image: url('{{ url_for('static', filename=photo.src) }}');"></div>
+        <img src="{{ url_for('static', filename=photo.src) }}" alt="{{ photo.alt }}" decoding="async"{% if not loop.first %} loading="lazy"{% endif %}>
       </div>
-    </div>
-    <button class="thumb-next" style="{{ display }}" data-onclick='["scrollThumbnails", "right", false]'>&#11167;</button>
-  </div>
+      {% endfor %}
 
-  <div class="image-gallery">
-    <div class="slider">
-      <button class="prevM" data-onclick='["prevImage"]'>&#10094;</button>
-      <img id="main-image" src="{{ url_for('static', filename=mainImgUrl ) }}"
-        alt="{{ mainImgAlt }}" class="fade">
-      <button class="nextM" data-onclick='["nextImage"]'>&#10095;</button>
+      <button type="button" class="pg__round pg__prev" aria-label="{{ _('Previous photo') }}" data-onclick='["prevImage"]'>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+      </button>
+      <button type="button" class="pg__round pg__next" aria-label="{{ _('Next photo') }}" data-onclick='["nextImage"]'>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+      </button>
+      <button type="button" class="pg__round pg__expand" aria-label="{{ _('Full screen') }}" data-gallery-open>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+      </button>
     </div>
-  </div>
+
+    <div class="pg__thumbs" data-gallery-thumbs>
+      {% for photo in photos %}
+      <button type="button" class="pg__thumb{% if loop.first %} is-active{% endif %}" aria-label="{{ _('Photo %(num)s', num=loop.index) }}"{% if loop.first %} aria-current="true"{% endif %}
+              data-onclick='{{ ["showImage", loop.index0 | string] | tojson }}'>
+        <img src="{{ url_for('static', filename=photo.src) }}" alt="" loading="lazy">
+      </button>
+      {% endfor %}
+    </div>
+
+    <!-- Full-screen viewer: slideshow.js moves it to the end of the page when it opens -->
+    <div class="pg-lightbox{% if totalSlides < 2 %} pg--single{% endif %}" role="dialog" aria-modal="true" aria-label="{{ _('Photo viewer') }}" data-gallery-lightbox>
+      <img src="{{ url_for('static', filename=photos[0].src) }}" alt="{{ photos[0].alt }}" data-gallery-lightbox-img>
+      <button type="button" class="pg__round pg__prev" aria-label="{{ _('Previous photo') }}" data-onclick='["prevImage"]'>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+      </button>
+      <button type="button" class="pg__round pg__next" aria-label="{{ _('Next photo') }}" data-onclick='["nextImage"]'>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+      </button>
+      <button type="button" class="pg__round pg__close" aria-label="{{ _('Close') }}" data-gallery-close>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+      <div class="pg-lightbox__counter" data-gallery-counter>01 / {{ '%02d' % totalSlides }}</div>
+    </div>
+  </section>
 
   <div class="product-details">
     <div 

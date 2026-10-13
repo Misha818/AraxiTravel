@@ -1,0 +1,52 @@
+{#- Site footer shared by the landing page and the client and staff product pages
+    (styles: static/css/site-chrome.css). chrome_nav / chrome_refkey: see _site_header.html.
+    site_contacts: social links from .env (context processor in app.py). -#}
+{%- if chrome_nav == 'landing' -%}
+    {%- set nav_journeys, nav_about, nav_contacts = '#activities', '#about', '#contacts' -%}
+{%- else -%}
+    {%- set nav_journeys, nav_about, nav_contacts = url_for('activities'), url_for('about'), url_for('contacts') -%}
+{%- endif -%}
+<footer class="site-footer">
+    <svg class="site-footer__river" viewBox="0 0 1440 80" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0 52 C 240 8, 420 78, 720 44 S 1180 6, 1440 36"/>
+        <path d="M0 64 C 260 24, 440 88, 740 56 S 1200 20, 1440 50"/>
+    </svg>
+    <div class="container site-footer__grid">
+        <div class="site-footer__brand">
+            <a href="{{ url_for('home') }}" class="brand brand--footer" aria-label="{{ _('company') }}">
+                <span class="brand__tile"><img src="{{ url_for('static', filename='images/logo-mark.png') }}" width="360" height="218" alt="" loading="lazy"></span>
+                <span class="brand__word">
+                    <span class="brand__name">Araxi</span>
+                    <span class="brand__sub">Travel</span>
+                </span>
+            </a>
+            <p>{{ _('Journeys across Armenia') }}</p>
+        </div>
+
+        <nav class="site-footer__col" aria-label="{{ _('Footer navigation') }}">
+            <h3>{{ _('Explore') }}</h3>
+            <ul>
+                <li><a href="{{ nav_journeys }}">{{ _('Journeys') }}</a></li>
+                <li><a href="{{ nav_about }}">{{ _('About') }}</a></li>
+                <li><a href="{{ nav_contacts }}">{{ _('Contacts') }}</a></li>
+            </ul>
+        </nav>
+
+        <div class="site-footer__col">
+            <h3>{{ _('Follow us') }}</h3>
+            <ul>
+                <li><a href="mailto:info@araxitravel.am">info@araxitravel.am</a></li>
+                {% for key, label in [('TG', 'Telegram'), ('INS', 'Instagram'), ('FB', 'Facebook'), ('IN', 'LinkedIn')] %}
+                    {% if site_contacts[key] %}
+                    <li><a href="{{ site_contacts[key] }}" target="_blank" rel="noopener">{{ label }}</a></li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <div class="container site-footer__bottom">
+        <p>&copy; {{ current_year }} {{ _('Your Company. All rights reserved.') }}</p>
+        <div class="lang-switch lang-switch--footer" aria-label="{{ _('Language') }}">{% include '_lang_switch.html' %}</div>
+    </div>
+</footer>

@@ -9,23 +9,40 @@
     {{ metaTags | safe }}
     
     <link rel="stylesheet" href="{{ url_for('static', filename='quill.snow.css') }}">
-    
+
+    <!-- Header and footer of the landing page (templates/_site_header.html, _site_footer.html) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Marcellus&family=Noto+Sans+Armenian:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/site-chrome.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/product-header.css') }}">
     
     <style>
-        .header_public {
-            box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.3);
+        /* the site's standard background (styles.css sets a grey one with !important) */
+        body {
+            background-color: #fbf9f4 !important;
+            min-height: 100vh;
+        }
+
+        /* Short pages: the footer stays at the bottom of the window. The footer ends up inside
+           .containerZ (a flex column, like the body), which fills the rest of the window. */
+        .containerZ {
+            flex: 1 0 auto;
+        }
+        .site-footer {
+            margin-top: auto;
         }
 
         .card-content {
             font-family: Georgia, 'Times New Roman', Times, serif;
         }
 
-        /* The 60px public header is fixed up to 800px (styles.css); wider, it sits above the
-           page and the slideshow needs no room for it */
-        @media screen and (max-width: 800px) {
-            #slides {
-                --product-header-h: 60px;
-            }
+        /* Main content area: same background as the page (styles.css gives it a grey one), and
+           clear of the landing-page header, which is fixed at every width (76px, 64px on narrow
+           screens) - with or without a slideshow */
+        .containerZ {
+            background-color: #fbf9f4;
+            margin-top: var(--header-h);
         }
 
     </style>
@@ -47,6 +64,9 @@
 <div class="overlay" id="overlay"></div>
 
 <div class="containerZ" style="padding-top: 0px; margin-bottom: unset;">
+
+<!-- Product header: photo, category, title, description, price (static/css/product-header.css) -->
+{% include '_product_hero.html' %}
     
     {{ slideShow | safe }}
 
@@ -199,3 +219,16 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 {% endblock %}
+
+
+{# Header and footer of the landing page instead of the public ones (see public.html) #}
+{% block site_header %}
+{% with chrome_solid = true, chrome_refkey = prData.RefKey %}{% include '_site_header.html' %}{% endwith %}
+{% endblock %}
+
+{% block site_footer %}
+{% with chrome_refkey = prData.RefKey %}{% include '_site_footer.html' %}{% endwith %}
+<script nonce="{{ csp_nonce() }}" type="text/javascript" src="{{ url_for('static', filename='JS/site-chrome.js') }}"></script>
+{% endblock %}
+
+{% block site_scripts %}{% endblock %}

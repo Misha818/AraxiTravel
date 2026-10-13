@@ -1,0 +1,368 @@
+/*
+ * Photo gallery of the product pages (templates/slideshow.html, both the public page and the staff
+ * editor view): one photo at a time on a 16:9 stage over a blurred copy of itself, a strip of
+ * thumbnails under it, and a full-screen viewer. Behaviour: static/JS/slideshow.js.
+ * Loaded after styles.css, whose #slides rules (thumbnail column, 750x560 image) this replaces.
+ * Colours and fonts come from site-chrome.css.
+ */
+
+/* ---- Layout of #slides: the gallery, then the title and prices (.product-details) ---- */
+#slides,
+#slides.no-price {
+    width: min(calc(100% - 24px), 960px);
+    margin: calc(var(--product-header-h, 0px) + 24px) auto 2rem;
+    padding: 0;
+    background: transparent;    /* styles.css: a grey card; the gallery sits on the page */
+    border-radius: 0;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+/* under the product's photo header the header already clears the site header */
+.pr-hero ~ #slides {
+    margin-top: clamp(2.5rem, 6vw, 4rem);
+}
+
+/* the title and prices: a card of their own */
+#slides .product-details,
+#slides.no-price .product-details {
+    flex: 1 1 100%;
+    width: 100%;
+    margin: 20px 0 0 0;
+    padding: 20px 16px;
+    border-radius: var(--radius);
+    background: #fff;
+    box-shadow: var(--shadow-card);
+    box-sizing: border-box;
+}
+
+/* No prices: the block under the gallery holds only the product's title, which the photo header
+   above already shows */
+.pr-hero ~ #slides.no-price .product-details {
+    display: none;
+}
+
+/* Wide screens with prices: gallery | title and prices. The gallery is as wide as the product text
+   under it (styles.css lines that up at 882px in the same 1346px box) */
+@media screen and (min-width: 1366px) {
+    #slides:not(.no-price) {
+        width: min(calc(100% - 24px), 1346px);
+        padding: 0 16px;
+        flex-wrap: nowrap;
+    }
+
+    #slides:not(.no-price) .pg {
+        flex: 0 0 882px;
+    }
+
+    #slides:not(.no-price) .product-details {
+        flex: 1 1 0;
+        min-width: 0;
+        margin: 34px 0 0 24px;    /* level with the stage, under the gallery's heading */
+    }
+}
+
+@media screen and (max-width: 650px) {
+    #slides,
+    #slides.no-price {
+        width: calc(100% - 16px);
+        padding: 0;
+    }
+}
+
+/* ---- Gallery ---- */
+#slides .pg {
+    flex: 1 1 100%;
+    width: 100%;
+    min-width: 0;
+    font-family: var(--font-body);
+    color: var(--ink-900);
+    text-align: left;
+}
+
+.pg svg,
+.pg-lightbox svg {
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+#slides .pg__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+#slides .pg__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: .8rem;
+    font-size: .78rem;
+    font-weight: 600;
+    letter-spacing: .26em;
+    text-transform: uppercase;
+    color: var(--river-600);
+}
+#slides .pg__eyebrow::before {
+    content: "";
+    width: 34px;
+    height: 10px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 10'%3E%3Cpath d='M1 7 C 7 1, 12 1, 17 5 S 27 9, 33 3' fill='none' stroke='%23c59054' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat center / contain;
+}
+
+#slides .pg__counter {
+    font-size: .85rem;
+    font-weight: 600;
+    letter-spacing: .12em;
+    color: var(--ink-600);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Stage: the photo whole (contain) over a blurred, dimmed copy that fills the 16:9 box */
+#slides .pg__stage {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--navy-900);
+    box-shadow: var(--shadow-card);
+    touch-action: pan-y;
+    outline: none;
+    user-select: none;
+}
+#slides .pg__stage:focus-visible {
+    outline: 2px solid var(--ochre-500);
+    outline-offset: 3px;
+}
+
+#slides .pg__slide {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity .6s var(--ease-in-out);
+}
+#slides .pg__slide.is-active {
+    opacity: 1;
+}
+
+#slides .pg__slide-bg {
+    position: absolute;
+    inset: -8%;
+    background-size: cover;
+    background-position: center;
+    filter: blur(28px) saturate(1.1);
+    opacity: .55;
+    transform: scale(1.05);
+}
+
+#slides .pg__slide img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    margin: 0;
+    object-fit: contain;
+    transform: scale(1.015);
+    transition: transform 1.2s var(--ease-out);
+    -webkit-user-drag: none;
+}
+#slides .pg__slide.is-active img {
+    transform: none;
+}
+
+/* Round glass buttons: on the stage and in the full-screen viewer */
+.pg .pg__round,
+.pg-lightbox .pg__round {
+    position: absolute;
+    top: 50%;
+    z-index: 2;
+    display: inline-grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    margin: -26px 0 0 0;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, .35);
+    border-radius: 50%;
+    background: rgba(4, 24, 42, .32);
+    color: #fff;
+    line-height: 1;
+    cursor: pointer;
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    transition: background-color .25s, border-color .25s, transform .25s var(--ease-out);
+}
+.pg .pg__round:hover,
+.pg-lightbox .pg__round:hover {
+    background: rgba(248, 245, 237, .2);
+    border-color: rgba(255, 255, 255, .8);
+}
+.pg .pg__round:active,
+.pg-lightbox .pg__round:active {
+    transform: scale(.94);
+}
+.pg .pg__round:focus-visible,
+.pg-lightbox .pg__round:focus-visible {
+    outline: 2px solid var(--ochre-500);
+    outline-offset: 3px;
+}
+
+#slides .pg__stage .pg__round { opacity: .9; }
+#slides .pg__stage .pg__prev { left: 16px; }
+#slides .pg__stage .pg__next { right: 16px; }
+#slides .pg__stage .pg__expand {
+    top: 16px;
+    right: 16px;
+    width: 44px;
+    height: 44px;
+    margin-top: 0;
+}
+
+/* Thumbnail strip: scrolls sideways when the photos don't fit */
+#slides .pg__thumbs {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+    padding: 4px 2px 6px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: thin;
+}
+
+#slides .pg__thumb {
+    flex: none;
+    width: 104px;
+    aspect-ratio: 3 / 2;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--navy-900);
+    cursor: pointer;
+    scroll-snap-align: start;
+    opacity: .6;
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    transition: opacity .25s, outline-color .25s;
+}
+#slides .pg__thumb img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    object-fit: cover;
+    pointer-events: none;
+}
+#slides .pg__thumb:hover { opacity: .9; }
+#slides .pg__thumb.is-active {
+    opacity: 1;
+    outline-color: var(--ochre-500);
+}
+#slides .pg__thumb:focus-visible {
+    outline-color: var(--ochre-500);
+}
+
+/* One photo: nothing to page through */
+#slides .pg--single .pg__counter,
+#slides .pg--single .pg__thumbs,
+#slides .pg--single .pg__stage .pg__prev,
+#slides .pg--single .pg__stage .pg__next,
+.pg-lightbox.pg--single .pg__prev,
+.pg-lightbox.pg--single .pg__next,
+.pg-lightbox.pg--single .pg-lightbox__counter {
+    display: none;
+}
+
+/* ---- Full-screen viewer (moved to the end of <body> when it opens) ---- */
+.pg-lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 9000;
+    display: grid;
+    place-items: center;
+    background: rgba(4, 24, 42, .94);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .35s, visibility 0s .35s;
+    font-family: var(--font-body);
+    touch-action: pan-y;
+}
+.pg-lightbox.is-open {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity .35s;
+}
+
+.pg-lightbox img {
+    max-width: min(92vw, 1600px);
+    max-height: 84vh;
+    margin: 0;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 30px 80px -20px rgba(0, 0, 0, .6);
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+.pg-lightbox .pg__prev { left: 24px; }
+.pg-lightbox .pg__next { right: 24px; }
+.pg-lightbox .pg__close {
+    top: 20px;
+    right: 20px;
+    margin-top: 0;
+}
+
+.pg-lightbox__counter {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 22px;
+    text-align: center;
+    color: rgba(248, 245, 237, .8);
+    font-size: .85rem;
+    letter-spacing: .14em;
+    font-variant-numeric: tabular-nums;
+}
+
+html.pg-locked {
+    overflow: hidden;
+}
+
+@media (max-width: 650px) {
+    #slides .pg__stage { border-radius: 12px; }
+    .pg .pg__round,
+    .pg-lightbox .pg__round {
+        width: 42px;
+        height: 42px;
+        margin-top: -21px;
+    }
+    #slides .pg__stage .pg__prev { left: 8px; }
+    #slides .pg__stage .pg__next { right: 8px; }
+    #slides .pg__stage .pg__expand {
+        top: 8px;
+        right: 8px;
+        width: 38px;
+        height: 38px;
+        margin-top: 0;
+    }
+    #slides .pg__thumb { width: 84px; }
+    .pg-lightbox .pg__prev { left: 8px; }
+    .pg-lightbox .pg__next { right: 8px; }
+    .pg-lightbox .pg__close { top: 12px; right: 12px; margin-top: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #slides .pg__slide,
+    #slides .pg__slide img,
+    .pg-lightbox {
+        transition: none;
+    }
+}
