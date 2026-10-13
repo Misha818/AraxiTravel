@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block title %}
+    {{ _('Something is wrong') }}
+{% endblock %}
+{% block head %}
+<style>
+    /* Scoped to the page body: a bare "a" rule used to restyle the header's logout link too */
+    .error-page {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+        width: calc(100% - 32px);
+        max-width: 640px;
+        margin: 40px auto;
+        text-align: center;
+        box-sizing: border-box;
+    }
+
+    .error-page img {
+        width: 100%;
+        max-width: 320px;
+        height: auto;
+    }
+
+    .error-page h1 {
+        margin: 0;
+        color: brown;
+        font-size: clamp(1.4rem, 5vw, 2.5rem);
+        line-height: 1.25;
+        overflow-wrap: anywhere;
+    }
+
+    .error-page .error-back {
+        display: inline-block;
+        min-width: min(100%, 320px);
+        box-sizing: border-box;
+        padding: 14px 24px;
+        border: 1px solid brown;
+        border-radius: 10px;
+        color: brown;
+        font-size: 1.25rem;
+        text-decoration: none;
+    }
+
+    .error-page .error-back:hover,
+    .error-page .error-back:focus-visible {
+        background-color: #fbe9e4;
+    }
+
+    .error-page .error-back:focus-visible {
+        outline: 3px solid #264653;
+        outline-offset: 2px;
+    }
+</style>
+{% endblock %}
+{% block content %}
+    {% set backUrlText = _('Something went wrong!') %}
+    {% set backUrl = url_for('stuff') %}
+    {% if userBool == False %}
+        {% set backUrl = url_for('home') %}
+    {% endif %}
+
+    {% if setUrl %}
+        {% set backUrl = setUrl %}
+    {% endif %}
+
+    {% if setUrlText %}
+        {% set backUrlText = setUrlText %}
+    {% endif %}
+
+    <div class="error-page">
+        <img src="{{ url_for('static', filename='images/error.png' ) }}" alt="" aria-hidden="true">
+        <h1>{{ backUrlText }}</h1>
+        <a class="error-back" href="{{ backUrl }}">{{ _('Back to home') }}</a>
+    </div>
+{% endblock %}

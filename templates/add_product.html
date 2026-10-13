@@ -1,0 +1,607 @@
+{% extends 'base.html' %}
+{% block title %}
+{{ _('Add Product') }}
+{% endblock %}
+
+{% block head %}
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='dropzon.css') }}">  
+    <link rel="stylesheet" href="{{ url_for('static', filename='dropzone.min.css') }}">  
+    <link rel="stylesheet" href="{{ url_for('static', filename='cropper.min.css') }}">  
+    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.css"> -->
+    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css"> -->
+
+    <style>
+        .dz-details:hover {
+            cursor: pointer;
+        }
+    
+        .dz-remove-btn:hover {
+            background-color: #c82333;
+            cursor: pointer;
+        }
+    
+    
+        .alt-input:hover {
+            cursor: auto;
+        }
+
+        .styled-select {
+            margin-bottom: 5px;
+        }
+
+        #product-category-form input {
+            font-size: 18px;
+        }
+
+        #product-category-form textarea {
+            font-size: 18px;
+        }
+
+        /* ---- Form layout (card styles come from .admin-form-card in styles.css) ---- */
+        .containerS.product-form-card {
+            max-width: 720px;
+        }
+
+        .product-form .form_input {
+            width: 100% !important;
+            margin: 0;
+            padding: 12px 14px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .product-form textarea.form_input {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .product-form .form_input:focus {
+            border-color: #66afe9;
+            outline: none;
+            box-shadow: 0 0 5px rgba(102, 175, 233, 0.6);
+        }
+
+        .product-form .styled-select {
+            margin: 0 !important;
+        }
+
+        .product-form .add-pr-category {
+            display: inline-block !important;
+            align-self: flex-start;
+            margin: 8px 0 !important;
+            padding: 8px 14px;
+            border-radius: 5px;
+            text-decoration: none;
+        }
+
+        .product-form .add-pr-category:focus-visible,
+        .product-form .pcButtonS:focus-visible {
+            outline: 3px solid #264653;
+            outline-offset: 2px;
+        }
+
+        .product-form .dropzone {
+            margin-top: 8px;
+        }
+
+        .product-form .pcButtonS {
+            width: 100%;
+            margin: 16px 0 0 0;
+            padding: 15px;
+            font-size: 20px;
+            box-sizing: border-box;
+        }
+    
+    </style>
+{% endblock %}
+
+{% block content %}
+
+<div class="overlay" id="overlay"></div>
+{{ sideBar | safe }}
+<div class="containerS admin-form-card product-form-card">
+
+    <h1>{{ _('Add Product') }}</h1>
+    <div id="mistakes" style="width: 100%" role="alert" aria-live="polite"></div>
+    <form id="product-category-form" class="admin-form product-form" novalidate>
+        <label for="product-name" class="field-label">{{ _('Product Title') }}</label>
+        <input type="text" class="form_input" id="product-name" placeholder="{{ _('Product Title')  + ' | ' + _('Max allowed number of chars is 20') }}" title="{{ _('Product Title')  + ' | ' + _('Max allowed number of chars is 20') }}" >
+        <label for="product-link" class="field-label">{{ _('Product Url') }}</label>
+        <input type="text" class="form_input" id="product-link" placeholder="{{ _('Product Url') }}  {{ root_url }}{{ _('This-is-Your-Product-Link') }} " >
+        <label for="short-description" class="field-label">{{ _('Short description') }}</label>
+        <input type="text" id="short-description" class="form_input" placeholder="{{ _('Short description') }}" />
+        <label for="long-description" class="field-label">{{ _('Long description') }}</label>
+        <textarea id="long-description" class="form_input" placeholder="{{ _('Long description') }}" ></textarea>
+       
+        {% if productCategory.product_category.length > 0 %}
+        <label for="category-id" class="field-label">{{ _('Product Category') }}</label>
+        <select name="product-category" id="category-id" class="styled-select">
+            <option value="">{{ _('Choose product category') }}</option>
+            {% for val in productCategory.product_category.data %}
+                {% set optVal = val['Product_Category_Name'] %}
+                {% if optVal is not none %}
+                    {% set selected = '' %}
+                    {% if productCategory.Product_Category_ID == val['Product_Category_ID'] %}
+                        {% set selected = 'selected' %}
+                    {% endif %}
+                    <option value="{{ val['Product_Category_ID'] }}" {{ selected }}>
+                        {{ optVal }}
+                    </option>
+                {% endif %}
+            {% endfor %}
+        </select>
+        
+        
+     
+        {% endif %}    
+        <a  href="{{ root_url }}add-product-category"
+            target="_blank"    
+            class="add-pr-category"
+            style="
+                display: block;
+                margin-bottom: unset;
+                background-color: #e76f51;
+                color: #fff;
+                margin-bottom: 5px;"
+            >{{ _('Add Product Category') }}
+        </a>
+
+
+        
+        <div  class="dropzone" id="myDropzone">
+            <div class="dz-message dz-button">{{ _('Thumbnail image') }}</div>
+        </div>
+
+            
+        <input type="hidden" id="language-id" value="{{ languageID }}">
+
+        <div id="saveButton" class="pcButtonS margin10" role="button" tabindex="0">{{ _('Submit') }}</div>
+        <div id="saving" class="pcButtonS margin10 hidden" aria-live="polite">{{ _('Saving...') }}</div>
+    </form>
+</div>
+<script nonce="{{ csp_nonce() }}">
+    // Submit is a div: let Enter/Space press it too
+    document.getElementById('saveButton').addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            this.click();
+        }
+    });
+</script>
+<!-- Script for Dropzone (image upload) -->
+<script nonce="{{ csp_nonce() }}" src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.js"></script>
+<script nonce="{{ csp_nonce() }}" src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+<script nonce="{{ csp_nonce() }}" src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+
+<!-- Thumbnail image manipulations -->
+<script nonce="{{ csp_nonce() }}">
+    let csrfToken = "{{ csrf_token() }}"
+    let xRatio = 1;
+    let yRatio = 1;
+    // Create a FormData object to hold the files
+    let formData = new FormData();
+
+    let dzCancel = 'display: none;';
+    let outputType = '';
+    // Initialize Dropzone
+    Dropzone.autoDiscover = false;
+    let myDropzone = new Dropzone("#myDropzone", {
+        url: "/upload",
+        autoProcessQueue: false,
+        maxFiles: 1,  // Limit the number of files to 1
+        addRemoveLinks: false,  // Disable default remove link
+        previewsContainer: "#myDropzone",
+        clickable: true,
+        init: function () {
+            let dz = this;          
+            
+
+            dz.on("addedfile", function (file) {
+                // Check file type
+                const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+                if (!validTypes.includes(file.type)) {
+                    let ms = "{{ _('File should be in PNG or JPG/JPEG format.') }}"
+                    alert(ms)
+                    myDropzone.removeAllFiles(true);
+                    return;
+                }
+
+                // Check file size (1 MB = 1048576 bytes)
+                if (file.size > 1048576) {
+                    let ms = "{{ _('File size should not exceed 1MB.') }}"
+                    alert(ms)
+                    myDropzone.removeAllFiles(true);
+                    return;
+                }
+
+                // Determine output type based on file type
+                outputType = file.type;
+
+                // Create a new FileReader instance
+                let reader = new FileReader();
+
+                // Define the onload function for the FileReader
+                reader.onload = function (event) {
+                    // Get the image data URL from the FileReader
+                    let imageUrl = event.target.result;
+
+                    // Open the image editor modal
+                    openImageEditorModal(imageUrl, function (editedImageBlob) {
+                        // Create a new Dropzone file object from the edited image blob
+                        let editedFile = new File([editedImageBlob], file.name, { type: file.type });
+                        dz.removeFile(file);
+                        dz.addFile(editedFile);
+                    });
+                };
+
+                // Read the image file as a data URL
+                reader.readAsDataURL(file);
+
+                // Add a custom remove button to the preview element
+                let removeButton = Dropzone.createElement("<button class='dz-remove-btn'>&times;</button>");
+                removeButton.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dz.removeFile(file);
+                    dzCancel = 'display: none;';
+                });
+                file.previewElement.appendChild(removeButton);
+
+                let progressBars = file.previewElement.querySelectorAll("[data-dz-uploadprogress], .dz-progress");
+                progressBars.forEach(function (progressBar) {
+                    progressBar.style.display = "none";
+                });
+
+                // Add a text input for the alt attribute
+                let altInput = Dropzone.createElement("<input type='text' class='alt-input' placeholder='Enter alt text'>");
+                file.previewElement.appendChild(altInput);
+            });
+
+            dz.on("complete", function (file) {
+                // Hide progress bar when upload is completed
+                let progressBars = file.previewElement.querySelectorAll("[data-dz-uploadprogress], .dz-progress");
+                progressBars.forEach(function (progressBar) {
+                    progressBar.style.display = "none";
+                });
+            });
+        }
+
+    });
+    
+// Image Editor Modal Logic
+let cropper;
+
+function openImageEditorModal(imageUrl, callback) {
+       
+       // Show the overlay
+       document.getElementById('overlay').classList.add('show');
+
+       // Create modal element
+       let imageEditorModal = document.createElement('div');
+       imageEditorModal.id = 'imageEditorModal';
+       imageEditorModal.className = 'modal open';
+       imageEditorModal.innerHTML = `
+           <img id="imageToEdit" src="${escapeHtml(imageUrl)}" alt="Image to edit">
+           <br>
+           <button id="saveEditedImage">{{ _('Crop') }}</button>
+           <button id="cancelEdit" style="${dzCancel}">{{ _('Done') }}</button>
+       `;
+       document.body.appendChild(imageEditorModal);
+
+       let imageToEdit = document.getElementById('imageToEdit');
+       cropper = new Cropper(imageToEdit, {
+           aspectRatio: xRatio / yRatio,  // Set the aspect ratio. Default is 1:1
+           viewMode: 1,
+           ready: function () {
+               // Get the Cropper instance
+               let cropperInstance = this.cropper;
+
+               // Get the natural size of the image
+               let naturalWidth = cropperInstance.imageData.naturalWidth;
+               let naturalHeight = cropperInstance.imageData.naturalHeight;
+
+               // Calculate the maximum size of the crop box
+               let maxCropBoxWidth = naturalWidth;
+               let maxCropBoxHeight = naturalWidth;
+
+               // Set the crop box data to the maximum size
+               cropperInstance.setCropBoxData({
+                   width: maxCropBoxWidth,
+                   height: maxCropBoxHeight,
+                   left: 0,
+                   top: 0
+               });
+           }
+
+        });
+        
+
+       document.getElementById('saveEditedImage').onclick = function () {
+           cropper.getCroppedCanvas().toBlob(function (blob) {
+               dzCancel = 'display: true;';
+               closeImageEditorModal(imageEditorModal);
+               callback(blob);
+           }, outputType, 0.8); // Pass output type and quality
+       };
+
+       document.getElementById('cancelEdit').onclick = function () {
+           closeImageEditorModal(imageEditorModal);
+       };
+
+       // Event delegation to handle clicks on dynamically added .dz-preview elements
+       document.querySelector('.dz-preview').addEventListener('dblclick', function(event) {
+               if (event.target.closest('.dz-preview')) {
+               let file = myDropzone.getAcceptedFiles()[0];  // Get the file object associated with the clicked preview
+               if (file) {
+                   var reader = new FileReader();
+
+                   reader.onload = function(event) {
+                       // Get the image data URL from the FileReader
+                       var imageUrl = event.target.result;
+
+                       // Open the image editor modal
+                       openImageEditorModal(imageUrl, function(editedImageBlob) {
+                           // Create a new Dropzone file object from the edited image blob
+                           var editedFile = new File([editedImageBlob], file.name, { type: file.type });
+                           myDropzone.removeFile(file);
+                           myDropzone.addFile(editedFile);
+                       });
+                   };
+
+                   // Read the image file as a data URL
+                   reader.readAsDataURL(file);
+               }
+           }
+       });
+   }
+
+    function closeImageEditorModal(modal) {
+        cropper.destroy();
+        modal.remove();
+        // Hide the overlay
+        document.getElementById('overlay').classList.remove('show');
+    }
+
+        // When the form is submitted
+        const saveButton = document.getElementById('saveButton');
+
+saveButton.addEventListener('click', function (event) {
+    // Prevent the default form submission
+    event.preventDefault();
+
+            let productCategoryLenght = {{ productCategory.product_category.length }};
+            if (productCategoryLenght == 0) {
+                let emptyCategory = "{{ emptyCategory }}";
+                alert(emptyCategory);   
+                return;
+            }
+
+            const saveButton = document.getElementById('saveButton');
+            const saving = document.getElementById('saving');
+            
+            saveButton.classList.add('hidden');
+            saving.classList.remove('hidden');
+            
+            let formData = new FormData();
+
+            let file = myDropzone.files[0];
+            let altText = ""
+            if (file && file.previewElement && file.previewElement.querySelector(".alt-input")) {
+                altText = file.previewElement.querySelector(".alt-input").value;
+            }
+
+            let productName = document.getElementById('product-name').value;
+            let productLink = document.getElementById('product-link').value;
+            let languageID = document.getElementById('language-id').value;
+            let CategoryID = document.getElementById('category-id').value;
+            let shortDescription = document.getElementById('short-description').value;
+            let longDescription = document.getElementById('long-description').value;
+
+
+    // Create a new FormData object
+    formData.append('productName', productName);
+    formData.append('productLink', productLink);
+    formData.append('languageID', languageID);
+    formData.append('CategoryID', CategoryID);
+    formData.append('short-description', shortDescription);
+    formData.append('long-description', longDescription);
+    formData.append('altText', altText);
+    formData.append('file', file);
+
+    // console.log("Sending file:", file);
+
+    // Create a new XMLHttpRequest object
+    let xhr = new XMLHttpRequest();
+
+    // Configure the request
+    xhr.open('POST', '/add_product');
+    xhr.setRequestHeader('X-CSRFToken', csrfToken);
+
+    // Define what happens on successful data submission
+    xhr.onload = function () {
+        if (xhr.status === 200) {
+            let response = JSON.parse(xhr.responseText);
+
+            let mistakesDiv = document.getElementById('mistakes');
+            mistakesDiv.innerHTML = ''; // Clear previous messages
+
+            if (response.status === '2') {
+                // Handle empty product name
+                mistakesDiv.innerHTML = safeMessage(response.answer);
+                mistakesDiv.style.color = 'red';
+                mistakesDiv.style.display = 'flex';
+
+                // Scroll the window to the mistakesDiv with smooth behavior
+                mistakesDiv.scrollIntoView({ behavior: 'smooth' });
+
+                saveButton.classList.remove('hidden');
+                saving.classList.add('hidden');
+
+            } else if (response.status === '3') {
+                // Handle existing product name
+                mistakesDiv.textContent = response.answer;
+                mistakesDiv.style.color = 'red';
+                mistakesDiv.style.display = 'flex';
+
+                // Scroll the window to the mistakesDiv with smooth behavior
+                mistakesDiv.scrollIntoView({ behavior: 'smooth' });
+
+                saveButton.classList.remove('hidden');
+                saving.classList.add('hidden');
+
+            } else if (response.status === '4') {
+                // Handle empty product link
+                mistakesDiv.textContent = response.answer;
+                mistakesDiv.style.color = 'red';
+                mistakesDiv.style.display = 'flex';
+
+                // Scroll the window to the mistakesDiv with smooth behavior
+                mistakesDiv.scrollIntoView({ behavior: 'smooth' });
+
+                saveButton.classList.remove('hidden');
+                saving.classList.add('hidden');
+
+            } else if (response.status === '5') {
+                // Handle existing product link
+                mistakesDiv.textContent = response.answer;
+                mistakesDiv.style.color = 'red';
+                mistakesDiv.style.display = 'flex';
+
+                // Scroll the window to the mistakesDiv with smooth behavior
+                mistakesDiv.scrollIntoView({ behavior: 'smooth' });
+
+                saveButton.classList.remove('hidden');
+                saving.classList.add('hidden');
+
+            }  else if (response.status === '6') {
+                // Handle product category error
+                mistakesDiv.textContent = response.answer;
+                mistakesDiv.style.color = 'red';
+                mistakesDiv.style.display = 'flex';
+                
+                // Scroll the window to the mistakesDiv with smooth behavior
+                mistakesDiv.scrollIntoView({ behavior: 'smooth' });
+                
+                saveButton.classList.remove('hidden');
+                saving.classList.add('hidden');
+                
+            }  else if (response.status === '0') {
+                // Handle Unknown Error
+                mistakesDiv.textContent = response.answer;
+                mistakesDiv.style.color = 'red';
+                mistakesDiv.style.display = 'flex';
+
+                // Scroll the window to the mistakesDiv with smooth behavior
+                mistakesDiv.scrollIntoView({ behavior: 'smooth' });
+
+                saveButton.classList.remove('hidden');
+                saving.classList.add('hidden');
+
+            } else if (response.status === '1') {
+                // Handle success
+                // alert(response.answer);
+                let prURL = window.location.origin  + '/product/' + response.Ref_Key;
+                location.href = prURL;
+            }
+        } else {
+            // Handle error response
+            saveButton.classList.remove('hidden');
+            saving.classList.add('hidden');
+
+            console.error('Error adding category:', xhr.responseText);
+        }
+    };
+
+    // Send the request with the FormData object
+    xhr.send(formData);
+});
+
+
+if (document.getElementById('category-id')) {
+
+    document.getElementById('category-id').addEventListener('change', function (e) {
+        let categoryID = e.target.value;
+        if (categoryID) {
+            
+            const saveButton = document.getElementById('saveButton');
+            const saving = document.getElementById('saving');
+
+            saveButton.classList.add('hidden');
+            saving.classList.remove('hidden');
+
+            let formData = new FormData();
+            formData.append('categoryID', categoryID);
+
+            // Create a new XMLHttpRequest object
+            let xhr = new XMLHttpRequest();
+
+            // Configure the request
+            xhr.open('POST', '/get-category-ar');
+            xhr.setRequestHeader('X-CSRFToken', csrfToken);
+
+            // Define what happens on successful data submission
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    let response = JSON.parse(xhr.responseText);
+
+                    let mistakesDiv = document.getElementById('mistakes');
+                    mistakesDiv.innerHTML = ''; // Clear previous messages
+                    if (response.status === '0') {
+                        // Handle Unknown Error
+                        mistakesDiv.textContent = response.answer;
+                        mistakesDiv.style.color = 'red';
+                        mistakesDiv.style.display = 'flex';
+
+                        // Scroll the window to the mistakesDiv with smooth behavior
+                        mistakesDiv.scrollIntoView({ behavior: 'smooth' });
+
+                        saveButton.classList.remove('hidden');
+                        saving.classList.add('hidden');
+
+                    } 
+                    
+                    if (response.status === '1') {
+                        // Handle success
+                        xRatio = response.data.xRatio;
+                        yRatio = response.data.yRatio;    
+
+                        saveButton.classList.remove('hidden');
+                        saving.classList.add('hidden');
+                    }
+                } else {
+                    // Handle error response
+                    saveButton.classList.remove('hidden');
+                    saving.classList.add('hidden');
+
+                    console.error('Error adding category:', xhr.responseText);
+                }
+            };
+
+            // Send the request with the FormData object
+            xhr.send(formData);
+        }
+
+    });
+    
+}
+</script>
+<!-- End of thumbnail image manipulations -->
+
+<!-- Include jQuery library -->
+<script nonce="{{ csp_nonce() }}" src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script nonce="{{ csp_nonce() }}">
+    
+    const inputElement = document.getElementById("product-link");
+
+    inputElement.addEventListener("keyup", (event) => {
+        const newValue = event.target.value.replace(/\s/g, "-");
+        inputElement.value = newValue;
+    });
+
+
+
+</script>
+
+{% endblock %}

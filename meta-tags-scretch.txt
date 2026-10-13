@@ -1,0 +1,47 @@
+FACEBOOK, INSTAGRAM 
+<meta property="og:title" content="Your Page Title Here" />
+<meta property="og:description" content="A brief description of your page." />
+<meta property="og:image" content="https://www.example.com/image.jpg" />
+<meta property="og:url" content="https://www.example.com/page.html" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Your Site Name" />
+
+TELEGRAM
+<meta property="og:title" content="Your Telegram Post Title" />
+<meta property="og:description" content="A brief description of your Telegram post." />
+<meta property="og:image" content="https://www.example.com/telegram-image.jpg" />
+<meta property="og:url" content="https://t.me/your-channel-url" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Telegram" />
+
+
+GOOGLE (Structured Data Markup)
+Google uses JSON-LD for rich results in search. Here's an example:
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Your Article Title",
+  "description": "A brief description of your article.",
+  "image": "https://www.example.com/article-image.jpg",
+  "author": {
+    "@type": "Person",
+    "name": "Author Name"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Publisher Name",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://www.example.com/logo.jpg"
+    }
+  },
+  "datePublished": "2024-07-20",
+  "dateModified": "2024-07-20",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://www.example.com/article-page.html"
+  }
+}
+</script>

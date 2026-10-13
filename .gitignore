@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+
+# Virtualenvs
+env/
+venv/
+.venv/
+
+# Sensitive / config
+.env
+
+# Misc
+ToDo.txt
+meta-tags-scretch.txt
+gunicorn.txt
+nginx-conf.txt
+
+# /static/images/uploads/
+# /static/images/
+
+# Only ignore these subfolders under /static/images
+/static/images/homeSlides/
+/static/images/pc_uploads/
+/static/images/pr_thumbnails/
+/static/images/product_slider/
+/static/images/products/
+/static/images/stuff/
+/static/images/sub_product_slider/
+/static/images/thumbnails/
+/static/images/uploads/
+# /static/images/uploads/home_slides/
+
+
+ToDo.txt
+test.py
+# TLS certificate and private key (keep on the server only)
+/certs/
+
+# Old virtualenv copy
+env~/

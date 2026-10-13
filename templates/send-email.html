@@ -1,0 +1,779 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {{ _('Send Email') }}
+{% endblock %}
+
+{% block head %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='quill.snow.css') }}">
+
+<!-- Pickr themes (Color picker for reach text editor) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/classic.min.css"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/monolith.min.css"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/nano.min.css"/>
+
+<link href="https://fonts.googleapis.com/css?family=Montserrat|Roboto|Lato|Oswald|Playfair+Display|Raleway" rel="stylesheet">
+
+<style>
+
+#response {
+    width: 100%;
+    margin: 0 0 12px 0;
+    color: red;
+}
+
+#response:empty {
+    display: none !important;
+}
+
+/* ---- Form card ---- */
+.email-title {
+    max-width: 900px;
+    margin: 0 auto 12px auto;
+    font-size: 1.6rem;
+    text-align: center;
+    color: #333;
+}
+
+.email-page .transfer-funds {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto 30px auto;
+    padding: 20px;
+    box-sizing: border-box;
+    background-color: #fff;
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.email-page .field-label {
+    margin: 8px 0 2px 0;
+    font-weight: bold;
+    color: #333;
+}
+
+.email-page .styled-select {
+    margin-bottom: 0 !important;
+    font-size: 16px;
+}
+
+.email-page #to,
+.email-page #subject {
+    width: 100%;
+    min-height: 46px;
+    margin: 0;
+    padding: 10px 12px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.email-page #to:focus,
+.email-page #subject:focus {
+    border-color: #66afe9;
+    outline: none;
+    box-shadow: 0 0 5px rgba(102, 175, 233, 0.6);
+}
+
+/* the whole message box is clickable, not just its first line */
+.email-page .ql-container.ql-snow .ql-editor {
+    min-height: 300px;
+}
+
+.email-page .email-actions {
+    padding: 0;
+    margin-top: 12px;
+}
+
+.email-page .email-actions .pcButtonS {
+    width: 100%;
+    margin: 0;
+    padding: 15px;
+    font-size: 20px;
+    box-sizing: border-box;
+}
+
+.email-page .email-actions .pcButtonS:focus-visible {
+    outline: 3px solid #264653;
+    outline-offset: 2px;
+}
+
+@media (max-width: 1100px) {
+    /* beats the inline width: 987px */
+    .container.email-page {
+        width: 94% !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }
+}
+
+@media (max-width: 768px) {
+    #tableDaddy.email-page {
+        margin-left: auto !important;
+    }
+
+    .email-page .transfer-funds {
+        padding: 16px;
+    }
+
+    .email-title {
+        font-size: 1.35rem;
+    }
+}
+
+
+/* When collapsed, this shows the current font name above the picker */
+.ql-snow .ql-picker.ql-font .ql-picker-label::before {
+  content: attr(data-value);
+  /* font-family: attr(data-value);; */
+  text-transform: capitalize;
+  /* font-variant: small-caps; */
+  letter-spacing: 0.03em;
+  color: #4a4a4a;
+}
+
+.ql-snow .ql-picker.ql-font 
+  .ql-picker-item[data-value="playfair-display"]::before,
+.ql-snow .ql-picker.ql-font 
+  .ql-picker-label[data-value="playfair-display"]::before {
+  content: "Playfair Display";     /* no hyphen */
+  font-family: "Playfair Display", serif;
+  width:120px;
+  /* you can still apply text-transform or letter-spacing here if you like */
+}
+
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="montserrat"]::before {
+  content: 'Montserrat';
+  font-family: 'Montserrat', sans-serif;
+}
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="lato"]::before {
+  content: 'Lato';
+  font-family: 'Lato', sans-serif;
+}
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="roboto"]::before {
+  content: 'Roboto';
+  font-family: 'Roboto', sans-serif;
+}
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="playfair-display"]::before {
+  content: 'Playfair Display';
+  font-family: 'Playfair Display', serif;
+}
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="raleway"]::before {
+  content: 'Raleway';
+  font-family: 'Raleway', sans-serif;
+}
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="cursive"]::before {
+  content: 'Cursive';
+  font-family: cursive;
+}
+
+
+
+
+/* Each item in the open menu: */
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="montserrat"]::before {
+  content: 'Montserrat';
+  font-family: 'Montserrat', sans-serif;
+}
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="lato"]::before {
+  content: 'Lato';
+  font-family: 'Lato', sans-serif;
+}
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="roboto"]::before {
+  content: 'Roboto';
+  font-family: 'Roboto', sans-serif;
+}
+
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="raleway"]::before {
+  content: 'Raleway';
+  font-family: 'Raleway', sans-serif;
+}
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="cursive"]::before {
+  content: 'Cursive';
+  font-family: cursive;
+}
+
+
+.scroll-container {
+        overflow: auto;
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none;  /* IE 10+ */
+      }
+      
+      .scroll-container::-webkit-scrollbar {
+        display: none; /* Chrome, Safari, Opera */
+      }
+
+      /* kill Quill’s defaults */
+.ql-snow .ql-picker.ql-size .ql-picker-item::before,
+.ql-snow .ql-picker.ql-size .ql-picker-label::before {
+  content: none !important;
+}
+
+
+/* Dropdown items */
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="8px"]::before { content: "8"  !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="9px"]::before { content: "9"  !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="10px"]::before { content: "10" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="11px"]::before { content: "11" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="12px"]::before { content: "12" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="14px"]::before { content: "14" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="16px"]::before { content: "16" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="18px"]::before { content: "18" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="20px"]::before { content: "20" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="24px"]::before { content: "24" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="28px"]::before { content: "28" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="32px"]::before { content: "32" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="36px"]::before { content: "36" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="48px"]::before { content: "48" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="72px"]::before { content: "72" !important; } 
+
+/* 3) Toolbar label (current selection) */
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="8px"]::before { content: "8"  !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="9px"]::before { content: "9"  !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="10px"]::before { content: "10" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="11px"]::before { content: "11" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="12px"]::before { content: "12" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="14px"]::before { content: "14" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="16px"]::before { content: "16" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="18px"]::before { content: "18" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="20px"]::before { content: "20" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="24px"]::before { content: "24" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="28px"]::before { content: "28" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="32px"]::before { content: "32" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="36px"]::before { content: "36" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="48px"]::before { content: "48" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="72px"]::before { content: "72" !important; } 
+
+.pickr {
+    display: none!important;
+}
+
+</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='rte.css') }}">
+
+{% endblock %}
+
+{% block content %}
+
+{{ sideBar | safe }}
+
+
+
+<div class="container toRight email-page" id="tableDaddy" style="width: 987px;">
+    {% set email = '' %}
+    {% set emailID = '' %}
+
+    {% if filterContent | length > 0 %}
+        {% if filterContent.email %}
+            {% set email = filterContent.email %}
+        {% endif %}
+
+        {% if filterContent.emailID and filterContent.emailID is digit %}
+            {% set emailID = filterContent.emailID | int %}
+        {% endif %}
+    {% endif %}
+<h1 class="email-title">{{ _('Send Email') }}</h1>
+<div class="mb-3 transfer-funds">
+    <div id="response" role="alert" aria-live="polite"></div>
+
+    {% if result.length > 0 %}
+        <label for="from" class="field-label">{{ _('From') }}</label>
+        <select id="from" class="styled-select">
+            <option value="">{{ _('Choose sender email address') }}</option>
+            {% for val in result.data %}                
+                {% set selected = '' %}
+                {% if result.length == 1 %}
+                    {% set selected = 'selected' %}
+                {% elif emailID != '' %}
+                    {% if emailID == val['ID'] %}
+                        {% set selected = 'selected' %}
+                    {% endif %}                
+                {% endif %}
+                <option value="{{ val['ID'] }}" {{ selected }}>
+                    {{ val['email'] }}
+                </option>
+            {% endfor %}
+        </select>
+        
+    {% endif %}
+
+    <label for="to" class="field-label">{{ _('To') }}</label>
+    <input type="email" id="to" value="{{ email }}" placeholder="{{ _('Enter recipient email address') }}" inputmode="email" autocomplete="off">
+    <label for="subject" class="field-label">{{ _('Subject') }}</label>
+    <input type="text" id="subject" placeholder="{{ _('Subject') }}" autocomplete="off">
+    <span class="field-label" id="message-label">{{ _('Message') }}</span>
+
+    <!-- Quill.js editor container -->
+    <!-- <div id="editor" ></div> -->
+
+        <div id="text-pickr-container" style="display: none;"></div>
+        <div id="bg-pickr-container"   style="display: none;"></div>
+        <div id="editor-wrapper" class="quill-editor scroll-container" style="overflow-y: auto;" aria-labelledby="message-label">
+            <div id="editor-container" style="width: 100%; min-height: 300px; margin-top: unset; margin-bottom: unset;"></div>
+        </div>
+
+            <div class="containerH email-actions">
+                <div class="pcButtonS" id="submit" role="button" tabindex="0">{{ _('Submit')}}</div>
+                <div class="pcButtonS hidden" id="saving" aria-live="polite">{{ _('Saving...')}}</div>
+            </div>
+
+        <script nonce="{{ csp_nonce() }}" src="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/pickr.min.js"></script>
+</div>
+
+
+
+</div>
+
+<script nonce="{{ csp_nonce() }}" src="{{ url_for('static', filename='JS/araxi-palette.js') }}"></script>
+<script nonce="{{ csp_nonce() }}" src="{{ url_for('static', filename='JS/1-3-6-quill.js') }}"></script>
+<script nonce="{{ csp_nonce() }}">
+
+document.addEventListener('DOMContentLoaded', function() {
+    
+
+    function imageHandler() {
+            const input = document.createElement('input');
+            input.setAttribute('type', 'file');
+            input.setAttribute('accept', 'image/*');
+            input.click();
+
+            input.onchange = function () {
+                const file = input.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        const base64String = e.target.result;
+                        const base64WithFileName = 'data:' + file.type + ';filename=' + file.name + ';base64,' + base64String.split(',')[1];
+                        insertBase64Image(base64WithFileName);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+        }
+
+        function insertBase64Image(base64String) {
+            const range = quill.getSelection();
+            quill.insertEmbed(range.index, 'image', base64String);
+        }
+
+//     const Font = Quill.import('formats/font');
+//     const fonts = [
+//         'montserrat',
+//         'lato',
+//         'roboto',
+//         // 'oswald',
+//         'playfair-display',
+//         'raleway',
+//         'cursive'
+//     ];
+
+//     Font.whitelist = fonts;
+//     Quill.register(Font, true);
+
+       
+//     // Initialize Quill.js editor
+//     const toolbarOptions = [
+//         ['bold', 'italic', 'underline', 'strike'],
+//         // ['blockquote', 'code-block'],
+//         // ['link', 'image', 'video', 'formula'],
+//         ['link'],
+//         // [{ 'header': 1 }, { 'header': 2 }],
+//         [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'list': 'check' }],
+//         // [{ 'script': 'sub' }, { 'script': 'super' }],
+//         [{ 'indent': '-1' }, { 'indent': '+1' }],
+//         [{ 'direction': 'rtl' }],
+//         [{ 'size': ['small', false, 'large', 'huge'] }],
+//         [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+//         [{ 'color': [] }, { 'background': [] }],
+//         // [{ 'font': ['roboto', 'montserrat', 'lato', 'oswald', 'playfair', 'raleway'] }],
+//         [{ 'font': fonts }],
+//         [{ 'align': [] }]
+//     ];
+
+
+
+// const quill = new Quill('#editor', {
+//   theme: 'snow',
+//   placeholder: "{{ _('Additional notes') }}",
+//   modules: {
+//     toolbar: {
+//       container: toolbarOptions, 
+//       handlers: {
+//         image: imageHandler
+//       }
+//     }
+//   }
+// });
+
+
+
+// // Select the target element
+// const fontLabel = document.querySelector('.ql-font .ql-picker-label');
+
+// if (fontLabel) {
+//   // Create a MutationObserver instance to watch for attribute changes
+//   const observer = new MutationObserver((mutationsList) => {
+//     mutationsList.forEach((mutation) => {
+//       if (mutation.type === 'attributes' && mutation.attributeName === 'data-value') {
+//         const newValue = fontLabel.getAttribute('data-value');
+//         // console.log('New data-value:', newValue);
+//         updateCSSContent(newValue);
+//       }
+//     });
+//   });
+
+//   // Start observing the target element for attribute changes to 'data-value'
+//   observer.observe(fontLabel, { attributes: true, attributeFilter: ['data-value'] });
+// } else {
+//   console.warn('Element .ql-font .ql-picker-label not found');
+// }
+
+
+// // Function to update (or create) a style element with new CSS rule
+// function updateCSSContent(newValue) {
+//   newValue = formatFontName(newValue); 
+//   // Try to find an existing style element we can update
+//   let styleElem = document.getElementById('dynamic-font-style');
+//   if (!styleElem) {
+//     styleElem = document.createElement('style');
+//     styleElem.id = 'dynamic-font-style';
+//     document.head.appendChild(styleElem);
+//   }
+//   // Update the CSS rule. The content property must be quoted.
+//   styleElem.innerHTML = `
+//     .ql-snow .ql-picker.ql-font .ql-picker-label::before,
+//     .ql-snow .ql-picker.ql-font .ql-picker-item::before {
+//       content: '${newValue}';
+//       font-family: '${newValue}';
+//     }
+//   `;
+// }
+
+
+// function formatFontName(fontKey) {
+//   return fontKey
+//     .split('-') // split by dash
+//     .map(word => word.charAt(0).toUpperCase() + word.slice(1)) // capitalize each part
+//     .join(' '); // rejoin with space
+// }
+
+
+
+const Font = Quill.import('formats/font');
+    const fonts = [
+        'montserrat',
+        'lato',
+        'roboto',
+        'raleway',
+        'cursive'
+    ];
+
+    Font.whitelist = fonts;
+    Quill.register(Font, true);
+
+    
+    let Size = Quill.import('attributors/style/size');
+    // Define exactly the sizes you want (with units!)
+    Size.whitelist = [
+    '8px', '9px', '10px', '11px', '12px', '14px',
+    '16px', '18px', '20px', '24px', '28px', '32px',
+    '36px', '48px', '72px'
+    ];
+
+    // Tell Quill to use your version
+    Quill.register(Size, true);
+
+    // Initialize Quill.js editor
+    const toolbarOptions = [
+        ['bold', 'italic', 'underline', 'strike'],
+        ['blockquote'],
+        ['link', 'image'],
+        [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'list': 'check' }],
+        [{ 'script': 'sub' }, { 'script': 'super' }],
+        [{ 'indent': '-1' }, { 'indent': '+1' }],
+        [{ 'direction': 'rtl' }],
+        // [{ 'size': ['small', false, 'large', 'huge'] }],
+        // false = no size / no font chosen ("Normal" / "Sans Serif"), so the pickers are never blank
+        [{ 'size': [false, ...Size.whitelist] }],
+        [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+        [{ 'color': [] }, { 'background': [] }],
+        [{ 'font': [false, ...Font.whitelist] }],
+        [{ 'align': [] }],
+        ['clean']
+    ];
+
+    function imageHandler() {
+            const input = document.createElement('input');
+            input.setAttribute('type', 'file');
+            input.setAttribute('accept', 'image/*');
+            input.click();
+
+            input.onchange = function () {
+                const file = input.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        const base64String = e.target.result;
+                        const base64WithFileName = 'data:' + file.type + ';filename=' + file.name + ';base64,' + base64String.split(',')[1];
+                        insertBase64Image(base64WithFileName);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+        }
+
+        function insertBase64Image(base64String) {
+            const range = quill.getSelection();
+            quill.insertEmbed(range.index, 'image', base64String);
+        }
+
+    const quill = new Quill('#editor-container', {
+        modules: { 
+            toolbar: {
+                    container: toolbarOptions,
+                    // container: '#toolbar',
+                    handlers: {
+                        'image': imageHandler
+                    }
+                }
+            
+        },
+        theme: 'snow',
+        scrollingContainer: '#editor-wrapper'
+    });
+
+    // No font is forced on start: text without a chosen font is Sans Serif (see rte.css).
+    // Formatting here also focused the editor on page load and left a stray caret placeholder in it.
+    const tb = quill.getModule('toolbar').container;
+    tb.id = 'toolbar';
+
+const textColorPickr = Pickr.create({
+  el:  '#text-pickr-container',
+  theme: 'classic',
+  default: '#FCC628',
+  swatches: window.ARAXI_PALETTE,   // Araxi Travel colours (static/JS/araxi-palette.js)
+  position: 'top-middle',
+  autoReposition: false, 
+  components: {
+    preview: true, opacity: true, hue: true,
+    interaction: { hex: true, input: true, clear: true, save: true }
+  }
+});
+const bgColorPickr = Pickr.create({
+  el:  '#bg-pickr-container',
+  theme: 'classic',
+  default: '#ccc',
+  position: 'top-middle',   
+  autoReposition: true, 
+  components: {
+    preview: true, opacity: true, hue: true,
+    interaction: { hex: true, input: true, clear: true, save: true }
+  }
+});
+
+// 3. when they click “save,” apply to Quill
+textColorPickr.on('save', color => {
+  const hex = color.toHEXA().toString();
+  const range = quill.getSelection();
+  if (range) quill.format('color', hex);
+  textColorPickr.hide();
+});
+bgColorPickr.on('save', color => {
+  const hex = color.toHEXA().toString();
+  const range = quill.getSelection();
+  if (range) quill.format('background', hex);
+  bgColorPickr.hide();
+});
+
+// grab the Quill “A” icons
+const textLabel = document.querySelector('.ql-color .ql-picker-label');
+const bgLabel   = document.querySelector('.ql-background .ql-picker-label');
+
+textLabel.addEventListener('click', e => {
+  e.preventDefault();
+  e.stopPropagation();
+  textColorPickr.show();
+});
+
+bgLabel.addEventListener('click', e => {
+  e.preventDefault();
+  e.stopPropagation();
+  bgColorPickr.show();
+});
+
+textColorPickr.on('save', color => {
+  quill.format('color', color.toHEXA().toString());
+  textColorPickr.hide();
+});
+// a palette colour applies at once, no need to press Save
+textColorPickr.on('swatchselect', color => {
+  quill.format('color', color.toHEXA().toString());
+  textColorPickr.hide();
+});
+bgColorPickr.on('save', color => {
+  quill.format('background', color.toHEXA().toString());
+  bgColorPickr.hide();
+});
+
+
+// after you’ve whitelisted & registered Font and init’d Quill…
+const fontPicker = document.querySelector('.ql-picker.ql-font');
+
+
+
+
+
+        let csrfToken = "{{ csrf_token() }}";
+        // Submit is a div: let Enter/Space press it too
+        document.getElementById('submit').addEventListener('keydown', function (event) {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                this.click();
+            }
+        });
+
+        document.getElementById('submit').onclick = function() {
+            event.preventDefault(); // Prevent form submission
+            clickedBotton = document.getElementById('submit');
+            let loader = myLoader('#fff');    
+            
+            clickedBotton.textContent = '';
+            clickedBotton.appendChild(loader);
+
+            let gearElement = document.getElementById('gear');
+            if (!gearElement) {
+            return;
+            } 
+            rotate(gearElement);
+
+            let response = document.querySelector("#response");
+            response.innerHTML = "";
+            response.style.display = 'none';
+            document.getElementById("from").style.borderColor = "black";
+            document.getElementById("to").style.borderColor = "black";
+            document.getElementById("subject").style.borderColor = "black";
+
+            let answer;
+
+            let from = document.getElementById("from").value;
+            if (!from) {
+                response.innerHTML = "{{ _('Please specify sender email address!') }}";
+                response.style.display = 'flex';
+                document.getElementById("from").style.borderColor = "red";
+
+                gearElement.remove();
+                clickedBotton.textContent = `{{ _('Submit') }}`;
+                return;
+            }
+            
+            let to = document.getElementById("to").value;
+            if (!to) {
+                response.innerHTML = "{{ _('Please specify recipient email address!') }}";
+                response.style.display = 'flex';
+                document.getElementById("to").style.borderColor = "red";
+
+                gearElement.remove();
+                clickedBotton.textContent = `{{ _('Submit') }}`;
+                return;
+            }
+            
+            let subject = document.getElementById("subject").value;
+            if (!subject) {
+                response.innerHTML = "{{ _('Please specify subject!') }}";
+                response.style.display = 'flex';
+                document.getElementById("subject").style.borderColor = "red";
+
+                gearElement.remove();
+                clickedBotton.textContent = `{{ _('Submit') }}`;
+                return;
+            }
+
+            
+            let content = quill.root.innerHTML;
+            const delta = quill.getContents();
+            const hasContent = delta.ops.some(op => {
+                return op.insert && typeof op.insert === 'string' && op.insert.trim() !== '';
+            });
+                
+            let formData = new FormData();
+
+            formData.append('from', from)     
+            formData.append('to', to)     
+            formData.append('subject', subject)     
+            formData.append('content', content)     
+
+            // Create a new XMLHttpRequest object
+            let xhr = new XMLHttpRequest();
+            
+            // Configure the request
+            xhr.open('POST', '/send-email');
+            xhr.setRequestHeader('X-CSRFToken', csrfToken);
+
+            // Define what happens on successful data submission
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    gearElement.remove();
+                    clickedBotton.textContent = `{{ _('Submit') }}`;
+                    const response = JSON.parse(xhr.responseText);
+                    if (response.status === '1') {
+                        alert(response.answer)
+                        
+                    }
+                    
+                    if (response.status === '0') {
+                        document.querySelector("#response").textContent = response.answer;
+                        document.querySelector("#response").style.display = 'flex';
+                        return;
+                    } 
+                    
+                    
+                } else {
+                    gearElement.remove();
+                    clickedBotton.textContent = `{{ _('Submit') }}`;
+                    console.error('Request failed with status: ' + xhr.status);
+                }
+            };
+
+            // Define what happens in case of error
+            xhr.onerror = function () {
+                console.error('Request failed.');
+            };
+
+            // Send the request with the JSON data
+            xhr.send(formData);
+        };
+
+
+    function rotate(gearElement) {
+        let angle = 0;
+        setInterval(() => {
+            angle = (angle + 5) % 360; 
+            gearElement.style.transform = `rotate(${angle}deg)`;
+        }, 50); 
+    
+    }
+
+    function myLoader(color) {
+        if (color === undefined) {
+          color = 'crimson'
+        }
+        let loader = document.createElement('div'); // Create a div element for the loader
+          loader.id = 'gear';
+          loader.style.color = color;
+          loader.style.fontSize = '20px';
+          loader.style.display = 'inline-block';
+          loader.textContent = '⚙';
+          return loader;
+    }
+});
+
+    </script>
+
+{% endblock %}

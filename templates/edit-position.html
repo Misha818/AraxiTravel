@@ -1,0 +1,489 @@
+{% extends 'base.html' %}
+
+{% block head %}
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='dropzon.css') }}">  
+    <link rel="stylesheet" href="{{ url_for('static', filename='dropzone.min.css') }}">  
+    <link rel="stylesheet" href="{{ url_for('static', filename='cropper.min.css') }}">  
+
+    <style>
+        .dz-details:hover {
+            cursor: pointer;
+        }
+    
+        .dz-remove-btn:hover {
+            background-color: #c82333;
+            cursor: pointer;
+        }
+    
+    
+        .alt-input:hover {
+            cursor: auto;
+        }
+
+        /* ---- Edit form ---- */
+        .containerS.edit-form-card {
+            width: calc(100% - 32px);
+            max-width: 560px;
+            min-width: 0;
+            margin-top: 0;
+            margin-bottom: 30px;
+            box-sizing: border-box;
+            align-items: stretch;
+        }
+
+        .edit-form-card h1 {
+            font-size: 1.6rem;
+            margin: 0 0 12px 0;
+            text-align: center;
+            color: #333;
+        }
+
+        .edit-form-card #mistakes {
+            margin: 0 0 12px 0;
+        }
+
+        /* The id carries a global 20px margin that pushed the full-width form out of the card */
+        #add-product-form.edit-form {
+            margin: 0;
+        }
+
+        .edit-form {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            width: 100%;
+        }
+
+        .edit-form .field-label {
+            font-weight: bold;
+            color: #333;
+            margin: 8px 0 2px 0;
+        }
+
+        .edit-form .text-field {
+            width: 100%;
+            padding: 12px 14px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .edit-form .text-field:focus,
+        .actions-search:focus {
+            border-color: #66afe9;
+            outline: none;
+            box-shadow: 0 0 5px rgba(102, 175, 233, 0.6);
+        }
+
+        .actions-header {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .actions-count {
+            font-size: 14px;
+            color: #666;
+            white-space: nowrap;
+        }
+
+        .actions-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .actions-search {
+            flex: 1 1 200px;
+            min-width: 0;
+            padding: 10px 12px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #f8f8f8;
+        }
+
+        .select-all-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            white-space: nowrap;
+            user-select: none;
+        }
+
+        .actions-checklist {
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #f8f8f8;
+            max-height: 50vh;
+            overflow-y: auto;
+            padding: 4px;
+        }
+
+        .actions-checklist label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #333;
+        }
+
+        .actions-checklist label:hover {
+            background-color: #e6e6e6;
+        }
+
+        .actions-checklist label.is-checked {
+            background-color: #fbe9e4;
+        }
+
+        .actions-checklist input[type="checkbox"],
+        .select-all-toggle input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+            margin: 0;
+            accent-color: #E76F51;
+            cursor: pointer;
+        }
+
+        .actions-checklist .action-id {
+            margin-left: auto;
+            font-size: 12px;
+            color: #999;
+        }
+
+        .actions-empty {
+            padding: 12px;
+            color: #666;
+            text-align: center;
+        }
+
+        .edit-form .pcButtonS.modifiedB {
+            margin-top: 12px;
+            box-sizing: border-box;
+        }
+
+        @media (max-width: 600px) {
+            .containerS.edit-form-card {
+                width: calc(100% - 24px);
+                padding: 16px;
+            }
+
+            .edit-form-card h1 {
+                font-size: 1.35rem;
+            }
+
+            .actions-checklist {
+                max-height: 45vh;
+            }
+        }
+    </style>
+{% endblock %}
+{% block title %}
+    {{ _('Edit Position') }}
+{% endblock %}
+
+
+
+{% block content %}
+{{ sideBar | safe }}
+
+<div class="overlay" id="overlay"></div>
+<div class="containerS edit-form-card">
+    <h1>{{ _('Edit Position') }}</h1>
+    <div id="mistakes" style="width: 100%;" role="alert" aria-live="polite"></div>
+
+    <form id="add-product-form" class="edit-form" novalidate>
+        <label for="Position" class="field-label">{{ _('Position') }}</label>
+        <input type="text" id="Position" class="text-field" placeholder="{{ _('Position') }}" value="{{ row['Position'] }}" autocomplete="off">
+
+        <div class="actions-header">
+            <span class="field-label" id="actions-label">{{ _('Roles') }}</span>
+            <span class="actions-count" id="actions-count" aria-live="polite"></span>
+        </div>
+        <div class="actions-toolbar">
+            <input type="search" id="actions-search" class="actions-search" placeholder="{{ _('Search roles') }}" aria-label="{{ _('Search roles') }}" autocomplete="off">
+            <label class="select-all-toggle">
+                <input type="checkbox" id="actions-select-all">
+                <span>{{ _('Select All') }}</span>
+            </label>
+        </div>
+        <div class="actions-checklist" id="actions-checklist" role="group" aria-labelledby="actions-label"></div>
+
+        <!-- The original multi-select stays the source of truth for the submitted value -->
+        <div class="form-group row hidden" id="actionsDropDown"></div>
+
+
+        <input type="hidden" id="language-id" value="{{ languageID }}">
+        <input type="hidden" id="Position-id" value="{{ row['ID'] }}">
+
+        <div id="saveButton" class="pcButtonS modifiedB" role="button" tabindex="0">{{ _('Submit') }}</div>
+        <div id="saving" class="pcButtonS hidden modifiedB" aria-live="polite">{{ _('Saving...') }}</div>
+    </form>
+
+
+</div>
+
+
+<script nonce="{{ csp_nonce() }}">
+
+document.addEventListener('DOMContentLoaded', function() {
+    let csrfToken = "{{ csrf_token() }}"
+
+    function actionsDropDown() {
+
+        const actions = {{ resultActions | tojson }}
+        const preselectedValues = {{ row['rolIDs'] | tojson }};
+        // rolIDs is a "1,2,10" string; compare whole ids, not substrings
+        const selectedArr = (preselectedValues || '').split(',').map(id => parseInt(id));
+        const dropdownContainer = document.getElementById('actionsDropDown');
+
+        if (actions['length'] > 0) {
+            const select = document.createElement('select');
+            select.name = 'actions';
+            select.id = 'actions';
+            select.classList.add('form-control');
+            select.classList.add('styled-select');
+            select.style = 'height: 250px';
+            select.multiple = true; // Adds the multiple attribute
+
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = '{{ _("Choose actions") }}';
+            defaultOption.disabled = true;
+            select.appendChild(defaultOption);
+
+            
+            actions.data.forEach(val => {
+                const optVal = val['Name'];
+                if (optVal !== null) {
+                    const option = document.createElement('option');
+                    option.value = val['ID'];
+                 
+                    option.textContent = optVal;
+
+                    // Check if this option should be pre-selected
+                    if (selectedArr.includes(parseInt(val['ID']))) {
+                        option.selected = true;
+                    }
+                    select.appendChild(option);
+                }
+            });
+
+            dropdownContainer.appendChild(select); // Append the select element to the body or any other specific location
+        }
+    };
+
+    actionsDropDown();
+
+    // Checkbox list that mirrors the (hidden) multi-select above, with search and "select all"
+    function actionsChecklist() {
+        const selectElement = document.getElementById('actions');
+        const list = document.getElementById('actions-checklist');
+        const search = document.getElementById('actions-search');
+        const selectAll = document.getElementById('actions-select-all');
+        const counter = document.getElementById('actions-count');
+        if (!selectElement || !list) {
+            return;
+        }
+
+        const options = Array.from(selectElement.options).filter(option => !option.disabled);
+        const items = [];
+
+        options.forEach(option => {
+            const label = document.createElement('label');
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.value = option.value;
+            checkbox.checked = option.selected;
+
+            const name = document.createElement('span');
+            name.textContent = option.textContent;
+
+            // Several entries can share a name; the id tells them apart
+            const id = document.createElement('span');
+            id.className = 'action-id';
+            id.textContent = '#' + option.value;
+
+            label.append(checkbox, name, id);
+            label.classList.toggle('is-checked', checkbox.checked);
+            list.appendChild(label);
+
+            checkbox.addEventListener('change', function () {
+                option.selected = checkbox.checked;
+                label.classList.toggle('is-checked', checkbox.checked);
+                update();
+            });
+
+            items.push({ option: option, checkbox: checkbox, label: label, text: option.textContent.toLowerCase() });
+        });
+
+        const empty = document.createElement('div');
+        empty.className = 'actions-empty hidden';
+        empty.textContent = "{{ _('Nothing found.') }}";
+        list.appendChild(empty);
+
+        function visibleItems() {
+            return items.filter(item => !item.label.classList.contains('hidden'));
+        }
+
+        function update() {
+            const checked = items.filter(item => item.checkbox.checked).length;
+            counter.textContent = checked + ' / ' + items.length;
+
+            const visible = visibleItems();
+            const visibleChecked = visible.filter(item => item.checkbox.checked).length;
+            selectAll.checked = visible.length > 0 && visibleChecked === visible.length;
+            selectAll.indeterminate = visibleChecked > 0 && visibleChecked < visible.length;
+            empty.classList.toggle('hidden', visible.length > 0);
+        }
+
+        search.addEventListener('input', function () {
+            const query = search.value.trim().toLowerCase();
+            items.forEach(item => {
+                const match = query === '' || item.text.includes(query) || ('#' + item.option.value) === query;
+                item.label.classList.toggle('hidden', !match);
+            });
+            update();
+        });
+
+        // Applies to the entries currently shown (all of them when the search is empty)
+        selectAll.addEventListener('change', function () {
+            visibleItems().forEach(item => {
+                item.checkbox.checked = selectAll.checked;
+                item.option.selected = selectAll.checked;
+                item.label.classList.toggle('is-checked', selectAll.checked);
+            });
+            update();
+        });
+
+        update();
+    }
+
+    actionsChecklist();
+
+    // Enter in a text field used to reload the page (implicit form submission)
+    document.getElementById('add-product-form').addEventListener('submit', function (event) {
+        event.preventDefault();
+    });
+
+    document.getElementById('Position').addEventListener('keydown', function (event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            document.getElementById('saveButton').click();
+        }
+    });
+
+    document.getElementById('actions-search').addEventListener('keydown', function (event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+        }
+    });
+
+    document.getElementById('saveButton').addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            this.click();
+        }
+    });
+
+    // When the form is submitted
+    const saveButton = document.getElementById('saveButton');
+
+    saveButton.addEventListener('click', function (event) {
+
+        event.preventDefault();
+                
+        const selectElement = document.getElementById('actions');
+        const Roles = [];
+
+        for (let i = 0; i < selectElement.options.length; i++) {
+        if (selectElement.options[i].selected) {
+            Roles.push(selectElement.options[i].value);
+        }
+        }
+      
+        const saveButton = document.getElementById('saveButton');
+        const saving = document.getElementById('saving');
+        
+        saveButton.classList.add('hidden');
+        saving.classList.remove('hidden');
+        
+        let formData = new FormData();
+         
+        let languageID = document.getElementById('language-id').value;
+        let Position = document.getElementById('Position').value;
+        let PositionID = document.getElementById('Position-id').value;
+        
+
+        
+        // Create a new FormData object
+        formData.append('languageID', languageID);
+        formData.append('positionID', PositionID);
+        formData.append('Position', Position);
+        formData.append('Roles', Roles);
+        
+
+        // Create a new XMLHttpRequest object
+        let xhr = new XMLHttpRequest();
+
+        // Configure the request
+        const requestURL = '/edit-position/' + PositionID;
+        xhr.open('POST', requestURL);
+        xhr.setRequestHeader('X-CSRFToken', csrfToken);
+
+        // Define what happens on successful data submission
+        xhr.onload = function () {
+            if (xhr.status === 200) {
+                let response = JSON.parse(xhr.responseText);
+
+                let mistakesDiv = document.getElementById('mistakes');
+                mistakesDiv.innerHTML = ''; // Clear previous messages
+
+                if (response.status === '0') {
+                    // Handle empty product name
+                    mistakesDiv.innerHTML = safeMessage(response.answer);
+                    mistakesDiv.style.color = 'red';
+                    mistakesDiv.style.display = 'flex';
+
+                    // Scroll the window to the mistakesDiv with smooth behavior
+                    mistakesDiv.scrollIntoView({ behavior: 'smooth' });
+
+                    saveButton.classList.remove('hidden');
+                    saving.classList.add('hidden');
+
+                } 
+                
+                if (response.status === '1') {
+                    // Handle success
+                    let prURL = window.location.origin  + '/positions';
+                    location.href = prURL;
+
+                    // location.reload();
+                }
+            } else {
+                // Handle error response
+                saveButton.classList.remove('hidden');
+                saving.classList.add('hidden');
+
+                console.error('Error adding category:', xhr.responseText);
+            }
+        };
+
+        // Send the request with the FormData object
+        xhr.send(formData);
+    });
+
+});
+
+</script>
+
+
+{% endblock %}

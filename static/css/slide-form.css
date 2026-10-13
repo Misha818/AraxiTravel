@@ -1,0 +1,138 @@
+/* Add/Edit Slide forms (templates/add_slide.html, edit_slide.html): compact image uploader and the
+   formatted title/subtitle fields (static/JS/slide-text-editor.js). */
+
+.rt-field {
+    margin-bottom: 4px;
+}
+
+.rt-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 6px;
+}
+
+.rt-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    height: 34px;
+    padding: 0 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #fff;
+    color: #333;
+    font: 600 16px/1 Georgia, "Times New Roman", serif;
+    cursor: pointer;
+    transition: background-color .15s, border-color .15s, color .15s;
+}
+.rt-btn:hover { border-color: #66afe9; background: #f3f8fd; }
+.rt-btn:focus-visible { outline: 2px solid #264653; outline-offset: 1px; }
+.rt-btn.is-active { background: #264653; border-color: #264653; color: #fff; }
+.rt-btn--wide { font: 600 13px/1 Arial, sans-serif; }
+
+.rt-sep {
+    width: 1px;
+    height: 24px;
+    margin: 0 4px;
+    background: #ddd;
+}
+
+/* Text colour picker (Pickr) inside the toolbar */
+.rt-toolbar .pickr {
+    display: inline-flex;
+    align-items: center;
+    margin: 0 2px;
+}
+.rt-toolbar .pickr .pcr-button {
+    margin: 0;
+}
+
+.rt-btn:disabled {
+    opacity: .4;
+    cursor: default;
+    background: #fff;
+    border-color: #ccc;
+}
+
+.rt-target {
+    flex: 1 1 100%;
+    font-size: 13px;
+    color: #666;
+}
+.rt-field.has-selection .rt-target { color: #1a5d8f; font-weight: 600; }
+
+/* The editor replaces the old <input>: same look as .form_input */
+.slide-form .rt-editor.form_input {
+    padding: 0;
+    height: auto;
+    font-family: Arial, sans-serif;     /* same as the other inputs of the form */
+    font-size: 18px;
+    background: #fff;
+}
+.slide-form .rt-editor .ql-editor {
+    height: auto;
+    min-height: 0;
+    padding: 11px 14px;
+    line-height: 1.3;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+.slide-form .rt-editor .ql-editor.ql-blank::before {
+    left: 14px;
+    right: 14px;
+    color: #999;
+    font-style: normal;
+}
+.slide-form .rt-editor:focus-within {
+    border-color: #66afe9;
+    box-shadow: 0 0 5px rgba(102, 175, 233, .6);
+}
+.slide-form .rt-editor .ql-editor ::selection { background: #b9dcf7; }
+
+/* Compact image uploader: as wide as the thumbnail frame Dropzone shows after an upload
+   (.dz-preview: 120px image + 2 x 10px padding + 1px border, plus 10px margin on each side),
+   and the same height empty or filled, so the box does not jump when an image is added. */
+.slide-form .dropzone {
+    box-sizing: border-box;
+    width: 166px;
+    max-width: 100%;
+    min-height: 218px;
+    margin-left: auto;      /* centred in the form */
+    margin-right: auto;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+}
+.slide-form .dropzone .dz-message {
+    margin: 0;
+    padding: 12px;
+    text-align: center;
+}
+.slide-form .dropzone .dz-preview {
+    margin: 10px;
+}
+
+/* Light default colour (e.g. white titles for dark photos): preview it on a dark field */
+.slide-form .rt-editor.rt-editor--dark {
+    background: #24313d;
+    border-color: #24313d;
+}
+.slide-form .rt-editor.rt-editor--dark .ql-editor.ql-blank::before { color: #9aa7b2; }
+.slide-form .rt-editor.rt-editor--dark .ql-editor { color: #fff; }
+
+/* Edit Slide: images from other languages, one per view (the shared .pc_slide in styles.css
+   shows two; product category and thumbnail pages keep that) */
+.slide-form .pc_slider {
+    width: 320px;   /* the shared style is 30% of the form (~200px) */
+    max-width: 100%;
+    padding: 0;     /* overflow is clipped at the padding edge: padding would show the neighbours */
+}
+.slide-form .pc_slide {
+    min-width: 100%;
+    margin-right: 0;
+}

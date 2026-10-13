@@ -1,0 +1,394 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {{ _('Transfer funds') }}
+{% endblock %}
+
+{% block head %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='quill.snow.css') }}">
+<link href="https://fonts.googleapis.com/css?family=Roboto|Montserrat|Lato|Oswald|Playfair+Display|Raleway" rel="stylesheet">
+<style>
+
+#response {
+    width: 100%;
+    margin: 0 0 12px 0;
+    color: red;
+}
+
+#response:empty {
+    display: none !important;
+}
+
+/* ---- Form card ---- */
+.transfer-title {
+    max-width: 760px;
+    margin: 0 auto 12px auto;
+    font-size: 1.6rem;
+    text-align: center;
+    color: #333;
+}
+
+.transfer-funds {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+    max-width: 760px;
+    margin: 0 auto 30px auto;
+    padding: 20px;
+    box-sizing: border-box;
+    background-color: #fff;
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.transfer-funds .field-label {
+    margin: 8px 0 2px 0;
+    font-weight: bold;
+    color: #333;
+}
+
+.transfer-funds .styled-select {
+    margin-bottom: 0;
+    font-size: 16px;
+}
+
+.transfer-funds #amount {
+    width: 100%;
+    min-height: 46px;
+    padding: 10px 12px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.transfer-funds #amount:focus {
+    border-color: #66afe9;
+    outline: none;
+    box-shadow: 0 0 5px rgba(102, 175, 233, 0.6);
+}
+
+/* The card spaces its fields 6px apart; the editor's toolbar and text area are one block */
+.transfer-funds .ql-toolbar.ql-snow + .ql-container.ql-snow {
+    margin-top: -6px;
+}
+
+
+.transfer-funds .pcButtonS.modifiedB {
+    margin-top: 12px;
+    box-sizing: border-box;
+}
+
+.transfer-funds .pcButtonS.modifiedB:focus-visible {
+    outline: 3px solid #264653;
+    outline-offset: 2px;
+}
+
+@media (max-width: 768px) {
+    /* beats the inline width: 70% */
+    .container.transfer-page {
+        width: 92% !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }
+}
+
+@media (max-width: 600px) {
+    .transfer-funds {
+        padding: 16px;
+    }
+
+    .transfer-title {
+        font-size: 1.35rem;
+    }
+}
+
+</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='rte.css') }}">
+
+{% endblock %}
+
+{% block content %}
+
+{{ sideBar | safe }}
+
+
+
+<div class="container toRight transfer-page" id="tableDaddy" style="width: 70%;">
+<h1 class="transfer-title">{{ _('Transfer funds') }}</h1>
+<div class="mb-3 transfer-funds">
+    <div id="response" role="alert" aria-live="polite"></div>
+
+    {% if result.length > 0 %}
+        <label for="recipient" class="field-label">{{ _('Staff member') }}</label>
+        <select id="recipient" class="styled-select">
+            <option value="">{{ _('Choose recipient') }}</option>
+            {% for val in result.data %}
+                {% set optVal = val['Initials'] + ' | ' + _(val['Position']) %}
+                {% if optVal is not none %}
+                {% endif %}
+                {% set selected = '' %}
+                {% if stuffID == val['ID'] %}
+                    {% set selected = 'selected' %}
+                {% endif %}
+                <option value="{{ val['ID'] }}" {{ selected }}>
+                    {{ optVal }}
+                </option>
+            {% endfor %}
+        </select>
+    {% else %}
+        <!-- No staff to pay: Submit then reports the missing recipient instead of failing -->
+        <input type="hidden" id="recipient" value="">
+    {% endif %}
+
+    <label for="type" class="field-label">{{ _('Type') }}</label>
+    <select id="type" class="styled-select">
+        <option value="">{{ _('Choose transaction type') }}</option>
+        <option value="1">{{ _('Revard') }}</option>
+        <option value="2">{{ _('Compensation') }}</option>
+    </select>
+    
+    <label for="amount" class="field-label">{{ _('Amount') }}</label>
+    <input type="number" id="amount" placeholder="{{ _('Amount') }}" inputmode="decimal" min="0" step="any">
+
+    <span class="field-label" id="notes-label">{{ _('Additional notes') }}</span>
+    <!-- Quill.js editor container -->
+    <div id="editor" aria-labelledby="notes-label"></div>
+
+    <div class="pcButtonS modifiedB" id="submit" role="button" tabindex="0">{{ _('Submit')}}</div>
+    <div class="pcButtonS modifiedB hidden" id="saving" aria-live="polite">{{ _('Saving...')}}</div>
+</div>
+
+
+</div>
+
+<script nonce="{{ csp_nonce() }}" src="{{ url_for('static', filename='JS/araxi-palette.js') }}"></script>
+<script nonce="{{ csp_nonce() }}" src="{{ url_for('static', filename='JS/1-3-6-quill.js') }}"></script>
+<script nonce="{{ csp_nonce() }}">
+
+document.addEventListener('DOMContentLoaded', function() {
+    
+
+    function imageHandler() {
+            const input = document.createElement('input');
+            input.setAttribute('type', 'file');
+            input.setAttribute('accept', 'image/*');
+            input.click();
+
+            input.onchange = function () {
+                const file = input.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        const base64String = e.target.result;
+                        const base64WithFileName = 'data:' + file.type + ';filename=' + file.name + ';base64,' + base64String.split(',')[1];
+                        insertBase64Image(base64WithFileName);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+        }
+
+        function insertBase64Image(base64String) {
+            const range = quill.getSelection();
+            quill.insertEmbed(range.index, 'image', base64String);
+        }
+
+
+
+
+
+
+
+
+
+        
+
+        // 1. Import the Font format from Quill
+const Font = Quill.import('formats/font');
+
+// 2. Create an array of font keys
+//    Use simple, lowercase strings (no spaces) to avoid Quill confusion
+//    For multi-word fonts like "Playfair Display", pick a single string, e.g. 'playfair-display'
+const fonts = [
+  'roboto',
+  'montserrat',
+  'lato',
+  'oswald',
+  'playfair-display',
+  'raleway'
+];
+
+// 3. Whitelist the fonts and register them
+Font.whitelist = fonts;
+Quill.register(Font, true);
+
+// Point sizes, as in the Product and Send Email editors
+let Size = Quill.import('attributors/style/size');
+Size.whitelist = [
+    '8px', '9px', '10px', '11px', '12px', '14px',
+    '16px', '18px', '20px', '24px', '28px', '32px',
+    '36px', '48px', '72px'
+];
+Quill.register(Size, true);
+
+       
+    // Initialize Quill.js editor (same toolbar as the Product and Send Email editors, plus code block)
+    const toolbarOptions = [
+        ['bold', 'italic', 'underline', 'strike'],
+        ['blockquote', 'code-block'],
+        ['link', 'image'],
+        [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'list': 'check' }],
+        [{ 'script': 'sub' }, { 'script': 'super' }],
+        [{ 'indent': '-1' }, { 'indent': '+1' }],
+        [{ 'direction': 'rtl' }],
+        // false = no size / no font chosen ("Normal" / "Sans Serif"), so the pickers are never blank
+        [{ 'size': [false, ...Size.whitelist] }],
+        [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+        [{ 'color': window.ARAXI_QUILL_COLORS }, { 'background': [] }],   // Araxi colours, then Quill's
+        [{ 'font': [false, ...fonts] }],
+        [{ 'align': [] }],
+        ['clean']
+    ];
+
+
+
+const quill = new Quill('#editor', {
+  theme: 'snow',
+  placeholder: "{{ _('Additional notes') }}",
+  modules: {
+    toolbar: {
+      container: toolbarOptions, 
+      handlers: {
+        image: imageHandler
+      }
+    }
+  }
+});
+
+
+
+// The font picker's labels (including the default "Sans Serif") come from rte.css
+
+
+
+
+
+        let csrfToken = "{{ csrf_token() }}";
+
+        // Submit is a div: let the keyboard press it too
+        document.getElementById('submit').addEventListener('keydown', function (event) {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                this.click();
+            }
+        });
+
+        document.getElementById('submit').onclick = function(event) {
+            event.preventDefault(); // Prevent form submission
+            let saving = document.getElementById("saving");
+            let submit = document.getElementById("submit");
+            saving.classList.toggle('hidden');
+            submit.classList.toggle('hidden');
+
+            let response = document.querySelector("#response");
+            response.innerHTML = "";
+            response.style.display = 'none';
+            document.getElementById("amount").style.borderColor = "black";
+            document.getElementById("type").style.borderColor = "black";
+            document.getElementById("recipient").style.borderColor = "black";
+
+            let answer;
+
+            let recipient = document.getElementById("recipient").value;
+            if (!recipient) {
+                response.innerHTML = "{{ _('Please specify the recipient!') }}";
+                response.style.display = 'flex';
+                document.getElementById("recipient").style.borderColor = "red";
+                saving.classList.toggle('hidden');
+                submit.classList.toggle('hidden');
+                return;
+            }
+            
+            let type = document.getElementById("type").value;
+            if (!type) {
+                response.innerHTML = "{{ _('Please specify the type!') }}";
+                response.style.display = 'flex';
+                document.getElementById("type").style.borderColor = "red";
+                saving.classList.toggle('hidden');
+                submit.classList.toggle('hidden');
+                return;
+            }
+            
+            let amount = document.getElementById("amount").value;
+            if (!amount) {
+                response.innerHTML = "{{ _('Please specify the amount!') }}";
+                response.style.display = 'flex';
+                document.getElementById("amount").style.borderColor = "red";
+                saving.classList.toggle('hidden');
+                submit.classList.toggle('hidden');
+                return;
+            }
+
+            
+            let content = quill.root.innerHTML;
+            const delta = quill.getContents();
+            const hasContent = delta.ops.some(op => {
+                return op.insert && typeof op.insert === 'string' && op.insert.trim() !== '';
+            });
+                
+            let formData = new FormData();
+
+            formData.append('recipient', recipient)     
+            formData.append('type', type)     
+            formData.append('amount', amount)     
+            formData.append('content', content)     
+
+            // Create a new XMLHttpRequest object
+            let xhr = new XMLHttpRequest();
+            
+            // Configure the request
+            xhr.open('POST', '/transfer-funds');
+            xhr.setRequestHeader('X-CSRFToken', csrfToken);
+
+            // Define what happens on successful data submission
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    const response = JSON.parse(xhr.responseText);
+                    if (response.status === '1') {
+                        alert(response.answer)
+                        let ptsURL = window.location.origin  + '/transfers/page=1';
+                        location.href = ptsURL;
+                    }
+                    
+                    if (response.status === '0') {
+                        document.querySelector("#response").textContent = response.answer;
+                        document.querySelector("#response").style.display = 'flex';
+                        saving.classList.toggle('hidden');
+                        submit.classList.toggle('hidden');
+                        return;
+                    } 
+                    
+                    
+                } else {
+                    console.error('Request failed with status: ' + xhr.status);
+                }
+            };
+
+            // Define what happens in case of error
+            xhr.onerror = function () {
+                console.error('Request failed.');
+            };
+
+            // Send the request with the JSON data
+            xhr.send(formData);
+        };
+
+});
+
+    </script>
+
+{% endblock %}

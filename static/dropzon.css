@@ -1,0 +1,183 @@
+
+.dropzone {
+    border: 2px dashed #007bff;
+    border-radius: 5px;
+    /* padding: 20px; */
+    background-color: #fff;
+    transition: background-color 0.2s;
+}
+
+.dz-error-mark {
+    cursor: pointer;
+}
+
+.dropzone:hover {
+    background-color: #e9ecef;
+}
+
+.alt-input:hover {
+    cursor: auto;
+}
+
+.dz-preview:hover {
+    cursor: all-scroll;
+}
+
+.dz-preview {
+    position: relative;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    background-color: #f8f9fa;
+    margin: 10px;
+    padding: 10px;
+}
+
+.dz-preview .dz-remove-btn {
+    position: absolute;
+    top: -7px;
+    right: -7px;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    z-index: 1000;
+}
+
+.dz-remove-btn:hover {
+    background-color: #c82333;
+    cursor: pointer;
+}
+
+.dz-preview:hover {
+    background-color: #c82333;
+    cursor: crosshair;
+}
+
+.modal {
+    display: none;
+    position: fixed!important;
+    top: 50%!important;
+    left: 50%!important;
+    transform: translate(-50%, -50%)!important;
+    background-color: white!important;
+    padding: 20px!important;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5)!important;
+    z-index: 1000!important;
+    border-radius: 8px!important;
+    max-width: 90%!important;
+    max-height: 90%!important;
+    overflow-x: hidden!important;
+    overflow-y: hidden!important;
+    width: unset!important;
+    height: unset!important;
+}
+
+
+/* 
+.modal {
+    display: none;
+    position: fixed!important;
+    top: 50%!important;
+    left: 50%!important;
+    transform: translate(-50%, -50%)!important;
+    background-color: white!important;
+    padding: 20px!important;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5)!important;
+    z-index: 1000!important;
+    border-radius: 8px!important;
+    max-width: 90%!important;
+    max-height: 90%!important;
+    overflow-x: hidden!important;
+    overflow-y: hidden!important;
+} */
+
+.modal.open {
+    display: block;
+}
+
+.modal img {
+    max-width: 100%;
+    max-height: 60vh;
+    margin-bottom: 10px;
+}
+
+.modal h2 {
+    margin-top: 0;
+}
+
+.modal button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    margin: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.modal button:hover {
+    background-color: #0056b3;
+}
+
+.overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    pointer-events: none; /* Ensure the overlay does not block interaction */
+}
+
+.overlay.show {
+    display: block;
+    pointer-events: auto; /* Block interaction when the overlay is visible */
+}
+
+.modal.open {
+    z-index: 1000; /* Ensure the modal appears above the overlay */
+}
+
+
+
+#saveUploads {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 20px;
+    display: hidden;
+}
+
+#uploadButton {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 20px;
+    display: inline-block;
+}
+
+#uploadButton:hover {
+    background-color: #007bffca;
+}
+
+.alt-input {
+    margin-top: 10px;
+    width: 120px;
+    padding: 5px;
+    box-sizing: border-box;
+}
+

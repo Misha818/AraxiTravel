@@ -1,0 +1,1295 @@
+{% extends 'base.html' %}
+{% block title %}
+  {{ _('Store') }}
+{% endblock %}
+
+
+{% block head %}
+  <!-- 1. Bootstrap 5 CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+
+  <!-- Bootstrap Icons for the calendar icon -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+  <!-- 2. flatpickr (calendars) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='calendar.css') }}">
+
+  <style>
+    body {
+      background-color: #fdf6ec;
+    }
+    .table-container table {
+      border-spacing: 0;
+      width: 100%;
+      border: 1px solid #ddd;
+    }
+
+    .table-container th {
+      cursor: pointer;
+    }
+
+    .table-container th, td {
+      text-align: left;
+      padding: 16px;
+    }
+
+    .table-container tr:nth-child(even) {
+      background-color: #f2f2f2
+    }
+
+    .draggerContainer {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        width: 100%; /* Ensure full width to contain all child elements */
+    }
+
+    .child {
+        display: grid;
+        grid-template-columns: 150px 1fr 1fr 1fr 1fr; 
+        gap: 10px; 
+        width: 100%; 
+        align-items: center; 
+        padding: 10px;
+        background-color: aliceblue;
+        border: 1px solid #ccc;
+        cursor: grab;
+    }
+
+    .child:active {
+        cursor: grabbing; 
+    }
+
+    .child img {
+        width: 150px; 
+        height: auto; 
+    }
+
+    .child p {
+        display: flex;
+        align-items: center; 
+        justify-content: center; 
+        text-align: center; 
+        padding: 10px; 
+    }
+
+    .dragging {
+        opacity: 0.5;
+    }
+
+
+
+    .datepicker-days thead {
+        background-color: inherit; 
+        color: inherit;
+    }
+
+    .datepicker-days th, td {
+        padding: 0px;
+        font-size: 16px;
+    }
+
+    .prev, .next {
+        cursor: pointer;
+        position: inherit;
+        top: 50%;
+        width: inherit;
+        padding: inherit;
+        margin-top: inherit;
+        color: inherit;
+        font-weight: inherit;
+        font-size: inherit;
+        transition: none;
+        border-radius: inherit;
+        user-select: inherit;
+    }
+
+    #saveButton:hover {
+      background-color: #2a9d8f!important;
+    }
+
+    /* ---- Toolbar ---- */
+    .store-toolbar {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    /* the open filter panel already sits below the toolbar's gap */
+    .filters.show {
+      margin-top: 0;
+    }
+
+    .store-toolbar .filter-button,
+    .store-toolbar .add-to-store-btn {
+      margin: 0;
+      width: auto;
+      min-width: 100px;
+      min-height: 40px;
+      padding: 6px 16px;
+      background: none;
+      font: inherit;
+      font-weight: 600;
+      box-sizing: border-box;
+    }
+
+    .store-toolbar .filter-button[aria-expanded="true"] {
+      background-color: #e6f4f2;
+    }
+
+    .store-toolbar .filter-button:focus-visible,
+    .store-toolbar .add-to-store-btn:focus-visible,
+    .filters #saveButton:focus-visible,
+    .view-types-btn:focus-visible {
+      outline: 3px solid #264653;
+      outline-offset: 2px;
+    }
+
+    /* ---- Filter panel ---- */
+    .filters.show {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      gap: 10px;
+    }
+
+    .filter-dates {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0 16px;
+      width: 100%;
+    }
+
+    .filter-dates .mb-3 {
+      flex: 1 1 200px;
+      width: auto !important;
+      max-width: 250px;
+    }
+
+    /* keep the calendar icon on the same line as its date field */
+    .filter-dates .input-group {
+      flex-wrap: nowrap;
+    }
+
+    .filter-dates .input-group input {
+      width: auto !important;
+      min-width: 0;
+    }
+
+    .filters select {
+      flex: 1 1 200px;
+      width: auto !important;
+      max-width: 250px;
+      min-width: 0;
+      margin-right: 0;
+    }
+
+    .filters #saveButton,
+    .filters #saving {
+      margin: 0;
+      min-height: 44px;
+      min-width: 56px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* The service-type panel used to be capped at 200px, cutting off longer lists */
+    #answerID.active {
+      max-height: 5000px;
+    }
+
+    @media (max-width: 768px) {
+      .containerCart.store-page {
+        width: 92%;
+        margin: 0 auto;
+        padding-top: 16px;
+      }
+
+      .store-page #tableDaddy {
+        margin-left: 0 !important;
+      }
+
+      #myTable td {
+        padding: 8px 0 !important;
+        align-items: center;
+        gap: 12px;
+        text-align: right;
+      }
+
+      #myTable td::before {
+        flex-shrink: 0;
+        text-align: left;
+      }
+
+      #myTable td.view-types-cell {
+        justify-content: center;
+      }
+
+      .pt-quantity-table td {
+        gap: 12px;
+        text-align: right;
+      }
+
+      .pt-quantity-table td::before {
+        flex-shrink: 0;
+        text-align: left;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .filter-dates .mb-3,
+      .filters select {
+        flex: 1 1 100%;
+        max-width: none;
+      }
+
+      /* Service types: picture on the left, details stacked beside it */
+      #answerID .child {
+        grid-template-columns: 88px minmax(0, 1fr);
+        gap: 4px 10px;
+        padding: 8px;
+      }
+
+      #answerID .child img {
+        width: 88px !important;
+        grid-row: span 4;
+      }
+
+      #answerID .child p {
+        justify-content: flex-start;
+        text-align: left;
+        margin: 0;
+        padding: 2px 0;
+      }
+
+      #answerID .child .more-on-quantity {
+        justify-self: start;
+        margin: 4px 0;
+        padding: 4px 10px;
+      }
+    }
+
+  </style>
+{% endblock %}
+
+{% block content %}
+
+{{ sideBar | safe }}
+
+<div class="containerCart store-page">
+  <div class="store-toolbar">
+    <button type="button" class="filter-button" aria-expanded="false" aria-controls="store-filters">{{ _('Filters') }}</button>
+    <a class="add-to-store-btn" style="text-decoration: none;" href="{{ url_for('add_to_store') }}">{{ _('Add To Store') }}</a>
+  </div>
+  <div class="filters" id="store-filters">
+    <div class="filter-dates">
+        <!-- Production Date -->
+        <div class="mb-3" style="width: 250px; display: inline-block; vertical-align: top;">
+          <label for="productionDate" class="form-label">{{ _('Production Date') }}</label>
+          <div class="input-group" style="gap: 0px;">
+          <input
+          type="text"
+          class="form-control"
+          id="productionDate"
+          placeholder="MM/DD/YYYY"
+          style="width: 200px"
+          />
+          <span class="input-group-text">
+              <i class="bi bi-calendar-date"></i>
+          </span>
+          </div>
+      </div>
+          
+      <!-- Expiration Date -->
+      
+      <div class="mb-3" style="width: 250px; display: inline-block; vertical-align: top;">
+          <label for="expDate" class="form-label">{{ _('Expiration Date') }}</label>
+          <div class="input-group" style="gap: 0px;">
+          <input
+              type="text"
+              class="form-control"
+              id="expDate"
+              placeholder="MM/DD/YYYY"
+              style="width: 200px; min-height: 48px;"
+          />
+          <span class="input-group-text">
+              <i class="bi bi-calendar-date"></i>
+          </span>
+          </div>
+      </div>    
+      
+      
+      <!-- Add Date -->
+      <div class="mb-3" style="width: 250px; display: inline-block; vertical-align: top;">
+          <label for="addDate" class="form-label">{{ _('Add Date') }}</label>
+          <div class="input-group" style="gap: 0px;">
+          <input
+              type="text"
+              class="form-control"
+              id="addDate"
+              placeholder="MM/DD/YYYY"
+              style="width: 200px; min-height: 48px;"
+          />
+          <span class="input-group-text">
+              <i class="bi bi-calendar-date"></i>
+          </span>
+          </div>
+      </div>    
+      
+    </div>    
+  </div>
+
+
+  
+  
+    <div class="table-container toRight" id="tableDaddy" style="max-width: 100%;">
+      <table id="myTable">
+        <thead>
+          <tr style="    border-width: 1px; border-color: #2a9d8f; background-color: #2a9d8f;">
+            <th>
+              <div style="display: flex; align-items: center;">
+              {{ _('Thumbnail') }} 
+              </div>
+            </th>
+
+            <th>
+              <div style="display: flex; align-items: center;">
+                {{ _('Title') }} 
+              </div>
+            </th>
+
+            <th>
+              <div style="display: flex; align-items: center;">
+                {{ _('Full Quantity') }} 
+              </div>
+            </th>
+
+            <th>
+              <div style="display: flex; align-items: center;">
+                {{ _('Outdated Quantity') }} 
+              </div>
+            </th>
+
+          </tr>
+      </thead>
+      <tbody id="myTbody">
+      {% if result.length > 0 %}
+        {% for row in result.data %}
+
+          {% if loop.index > 1 %}
+            {% set trBorderTop = 'class=trBorderTop' %}
+
+          {% else %}
+            {% set trBorderTop = '' %}
+          {% endif %}
+          {% set expQuantity = '' %}
+          {% if row['expired'] is not none %}
+            {% set expQuantity = row['expired'] %}
+          {% endif %}
+            <tr {{ trBorderTop }}>
+              <td style="padding: 16px;" data-label="{{ _('Thumbnail') }}"><img src="{{ url_for('static', filename='images/pr_thumbnails/' + row['Thumbnail']) }}" alt="" style="width: 100px;"/></td>
+              <td style="padding: 16px;" data-label="{{ _('Title') }}">{{ row['prTitle'] }}</td>
+              <td style="padding: 16px;" data-label="{{ _('Full Quantity') }}">{{ row['TotalQuantity'] }}</td>
+              <td style="padding: 16px; color: red;" data-label="{{ _('Outdated Quantity') }}">{{ expQuantity }}</td>
+
+            </tr>
+            <tr class="extra-row">
+              <td colspan="7" class="view-types-cell" style="text-align: center; padding: 5px; ">
+                <button class="view-types-btn" title="{{ _('View Types') }}" aria-label="{{ _('View Types') }}: {{ row['prTitle'] }}" id="btn_{{row['ID']}}" data-onclick='{{ ["getProductTypes", row["ID"]] | tojson }}'>
+                  <div class="chevron">&#9660;</div>
+                </button>
+              </td>
+            </tr>
+            
+            
+        {% endfor %}
+        {% else %}
+          <tr><td colspan="4" style="padding: 15px; font-size: 18px;">{{ _('The store(s) are empty.') }}</td></tr>
+        {% endif %}
+
+        </tbody>
+      </table>
+
+    </div>
+
+</div>
+
+
+<script nonce="{{ csp_nonce() }}" type="text/javascript" src="{{ url_for('static', filename='JS/custom.js')}}"></script>
+<script nonce="{{ csp_nonce() }}">
+let csrfToken = "{{ csrf_token() }}";
+window.addEventListener('load', () => {
+  document.querySelector('body').classList.add('loaded');
+});
+
+const languageID = `{{ languageID }}`;
+
+let prIdChecker = undefined; 
+let mode = 0;
+let clickedState = false
+function getProductTypes(prID) {
+  if (clickedState) {
+    return;
+  }
+  clickedState = true;
+
+  let answerTr = document.getElementById('answerID');
+  if (mode === 1) {
+    if (answerTr) {
+      setTimeout(() => (answerTr.style.display = 'none'), 750);
+      answerTr.remove();
+    }
+      
+    mode = 0;
+    if (prIdChecker === prID) {
+      clickedState = false;
+      return;
+    }
+   
+  }
+
+  prIdChecker = prID;
+  mode = 1;
+  if (answerTr) {
+    setTimeout(() => (answerTr.style.display = 'none'), 750);
+    answerTr.remove();
+    clickedState = false;
+  }
+  let clickedBtn = document.getElementById('btn_' + prID);
+  if (clickedBtn) {
+    let chevron = clickedBtn.getElementsByClassName('chevron');
+    chevron[0].style.display = 'none';
+    let loader = myLoader('#2a9d8f');
+    
+    
+    clickedBtn.appendChild(loader);
+
+    let gearElement = document.getElementById('gear');
+    if (!gearElement) {
+      return;
+    } 
+
+    rotate(gearElement);
+
+    let productionDate = document.getElementById('productionDate').value;
+    let expDate = document.getElementById('expDate').value;
+    let addDate = document.getElementById('addDate').value;
+    let storeID = document.getElementById('store').value;
+    let productID = document.getElementById('product').value;
+    let ptID = '';
+    if (document.getElementById('productType')) {
+      ptID = document.getElementById('productType').value;
+    }
+
+    let formData = new FormData();    
+    formData.append('prID', prID)
+    formData.append('languageID', languageID);
+    formData.append('productionDate', productionDate);
+    formData.append('expDate', expDate);
+    formData.append('addDate', addDate);
+    formData.append('storeID', storeID);
+    formData.append('productID', productID);
+    formData.append('ptID', ptID);
+    
+    // Create a new XMLHttpRequest object
+    let xhr = new XMLHttpRequest();
+    
+    // Configure the request
+    xhr.open('POST', '/get-product-types-quantity');                   
+    xhr.setRequestHeader('X-CSRFToken', csrfToken);
+
+    // Define what happens on successful data submission
+    xhr.onload = function () {
+        if (xhr.status === 200) {
+            let response = JSON.parse(xhr.responseText);
+            gearElement.remove();
+            chevron[0].style.display = 'block';
+            parentTr = clickedBtn.closest('tr');
+            
+            if (response.status === '0') {
+                // Handle Errors
+
+                parentTr.insertAdjacentHTML('afterend', `
+                      <tr id="answerID" >
+                          <td style="text-align: center;" colspan="7">${escapeHtml(response.answer)}</td>
+                      </tr>
+                  `);   
+                
+                clickedState = false;
+                
+            } 
+            
+            if (response.status === '1') {
+              
+              const mainUrl = `${window.location.protocol}//${window.location.hostname}${window.location.port ? `:${window.location.port}` : ''}`;
+                if (response.length === 0) {
+                  // Construct the main URL including the port, if present
+                  const urlTo = mainUrl + '/add-to-store';
+
+                  let addType = 'add-price/' + prID;
+                  parentTr.insertAdjacentHTML('afterend', `
+                      <tr id="answerID" >
+                          <td style="text-align: center;" colspan="7">
+                            <div class="no-pt-detected">{{ _('No Product Type Detected In Store') }}</div>
+                            <div><a class="pcButtonS" href="${escapeHtml(urlTo)}" style="text-decoration: none; margin-bottom: 20px;">{{ _('Add To Store') }}</a></div>
+                          </td>
+                      </tr>
+                  `);   
+                
+                  let answerTr = document.getElementById('answerID');
+                  answerTr.style.display = 'revert'; // Make it visible
+                  setTimeout(() => (answerTr.classList.add('active')), 750); 
+                  clickedState = false;  
+
+                } else {
+
+
+                  let dataArray = Object.entries(response.data);
+                  let rows = '';
+                  let inStock = "{{ _('in stock') }}"
+                  let expiredText = "{{ _('expired') }}"
+                  dataArray.forEach(function(list) {
+                    let imgUrl = mainUrl + '/static/images/sub_product_slider/' + list[1]['imgName']
+                    let checked = '';
+
+                    if (list[1]['Status'] === 1) {
+                      checked = 'checked'
+                    }
+
+                    console.log(list[1]['expired'])
+                    console.log(typeof(list[1]['expired']))
+                    let expired = ''
+                    if (list[1]['expired'] !== null && parseInt(list[1]['expired']) !== 0) {
+                      expired = `<p class="store-quantity-span" style="color: red;">${escapeHtml(list[1]['expired'])} ${expiredText} </p>`;
+                    } 
+
+                    let perRow = `<div class="child" draggable="false" style="cursor: auto;">
+                                    <input type="hidden" name="TypeID" value="${escapeHtml(list[1]['ID'])}">
+                                    <img src="${escapeHtml(imgUrl)}" alt="${escapeHtml(list[1]['AltText'])}" class="" style="width: 150px;">
+                                    <div><p style="justify-content: left; font-weight: 600;">${escapeHtml(restoreUnwantedJsonChars(list[1]['Title']))}</p></div>
+                                    <div><p><span style="font-weight: 600; margin-right: 3px;">${escapeHtml(list[1]['Price'])}</span> {{ mainCurrency }}</p></div>
+                                    <div>
+                                      <p>
+                                        <p class="store-quantity-span">${escapeHtml(list[1]['Quantity'])}  ${inStock}</p> 
+                                        ${expired}
+                                      </p>
+                                    </div>
+
+                                    <p data-id="${escapeHtml(list[1]['ID'])}" class="more-on-quantity" >{{ _('More') }}</p>
+                                </div>`;
+
+                    rows = rows + perRow;
+                    
+                  });
+
+                  let content = `<tr id="answerID" >
+                                  <td style="text-align: center;" colspan="7">
+                                    <div class="draggerContainer" id="draggerContainer">        
+                                      ${rows}    
+                                    </div>
+
+                                    <button class="pcButtonS" style="display: none" id="saveChanges" data-onclick='["saveChanges", ${Number(prID)}]'><span id='schText'>{{ _('Save Changes') }}</span></button>
+                                  </td>
+                                </tr>
+                                `
+
+parentTr.insertAdjacentHTML('afterend', content); 
+
+
+              const draggerContainer = document.getElementById('draggerContainer');
+
+                      draggerContainer.addEventListener('dragstart', (e) => {
+                          if (e.target.classList.contains('child')) {
+                              e.target.classList.add('dragging');
+                              e.dataTransfer.setData('text/plain', e.target.outerHTML); // Store the dragged element.
+                            document.getElementById('saveChanges').style.display = 'inline';
+                          }
+                      });
+
+                      draggerContainer.addEventListener('dragend', (e) => {
+                          if (e.target.classList.contains('child')) {
+                              e.target.classList.remove('dragging');
+                          }
+                      });
+
+                      draggerContainer.addEventListener('dragover', (e) => {
+                          e.preventDefault();
+                          const draggingElement = draggerContainer.querySelector('.dragging');
+                          const afterElement = getDragAfterElement(draggerContainer, e.clientY);
+
+                          if (afterElement == null) {
+                              draggerContainer.appendChild(draggingElement);
+                          } else {
+                              draggerContainer.insertBefore(draggingElement, afterElement);
+                          }
+                      });
+
+                      function getDragAfterElement(draggerContainer, y) {
+                          const draggableElements = [...draggerContainer.querySelectorAll('.child:not(.dragging)')];
+
+                          return draggableElements.reduce(
+                              (closest, child) => {
+                                  const box = child.getBoundingClientRect();
+                                  const offset = y - box.top - box.height / 2;
+                                  if (offset < 0 && offset > closest.offset) {
+                                      return { offset: offset, element: child };
+                                  } else {
+                                      return closest;
+                                  }
+                              },
+                              { offset: Number.NEGATIVE_INFINITY }
+                          ).element;
+                      }
+                    
+                  }
+                  
+                }
+
+                let answerTr = document.getElementById('answerID');
+                answerTr.style.display = 'revert'; // Make it visible
+                setTimeout(() => (answerTr.classList.add('active')), 750); 
+                clickedState = false;
+
+                let scrollTo = 'btn_' + prID.toString();
+                let target = document.getElementById(scrollTo);
+
+                const offset = 0;
+                // Calculate the element's vertical position relative to the top of the page
+                const elementPosition = target.getBoundingClientRect().top + window.pageYOffset;
+                // Subtract the offset
+                const offsetPosition = elementPosition - offset;
+
+                // Smoothly scroll to that position
+                window.scrollTo({
+                  top: offsetPosition,
+                  behavior: "smooth"
+                });
+                
+        } else {
+            // Handle error response
+            uploadButton.classList.remove('hidden');
+            saving.classList.add('hidden');
+
+            console.error('Error adding category:', xhr.responseText);
+            clickedState = false;
+        }
+    };
+
+    // Send the request with the FormData object
+    xhr.send(formData);
+
+
+  }
+  
+}
+
+let saveChangesFlag = 0;
+function saveChanges(prID) {
+  if (saveChangesFlag === 1) {
+    return;
+  }
+  
+  saveChangesFlag = 1;
+
+  let clickedBtn = document.getElementById('saveChanges');
+  let btnText = clickedBtn.querySelector('span');
+  btnText.style.display = 'none';
+  let loader = myLoader('white');
+
+
+  clickedBtn.appendChild(loader);
+
+  let gearElement = document.getElementById('gear');
+  if (!gearElement) {
+    return;
+  } 
+
+  rotate(gearElement);
+
+
+  let i = 0;
+  let formData = new FormData();
+  let dataArray = document.querySelectorAll('.draggerContainer input');
+    dataArray.forEach(function(input) {
+    let typeID = input.value;
+    formData.append(i, typeID)
+    i++;
+  });
+
+  formData.append('prID', prID);
+
+  // Create a new XMLHttpRequest object
+  let xhr = new XMLHttpRequest();
+  
+  // Configure the request
+  xhr.open('POST', '/change-type-order');                   
+  xhr.setRequestHeader('X-CSRFToken', csrfToken);
+
+  // Define what happens on successful data submission
+  xhr.onload = function () {
+      if (xhr.status === 200) {
+          let response = JSON.parse(xhr.responseText);
+
+          alert(response.answer);
+              
+      } else {
+          // Handle error response
+          console.error('Error adding category:', xhr.responseText);
+      }
+      gearElement.remove();
+      btnText.style.display = 'inline';
+
+  };
+
+  // Send the request with the FormData object
+  xhr.send(formData);
+
+  saveChangesFlag = 0;
+}
+
+
+
+
+
+function rotate(gearElement) {
+  let angle = 0;
+    // Stop once the spinner is removed; the timer used to run forever after every click
+    const timer = setInterval(() => {
+      if (!gearElement.isConnected) {
+        clearInterval(timer);
+        return;
+      }
+      angle = (angle + 5) % 360;
+      gearElement.style.transform = `rotate(${angle}deg)`;
+    }, 50);
+
+}
+
+function myLoader(color) {
+  if (color === undefined) {
+    color = 'crimson'
+  }
+  let loader = document.createElement('div'); // Create a div element for the loader
+    loader.id = 'gear';
+    loader.style.color = color;
+    loader.style.fontSize = '20px';
+    loader.style.display = 'inline-block';
+    loader.textContent = '⚙';
+    return loader;
+}
+
+
+
+// Create drop-down 
+
+  const storeData = JSON.parse({{ storeData | tojson }});
+  const productsData = JSON.parse({{ productsData | tojson }});
+    
+  creatDropDown(storeData, 'store', 'store', '200px', "{{ _('Shows From All Stores') }}", '.filters')
+  creatDropDown(productsData, 'product', 'product', '200px', "{{ _('Shows All Products') }}", '.filters')
+
+  function creatDropDown(dataValues, selectID, selectName, selectWidth, optionText, target, insertAfter=false) {
+
+      const storeSelect = document.createElement('select');
+      storeSelect.id = selectID;
+      storeSelect.name = selectName;
+      storeSelect.className = 'styled-select';
+      storeSelect.style.width = selectWidth;
+      storeSelect.style.marginBottom = '0px';
+      
+      
+      const option = document.createElement('option');
+      option.value = '';
+      option.textContent = optionText;
+      storeSelect.appendChild(option);
+      
+      dataValues.forEach(item => {
+        const option = document.createElement('option');
+        option.value = item[0];
+        option.textContent = restoreUnwantedJsonChars(item[1]);
+        storeSelect.appendChild(option);
+      }); 
+      
+      if (storeSelect.options.length == 2) {
+        storeSelect.options[1].selected = true;
+        storeSelect.disabled = true;
+      }
+      
+      if (insertAfter !== false) {
+        const dropdownPlaceholder = document.getElementById(insertAfter);
+        dropdownPlaceholder.insertAdjacentElement('afterend', storeSelect);
+      } else {
+        const dropdownPlaceholder = document.querySelector(target);
+        dropdownPlaceholder.appendChild(storeSelect);
+      }
+
+
+    }  
+
+    // End of creat drop-down
+
+
+    // Select the dropdown with the class 'product'
+    const productSelect = document.getElementById('product');
+
+    // Add an event listener for the 'change' event
+    productSelect.addEventListener('change', function() {
+      
+      let productType = document.getElementById('productType');
+      if (productType) {
+        productType.remove();
+      }
+      const selectedValue = this.value;
+      if (selectedValue.length > 0) {
+
+        
+        let formData = new FormData();
+        formData.append('prID', selectedValue);
+        formData.append('type', '1');
+
+        // Create a new XMLHttpRequest object
+        let xhr = new XMLHttpRequest();
+        
+        // Configure the request
+        xhr.open('POST', '/get-product-types');
+        
+
+        xhr.setRequestHeader('X-CSRFToken', csrfToken);
+
+        // Define what happens on successful data submission
+        xhr.onload = function () {
+            if (xhr.status === 200) {
+                let response = JSON.parse(xhr.responseText);
+
+                // let mistakesDiv = document.getElementById('mistakes_modal');
+                // mistakesDiv.innerHTML = ''; // Clear previous messages
+                
+                if (response.status === '1' && response.length > 0) {
+                    // Handle success                    
+                    creatDropDown(JSON.parse(response.data), 'productType', 'productType', '200px', "{{ _('Product Types') }}", '.filters', 'product')
+
+                } else if (response.status === '1' && response.length === 0) {
+                  let answer = "{{ _('No Types For Specified Product') }}";
+                  alert(answer)
+                } else {
+                  alert("{{ _('Something Went Wrong!') }}")
+                }
+
+            } else {
+                // Handle error response
+                console.error('Error:', xhr.responseText);
+            }
+        };
+
+        // Send the request with the FormData object
+        xhr.send(formData);
+
+      } 
+
+    });
+
+
+    const filtersContainer = document.querySelector('.filters');
+
+    // 2. Create the first new DIV (#saveButton)
+    const saveButton = document.createElement('div');
+    saveButton.id = 'saveButton';
+    saveButton.className = 'pcButtonS';     
+    saveButton.textContent = '🔍';
+    saveButton.style = 'background-color: white; border: 1px solid #2a9d8f;';
+    saveButton.setAttribute('role', 'button');
+    saveButton.setAttribute('tabindex', '0');
+    saveButton.setAttribute('title', "{{ _('Apply') }}");
+    saveButton.setAttribute('aria-label', "{{ _('Apply') }}");
+
+    // 3. Create the second new DIV (#saving)
+    const savingDiv = document.createElement('div');
+    savingDiv.id = 'saving';
+    savingDiv.className = 'pcButtonS hidden';
+    savingDiv.textContent = "{{ _('Loading...') }}";
+    savingDiv.style = 'background-color: white; border: 1px solid #2a9d8f; color: #2a9d8f;';
+
+    // 4. Append both to .filters (at the end)
+    filtersContainer.appendChild(saveButton);
+    filtersContainer.appendChild(savingDiv);
+</script>
+
+<!-- 3. Bootstrap 5 JS (Popper included) -->
+<script nonce="{{ csp_nonce() }}" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- 4. jQuery -->
+<script nonce="{{ csp_nonce() }}" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+
+<!-- 5. flatpickr (calendars) -->
+<script nonce="{{ csp_nonce() }}" src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<script nonce="{{ csp_nonce() }}">
+  // Initialize the date picker on our input
+  // Calendars: the same flatpickr calendar as the Add/Edit Slide pages (phone/tablet layout in static/calendar.css).
+  // Same date format as before (MM-DD-YYYY); typing a date (or deleting it) still works.
+  const calendarOptions = { dateFormat: 'm-d-Y', allowInput: true, disableMobile: true };
+  flatpickr('#productionDate', Object.assign({}, calendarOptions));
+  flatpickr('#expDate', Object.assign({}, calendarOptions));
+  flatpickr('#addDate', Object.assign({}, calendarOptions));
+
+  // The calendar icon next to each date field opens its calendar too
+  document.querySelectorAll('.input-group-text').forEach(function (icon) {
+    const input = icon.parentElement.querySelector('input');
+    if (input && input._flatpickr) {
+      icon.style.cursor = 'pointer';
+      icon.addEventListener('click', function () { input._flatpickr.open(); });
+    }
+  });
+
+
+  
+
+ 
+ document.querySelector('.filter-button').addEventListener('click', function() {
+    document.querySelector('.filters').classList.toggle('show');
+    this.setAttribute('aria-expanded', document.querySelector('.filters').classList.contains('show') ? 'true' : 'false');
+ })
+
+ // The search control is a div: let Enter/Space press it
+ document.querySelector('#saveButton').addEventListener('keydown', function (event) {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      this.click();
+    }
+ });
+
+ // The quantities modal closes with Escape or a click on its backdrop, like its close button
+ document.addEventListener('keydown', function (event) {
+    const modal = document.querySelector('.pt-quantity-modal');
+    if (event.key === 'Escape' && modal) {
+      modal.remove();
+    }
+ });
+ document.addEventListener('click', function (event) {
+    if (event.target.classList && event.target.classList.contains('pt-quantity-modal')) {
+      event.target.remove();
+    }
+ });
+
+
+ document.querySelector('#saveButton').onclick = function(event) {
+  event.preventDefault();
+
+  let formData = new FormData();
+
+  let productionDate = document.getElementById('productionDate').value;
+  let expDate = document.getElementById('expDate').value;
+  let addDate = document.getElementById('addDate').value;
+  let storeID = document.getElementById('store').value;
+  let productID = document.getElementById('product').value;
+  let ptID = '';
+  if (document.getElementById('productType')) {
+    ptID = document.getElementById('productType').value;
+  }
+
+  // Create a new FormData object
+  formData.append('productionDate', productionDate);
+  formData.append('expDate', expDate);
+  formData.append('addDate', addDate);
+  formData.append('storeID', storeID);
+  formData.append('productID', productID);
+  formData.append('ptID', ptID);
+
+  // Create a new XMLHttpRequest object
+  let xhr = new XMLHttpRequest();
+
+  // Configure the request
+  xhr.open('POST', '/store');
+  xhr.setRequestHeader('X-CSRFToken', csrfToken);
+
+  // Define what happens on successful data submission
+  xhr.onload = function () {
+    if (xhr.status === 200) {
+      let response = JSON.parse(xhr.responseText);
+
+      if (response.status === '1') {
+
+          const tbody = document.getElementById('myTbody');
+          tbody.innerHTML = '';
+          let imgUrl = "{{ url_for('static', filename='images/pr_thumbnails/') }}";
+
+          if (response.length > 0) {
+            response.answer.forEach(row => {
+              // Create the main row
+              const mainRow = document.createElement('tr');
+              let currentImgUrl = imgUrl + row.Thumbnail;
+              let expiredQuantity = row.expired;
+              if (row.expired == null) {
+                expiredQuantity = '';
+              }
+              mainRow.innerHTML = `
+                <td style="padding: 16px;" data-label="{{ _('Thumbnail') }}">
+                  <img src="${escapeHtml(currentImgUrl)}" alt="" style="width: 100px;"/>
+                </td>
+                <td style="padding: 16px;" data-label="{{ _('Title') }}">${escapeHtml(restoreUnwantedJsonChars(row.prTitle))}</td>
+                <td style="padding: 16px;" data-label="{{ _('Full Quantity') }}">${escapeHtml(row.TotalQuantity)}</td>
+                <td style="padding: 16px; color: red;" data-label="{{ _('Outdated Quantity') }}">${escapeHtml(expiredQuantity)}</td>
+              `;
+
+              // Create the extra row with the button
+              const extraRow = document.createElement('tr');
+              extraRow.classList.add('extra-row');
+              extraRow.innerHTML = `
+                <td colspan="7" class="view-types-cell" style="text-align: center; padding: 5px;">
+                  <button class="view-types-btn" title="{{ _('View Types') }}" aria-label="{{ _('View Types') }}: ${escapeHtml(restoreUnwantedJsonChars(row.prTitle))}" id="btn_${escapeHtml(row.ID)}" data-onclick='["getProductTypes", ${Number(row.ID)}]'>
+                    <div class="chevron">&#9660;</div>
+                  </button>
+                </td>
+              `;
+
+              tbody.appendChild(mainRow);
+              tbody.appendChild(extraRow);
+            });
+          } else {
+            const mainRow = document.createElement('tr');
+            mainRow.textContent = "{{ _('No Data') }}"
+            mainRow.classList.add('tr-no-data');
+            tbody.appendChild(mainRow);
+          }
+
+
+      } else {
+        alert("{{ _('Something Went Wrong!') }}");
+      }
+
+    } else {
+      // Handle error response
+      saveButton.classList.remove('hidden');
+      saving.classList.add('hidden');
+
+      console.error('Error adding category:', xhr.responseText);
+    }
+  };
+
+  // Send the request with the FormData object
+  xhr.send(formData);
+
+
+ }
+
+// Show Quantities of a product type
+document.addEventListener('click', function(event) {
+  if (event.target.classList.contains('more-on-quantity')) {
+    event.preventDefault();
+    let formData = new FormData();
+    const ptID = event.target.getAttribute('data-id');
+    let productionDate = document.getElementById('productionDate').value;
+    let expDate = document.getElementById('expDate').value;
+    let addDate = document.getElementById('addDate').value;
+    let storeID = document.getElementById('store').value;
+    let productID = document.getElementById('product').value;
+    const languageID = `{{ languageID }}`;
+
+    formData.append('ptID', ptID);
+    formData.append('productionDate', productionDate);
+    formData.append('languageID', languageID);
+    formData.append('expDate', expDate);
+    formData.append('addDate', addDate);
+    formData.append('storeID', storeID);
+    formData.append('productID', productID);
+    
+
+    // Create a new XMLHttpRequest object
+    let xhr = new XMLHttpRequest();
+
+    // Configure the request
+    xhr.open('POST', '/get-pt-quantities');
+    xhr.setRequestHeader('X-CSRFToken', csrfToken);
+
+    // Define what happens on successful data submission
+    xhr.onload = function () {
+      if (xhr.status === 200) {
+        let response = JSON.parse(xhr.responseText);
+
+        if (response.status === '1') {
+
+            if (response.length > 0) {
+              const baseEditStoreUrl = "{{ url_for('edit_store', quantity_pt_IDs='PLACEHOLDER') }}";
+              
+              // Function to build the table rows from JSON data
+              function buildTable(tableBody) {
+
+                tableBody.innerHTML = ''; // Clear existing rows
+                
+                response.data.forEach(item => {
+                  const row = document.createElement('tr');                  
+                  
+                  // Helper function to create a cell
+                  function createCell(content, cellClass, color=false) {
+                    const cell = document.createElement('td');
+                    cell.className = cellClass;
+                    cell.textContent = content;
+
+                    if (color) {
+                      if (color === 1) {
+                        cell.style.color = 'red';
+                      }
+                    }
+
+                    return cell;
+                  }
+                  
+                  // Append cells for each field
+                  row.appendChild(createCell(item.Name, 'pt-quantity-td'));          // Store Name
+                  row.appendChild(createCell(item.Initials, 'pt-quantity-td'));        // Initials
+                  row.appendChild(createCell(item.Quantity, 'pt-quantity-td'));        // Quantity
+                  row.appendChild(createCell(item.maxQuantity, 'pt-quantity-td'));     // Max Quantity
+                  row.appendChild(createCell(item.productionDate, 'pt-quantity-td'));  // Production Date
+                  row.appendChild(createCell(item.expDate, 'pt-quantity-td', item.expStatus));         // Expiration Date
+                  row.appendChild(createCell(item.addDate, 'pt-quantity-td'));         // Add Date
+                  
+                  quantity_pt_ids = item.ID + 'qptid' + item.ptID;
+                  let editUrl = baseEditStoreUrl.replace('PLACEHOLDER', quantity_pt_ids);
+                  // Action button cell
+                  const actionCell = document.createElement('td');
+                  actionCell.className = 'pt-quantity-td';
+                  const actionLink = document.createElement('a');
+                  actionLink.href = editUrl; 
+                  actionLink.target = "_BLANK"; 
+                  actionLink.textContent = "{{ _('Edit') }}";
+                  actionLink.className = "pt-quantity-action-btn";
+                  actionCell.appendChild(actionLink);
+                  row.appendChild(actionCell);
+
+                  // Label each cell from the header row: on phones the rows are stacked as cards
+                  const labels = tableBody.closest('table').querySelectorAll('thead th');
+                  Array.from(row.children).forEach((cell, i) => {
+                    if (labels[i]) {
+                      cell.dataset.label = labels[i].textContent;
+                    }
+                  });
+
+                  tableBody.appendChild(row);
+                });
+            }
+            
+            // Function to create the modal structure dynamically
+            function createModal(tableTitle) {
+              // Create the modal container
+              const modal = document.createElement('div');
+              modal.id = 'myModal';
+              modal.className = 'pt-quantity-modal';
+              
+              // Create modal content container
+              const modalContent = document.createElement('div');
+              modalContent.className = 'pt-quantity-modal-content';
+              
+              // Create and append the close button
+              const closeBtn = document.createElement('span');
+              closeBtn.id = 'closeModalBtn';
+              closeBtn.className = 'pt-quantity-close';
+              closeBtn.innerHTML = '&times;';
+              modalContent.appendChild(closeBtn);
+              
+              // Create and append a header
+              const header = document.createElement('h2');
+              header.textContent = tableTitle;
+              modalContent.appendChild(header);
+              
+              // Create a container for the table to allow horizontal scrolling on mobile
+              const tableContainer = document.createElement('div');
+              tableContainer.className = 'pt-quantity-table-container';
+              
+              // Create the table
+              const table = document.createElement('table');
+              table.className = 'pt-quantity-table';
+              
+              // Create the table header
+              const thead = document.createElement('thead');
+              thead.className = 'pt-quantity-thead';
+              const headerRow = document.createElement('tr');
+              headerRow.className = 'pt-quantity-tr';
+              
+              const headers = [
+                "{{ _('Store') }}",
+                "{{ _('Submitted By') }}",
+                "{{ _('Quantity') }}",
+                "{{ _('Max Quantity') }}",
+                "{{ _('Production Date') }}",
+                "{{ _('Expiration Date') }}",
+                "{{ _('Add Date') }}",
+                "{{ _('Action') }}"
+              ];
+              headers.forEach(text => {                
+                const th = document.createElement('th');
+                th.className = 'pt-quantity-th';
+                th.textContent = text;
+                headerRow.appendChild(th);
+              });
+              thead.appendChild(headerRow);
+              table.appendChild(thead);
+              
+              // Create table body
+              const tbody = document.createElement('tbody');
+              tbody.className = 'pt-quantity-tbody';
+              table.appendChild(tbody);
+              
+              // Append table to container, then container to modal content
+              tableContainer.appendChild(table);
+              modalContent.appendChild(tableContainer);
+              
+              // Append modal content to modal container
+              modal.appendChild(modalContent);
+              
+              // Append modal to the body
+              document.body.appendChild(modal);
+              
+              // Attach event listener for the close button
+              closeBtn.addEventListener('click', () => {
+                modal.remove();
+              });
+              
+              // Return modal references for later use
+              return { modal, tableBody: tbody };
+            }
+            
+            // Variables to store modal elements
+            let modalElements = null;
+            
+              // Create modal if it hasn't been created yet
+              if (!modalElements) {
+                modalElements = createModal(restoreUnwantedJsonChars(response.data[0].Title));
+              }
+              
+              // Build the table rows
+              buildTable(modalElements.tableBody);
+              
+              // Display the modal
+              modalElements.modal.style.display = 'block';
+            } else {
+              alert("{{ _('Nothing was found') }}")
+
+            }
+
+
+        } else {
+          alert("{{ _('Something Went Wrong!') }}");
+        }
+
+      } else {
+        // Handle error response
+        saveButton.classList.remove('hidden');
+        saving.classList.add('hidden');
+
+        console.error('Error adding category:', xhr.responseText);
+      }
+    };
+
+    // Send the request with the FormData object
+    xhr.send(formData);
+
+  }
+});
+</script>
+
+
+{% endblock %}

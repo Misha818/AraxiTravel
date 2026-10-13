@@ -1,0 +1,311 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {{ _("Order Details") }}
+{% endblock %}
+
+
+{% block head %}
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #fdf6ec;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
+        }
+        .card {
+            border: none;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.06);
+            border-radius: 16px;
+            animation: fadeIn 1s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from {opacity: 0; transform: translateY(20px);}
+            to {opacity: 1; transform: translateY(0);}
+        }
+        .summary-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #eceff3;
+        }
+        .summary-total {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #555;
+        }
+        .btn-primary {
+            background-color: #FCC628;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background-color: #ffaa00;
+            border: none;
+        }
+        .btn-outline-secondary:hover {
+            background-color: #FCC628;
+            border: none;
+        }
+
+        .btn-outline-secondary {
+            border-color: #FCC628;
+            color: #FCC628;
+        }
+
+        .text-success {
+            color: #FCC628!important;
+        }
+        .recommendation-card img {
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+        }
+        .recommendation-card {
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            border-radius: 12px;
+            transition: transform 0.3s;
+        }
+        .recommendation-card:hover {
+            transform: translateY(-5px);
+        }
+        .cp-price {
+            text-decoration: line-through !important;
+        }
+        .summary-item a {
+            color: black;
+            text-decoration: none;
+        }
+  
+        /* Remove all borders except the bottom border of rows */
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        table th, table td {
+            border: none; /* Remove all cell borders */
+            padding: 8px; /* Add some padding for spacing */
+        }
+
+        table tbody tr {
+            border-bottom: 1px solid #ddd; /* Add a bottom border to each row */
+        }
+
+        table thead tr {
+            border-bottom: 2px solid #333; /* Add a thicker bottom border for the header */
+        }
+        thead {
+            border-top: unset;
+        }
+
+        table a {
+            text-decoration: none;
+            color: #333;
+        }
+
+                /* Modal Styles */
+                .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.6);
+        }
+
+        .modal-content {
+            background-color: #fff;
+            margin: 3% auto;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+        }
+
+        .close-btn {
+            float: right;
+            font-size: 25px;
+            cursor: pointer;
+            margin: -15px 98%;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+
+    </style>
+{% endblock %}
+
+{% block content %} 
+{{ sideBar | safe }}
+<div class="container py-5">
+    <div class="card p-5 text-center">
+        <h4 class="text-muted">{{ _('Order') }} #{{ result[0]['ID']}}</h4>
+
+        <div class="row my-4">
+
+            <div class="col-md-9 text-start">
+                <h5 class="mb-3">{{ _('Order Details') }}</h5>
+                <span id="products">
+
+                </span>
+            </div>
+
+            <div class="col-md-3 text-start">
+                <h5 class="mb-3">{{ _('Client') }}</h5>
+                <p>
+                    <strong>{{ [result[0].FirstName, result[0].LastName] | select | join(' ') or _('N/A') }}</strong><br>
+                </p>
+                
+                {% if (result[0].promo_code) %}
+                <h6>🏷️ {{ _('Promo Code') }}: <span> {{ result[0].promo_code }}</span></h6>
+                
+                {% endif %}
+
+                {% if (result[0].timestamp) %}
+                <h6>🗓️ {{ _('Ordered') }}: <span>{{ result[0].timestamp }}</span></h6>
+                
+                {% endif %}
+                
+                {% if (result[0].Status == 5) %}
+                <h6>🗓️ {{ _('Delivered') }}: <span>{{ result[0].deliveryDate }}</span></h6>
+                
+                {% endif %}
+
+                <h6>📋 {{ _('Status') }}:</h6>
+                {% set statusStyle = 'status-open' %}
+                {% set status = _('Purchased') %}
+                {% if result[0].Status == 0 %}
+                    {% set status = _('Cancelled') %}
+                    {% set statusStyle = 'status-closed' %}
+                {% elif result[0].Status == 1 %}
+                    {% set status = _('Panding') %}
+                    {% set statusStyle = 'status-on-hold' %}
+                {% elif result[0].Status == 2 %}
+                    {% set status = _('Purchased') %}
+                    {% set statusStyle = 'status-open' %}
+                {% elif result[0].Status == 3 %}
+                    {% set status = _('Preparing') %}
+                    {% set statusStyle = 'status-preparing' %}
+                {% elif result[0].Status == 4 %}
+                    {% set status = _('Ready for delivery') %}
+                    {% set statusStyle = 'status-ready' %}
+                {% elif result[0].Status == 5 %}
+                    {% set status = _('Delivered') %}
+                    {% set statusStyle = 'status-delivered' %}
+                {% endif %}
+                <p style="width: 40%;" class="status-label {{statusStyle}}">{{ status }} </p>
+
+                
+            </div>
+        </div>
+    </div>
+
+    </div>
+
+</div>
+<script nonce="{{ csp_nonce() }}" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script nonce="{{ csp_nonce() }}">
+    let csrfToken = "{{ csrf_token() }}";
+    const result = {{ result | tojson }};
+    let productRows = '';
+    const mainURL = `${window.location.protocol}//${window.location.hostname}${window.location.port ? `:${window.location.port}` : ''}/`;
+    let display = 'display: none!important;';
+    let totalRevard = 0;
+
+    // Generate table rows for each product
+    result.forEach(row => {
+        let productTitle = row.prTitle + ' ' + row.ptTitle;
+        let productURL = mainURL + hyphen(row.prTitle) + '&' + hyphen(row.ptTitle);
+        let price = row.price * row.quantity;
+        let discountPrice = 0;
+        let discount = '';
+        let hidden = 'hidden';
+        let cpPrice = '';
+        let revardType = '%';
+        let revardVal = row.price * row.quantity * row['revard_value'] / 100;
+        if (row['revard_type'] == 1) {
+                revardType = 'fx';
+                revardVal = row['revard_value'] * row.quantity;
+            }
+        totalRevard = totalRevard + revardVal;
+        let revard = row['revard_value'] + '<i>' + revardType + '</i>';
+            
+
+
+        if (row.discount != null) {
+            discountPrice = row.price * row.quantity - row.price * row.quantity * row.discount / 100;
+            hidden = '';
+            cpPrice = 'cp-price';
+            discount = `(${row.discount}%)`;
+            display='display: table-cell;';
+        }
+
+        productRows += `
+            <tr>
+                <td style="width: 55%"><a href="${escapeHtml(productURL)}" target="_BLANK">${escapeHtml(productTitle)}</a></td>
+                <td>${row.quantity}</td>
+                <td class="${cpPrice}">{{ mainCurrency }} ${price}</td>
+                <td style="${display}">${discount}</td>
+                <td class="discountPrice" style="${display}">{{ mainCurrency }} ${discountPrice}</td>
+                <td class="discountPrice" style="${display}">${revard}</td>
+                <td class="discountPrice" style="${display}">{{ mainCurrency }} ${revardVal}</td>
+            </tr>
+        `;
+    });
+
+    // Generate the table and the total summary
+    const tableHTML = `
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>{{ _('Product') }}</th>
+                    <th>{{ _('Quantity') }}</th>
+                    <th>{{ _('Net') }}</th>
+                    <th style="${display}">{{ _('Discount') }}</th>
+                    <th style="${display}">{{ _('Discounted') }}</th>
+                    <th style="${display}">{{ _('Revard per product') }}</th>
+                    <th style="${display}">{{ _('Revard value') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${productRows}
+            </tbody>
+        </table>
+    `;
+
+    const totalHTML = `
+        <div class="summary-item summary-total d-flex justify-content-between mt-3">
+            <span>{{ _('Total revard') }}</span>
+            <span class="price">{{ mainCurrency }} ${totalRevard}</span>
+        </div>
+    `;
+
+    // Combine the table and the total summary
+    document.getElementById('products').innerHTML = tableHTML + totalHTML;
+
+    // Helper function to convert spaces to hyphens
+    function hyphen(str) {
+        return str.replace(/\s+/g, '-');
+    }
+
+</script>
+{% endblock %}

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+    <script nonce="{{ csp_nonce() }}" src="{{ url_for('static', filename='JS/security.js') }}"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script nonce="{{ csp_nonce() }}" src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+
+<title>Login Form</title>
+
+
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+  }
+
+  form {
+    text-align: center;
+  }
+
+  .login-container {
+    background: white;
+    border-radius: 8px;
+    padding: 30px;
+    box-shadow: 0 15px 25px rgba(0, 0, 0, 0.15);
+  }
+
+  .login-container h1 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #333;
+    text-align: center;
+  }
+
+  .input-field {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+    margin-bottom: 10px;
+  }
+
+  .input-field:focus {
+    border-color: #007bff;
+    outline: none;
+  }
+
+  .submit-button {
+    padding: 10px;
+    margin-top: 10px;
+    background-color: #007bff;
+    color: white;
+    font-size: 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .submit-button:hover {
+    background-color: #0056b3;
+  }
+
+  .hidden {
+    display: none;
+  }
+
+  #mistakes {
+    color: red;
+    display: flex;
+    border: 1px solid red;
+    border-radius: 5px;
+    padding: 15px;
+    margin: 0 auto 10px auto;
+    display: none;
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .checkbox {
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border: 1px solid #4CAF50;
+    border-radius: 5px;
+    position: relative;
+    cursor: pointer;
+    outline: none;
+    background-color: white;
+    transition: all 0.3s ease-in-out;
+  }
+
+  .checkbox:checked {
+    background-color: #4CAF50;
+    border-color: #4CAF50;
+  }
+
+  .checkbox:checked::after {
+    content: "\2713";
+    font-size: 14px;
+    color: white;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-weight: bold;
+  }
+
+  
+  .remember_me {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    margin-bottom: 12px;
+  }
+</style>
+
+</head>
+<body>
+<div class="login-container" style="min-width: 300px;">
+  <h1>{{ _('Login') }}</h1>
+  <form action="#" method="post">
+    <div id="mistakes" style="width: 268px;"></div>
+    
+    <input type="text" id="username" class="input-field" name="username" placeholder="{{ _('Username') }}" required>
+    <input type="password" class="input-field" name="password" placeholder="{{ _('Password') }}" id="password" autocomplete="current-password" required>
+    <div class="remember_me">
+      <input type="checkbox" name="remember" id="remember" class="checkbox">
+      <span class="untranslated" style="font-size: 20px; font-style: italic;">{{ _('Remember me') }}</span>
+    </div>
+
+    <div class="cf-turnstile" data-sitekey="{{ TURNSTILE_SITE_KEY }}"></div>
+    <div id="login" class="submit-button">{{ _('Log In') }}</div>
+    <div id="saving" class="submit-button hidden">{{ _('Loading...') }}</div>
+  </form>
+</div>
+
+<script nonce="{{ csp_nonce() }}">
+  let csrfToken = "{{ csrf_token() }}"
+  let saveButton = document.getElementById('login');
+
+  saveButton.addEventListener('click', function(event) {
+      let saving = document.getElementById('saving');
+      
+      // Check if username and password are specified
+      let username = document.getElementById('username').value;
+      let password = document.getElementById('password').value;
+
+      let mistakesDiv = document.getElementById('mistakes');
+
+      if (!username) {
+        let answer = "{{ _('Please specify username') }}";
+        mistakesDiv.innerHTML = answer;
+        mistakesDiv.style.color = 'red';
+        mistakesDiv.style.display = 'flex';
+        return;
+      }
+      
+      if (!password) {
+        let answer = "{{ _('Please specify password') }}";
+        mistakesDiv.innerHTML = answer;
+        mistakesDiv.style.color = 'red';
+        mistakesDiv.style.display = 'flex';
+        return;
+      }
+
+      saveButton.classList.toggle('hidden')
+      saving.classList.toggle('hidden')
+
+      let cf_turnstile_response = document.querySelector('input[name="cf-turnstile-response"]').value;
+      
+      const checkbox = document.getElementById('remember');
+      let remember = checkbox.checked ? '1' : '0';
+
+      let formData = new FormData();
+      formData.append('username', username);
+      formData.append('password', password);
+      formData.append('remember', remember);
+      formData.append('cf-turnstile-response', cf_turnstile_response);
+      
+      // Create a new XMLHttpRequest object
+      let xhr = new XMLHttpRequest();
+      
+      // Configure the request
+      xhr.open('POST', '/login');
+      xhr.setRequestHeader('X-CSRFToken', csrfToken);
+
+      // Define what happens on successful data submission
+      xhr.onload = function () {
+          if (xhr.status === 200 || xhr.status === 429) {
+              let response = JSON.parse(xhr.responseText);
+             
+              mistakesDiv.innerHTML = ''; // Clear previous messages
+
+              if (response.status === '0') {
+                  saveButton.classList.toggle('hidden')
+                  saving.classList.toggle('hidden')
+                  // Handle empty product name
+                  mistakesDiv.innerHTML = safeMessage(response.answer);
+                  mistakesDiv.style.color = 'red';
+                  mistakesDiv.style.display = 'flex';
+
+                  csrfToken = response.newCSRFtoken;
+                  
+                  // Scroll the window to the mistakesDiv with smooth behavior
+                  mistakesDiv.scrollIntoView({ behavior: 'smooth' });
+
+                  saveButton.classList.remove('hidden');
+                  saving.classList.add('hidden');
+
+              } 
+              
+              if (response.status === '1') {
+                saveButton.classList.toggle('hidden')
+                saving.classList.toggle('hidden')
+                  // Handle success
+                  let stuffURL = window.location.origin  + '/stuff';
+                  location.href = stuffURL;
+              }
+          } else {
+              saveButton.classList.toggle('hidden')
+              saving.classList.toggle('hidden')
+              // Handle error response
+              saveButton.classList.remove('hidden');
+              saving.classList.add('hidden');
+
+              console.error('Error adding category:', xhr.responseText);
+          }
+      };
+
+      // Send the request with the FormData object
+      xhr.send(formData);
+  });
+
+</script>
+
+</body>
+</html>

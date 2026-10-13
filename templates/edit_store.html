@@ -1,0 +1,597 @@
+{% extends 'base.html' %}
+{% block title %}
+{{ _('Edit Store') }}
+{% endblock %}
+{% block head %}
+
+  <!-- 1. Bootstrap 5 CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+
+  <!-- Bootstrap Icons for the calendar icon -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+  <!-- 2. flatpickr (calendars) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='calendar.css') }}">
+
+  <style>
+
+    thead {
+        background-color: inherit; 
+        color: inherit;
+    }
+    th, td {
+        padding: 0px;
+        font-size: 16px;
+    }
+
+    .prev, .next {
+        cursor: pointer;
+        position: inherit;
+        top: 50%;
+        width: inherit;
+        padding: inherit;
+        margin-top: inherit;
+        color: inherit;
+        font-weight: inherit;
+        font-size: inherit;
+        transition: none;
+        border-radius: inherit;
+        user-select: inherit;
+    }
+
+    /* ---- Form layout (card styles come from .admin-form-card in styles.css) ---- */
+    .store-add-form .dropdown {
+        display: block;
+        width: 100%;
+        margin: 0;
+    }
+
+    .store-add-form .dropdown-label {
+        padding: 12px 14px;
+    }
+
+    .store-add-form .dropdown-options {
+        max-height: 60vh;
+        overflow-y: auto;
+    }
+
+    .store-add-form .store-quantity {
+        width: 100%;
+        margin: 0;
+        padding: 12px 14px;
+        box-sizing: border-box;
+    }
+
+    .store-add-form .store-quantity:disabled {
+        background-color: #f2f2f2;
+    }
+
+    .store-add-form .store-date-field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin: 8px 0 0 0;
+    }
+
+    .store-add-form .store-date-field .form-label {
+        margin: 0;
+        font-weight: bold;
+        color: #333;
+    }
+
+    .store-add-form .input-group {
+        gap: 0 !important;
+        flex-wrap: nowrap;
+    }
+
+    .store-add-form .input-group input {
+        min-width: 0;
+        padding: 10px 12px;
+    }
+
+    .store-add-form .checkbox-container {
+        margin: 14px 0 6px 0;
+        font-size: 16px;
+        line-height: 25px;
+    }
+
+    .store-add-form .dropdown-label:focus-visible,
+    .store-add-form .option:focus-visible,
+    .store-add-form .child-option:focus-visible,
+    .store-add-form .checkbox-container:focus-within .checkmark {
+        outline: 3px solid #264653;
+        outline-offset: 2px;
+    }
+
+  </style>  
+
+{% endblock %}
+
+{% block content %}
+
+<div class="overlay" id="overlay"></div>
+{{ sideBar | safe }}
+<div class="containerS admin-form-card">
+    <h1>{{ _('Edit Store') }}</h1>
+    <div id="mistakes" style="width: 100%" role="alert" aria-live="polite"></div>
+    <form id="product-category-form" class="admin-form store-add-form" novalidate>
+
+        <span class="field-label" id="product-label">{{ _('Product') }}</span>
+        <!-- Dropdown Container -->
+        <div class="dropdown">
+            <!-- The top label -->
+            <div class="dropdown-label" id="selected-label" role="button" tabindex="0" aria-controls="parent-options" aria-expanded="false">{{ _('Choose a Product') }}</div>
+
+            <!-- Parents list (hidden initially) -->
+            <div class="dropdown-options hidden" id="parent-options"></div>
+        </div>
+        <!-- End of drop-down container -->
+
+        <!-- The store dropdown is inserted right after this label -->
+        <label for="store" class="field-label" id="store-label">{{ _('Store') }}</label>
+
+        <label for="quantity" class="field-label">{{ _('Quantity') }}</label>
+        <input type="number" value="{{ resultQuantity[0].Quantity }}" name="quantity" id="quantity" min="1" placeholder="{{ _('Quantity') }}" class="store-quantity" inputmode="numeric">
+
+        <!-- Production Date -->
+        <div class="store-date-field">
+            <label for="productionDate" class="form-label">{{ _('Production Date') }}</label>
+            <div class="input-group" style="gap: 0px;">
+            <input
+            type="text"
+            class="form-control"
+            id="productionDate"
+            placeholder="MM/DD/YYYY"
+            autocomplete="off"
+            />
+            <span class="input-group-text">
+                <i class="bi bi-calendar-date"></i>
+            </span>
+            </div>
+        </div>
+            
+        <!-- Expiration Date -->
+         
+        <div class="store-date-field">
+            <label for="expDate" class="form-label">{{ _('Expiration Date') }}</label>
+            <div class="input-group" style="gap: 0px;">
+            <input
+                type="text"
+                class="form-control"
+                id="expDate"
+                placeholder="MM/DD/YYYY"
+                autocomplete="off"
+            />
+            <span class="input-group-text">
+                <i class="bi bi-calendar-date"></i>
+            </span>
+            </div>
+        </div>    
+
+        <div>
+            <label class="checkbox-container" for="maxQuantityCheckbox">
+                <input type="checkbox" id="maxQuantityCheckbox" aria-controls="maxQuantity">
+                <span class="checkmark"></span>
+                <span>{{ _('Max allowed quantity to purchase') }}</span>
+              </label>
+            <!-- <input type="checkbox" name="qCheck" id="qCheck"> -->
+            <input
+                type="number"
+                name="maxQuantity"
+                placeholder="{{ _('Max allowed quantity to purchase') }}"
+                title="{{ _('Max allowed quantity to purchase') }}"
+                aria-label="{{ _('Max allowed quantity to purchase') }}"
+                class="store-quantity"
+                id="maxQuantity"
+                value="{{ resultQuantity[0].maxQuantity if resultQuantity[0].maxQuantity is not none else '' }}"
+                inputmode="numeric"
+                disabled
+            >
+        </div>
+            
+        <input type="hidden" id="language-id" value="{{ languageID }}">
+
+        <div id="saveButton" class="pcButtonS modifiedB" role="button" tabindex="0">{{ _('Submit') }}</div>
+        <div id="saving" class="pcButtonS modifiedB hidden" aria-live="polite">{{ _('Saving...') }}</div>
+    </form>
+</div>
+
+<script nonce="{{ csp_nonce() }}">
+
+    // Max quantity checkbox
+    const checkbox = document.getElementById('maxQuantityCheckbox');
+    const inputField = document.getElementById('maxQuantity');
+    // offered when the box is ticked on stock saved without a limit (MAX_ALLOWED_QUANTITY in .env)
+    let inputFieldValue = {{ maxAllowedQuantity | tojson }};
+    checkbox.addEventListener('change', function() {
+        if (this.checked) {
+        inputField.disabled = false;
+        inputField.value = inputFieldValue;
+        } else {
+            inputField.disabled = true;
+            inputField.value = '';
+        }
+    });
+
+    const maxQuantity = "{{ resultQuantity[0].maxQuantity }}"
+    if (maxQuantity !== 'None') {
+        inputField.disabled = false;
+        checkbox.checked = true;
+        inputFieldValue = parseInt(maxQuantity)
+    }
+
+    let csrfToken = "{{ csrf_token() }}"
+    // Create a FormData object to hold the files
+
+
+saveButton.addEventListener('click', function (event) {
+    // Prevent the default form submission
+    event.preventDefault();
+
+    const saveButton = document.getElementById('saveButton');
+    const saving = document.getElementById('saving');
+    
+    saveButton.classList.add('hidden');
+    saving.classList.remove('hidden');
+    
+    let formData = new FormData();
+
+    let ptID = document.getElementById('selected-label').getAttribute('data-value');
+    let storeID = document.getElementById('store').value;
+    let quantity = document.getElementById('quantity').value;
+    let productionDate = document.getElementById('productionDate').value;
+    let expDate = document.getElementById('expDate').value;
+    let quantityID = "{{ resultQuantity[0].ID }}";
+    let maxQuantity = false;
+    const languageID = `{{ languageID }}`;
+
+    if (checkbox.checked) {
+        maxQuantity = document.getElementById('maxQuantity').value;
+    } 
+
+    // Create a new FormData object
+    formData.append('ptID', ptID);
+    formData.append('languageID', languageID);
+    formData.append('storeID', storeID);
+    formData.append('quantity', quantity);
+    formData.append('productionDate', productionDate);
+    formData.append('expDate', expDate);
+    formData.append('maxQuantity', maxQuantity);
+    formData.append('quantityID', quantityID);
+
+    // Create a new XMLHttpRequest object
+    let xhr = new XMLHttpRequest();
+
+    // Configure the request
+    xhr.open('POST', '/edit-store');
+    xhr.setRequestHeader('X-CSRFToken', csrfToken);
+
+    // Define what happens on successful data submission
+    xhr.onload = function () {
+        if (xhr.status === 200) {
+            let response = JSON.parse(xhr.responseText);
+
+            let mistakesDiv = document.getElementById('mistakes');
+            mistakesDiv.innerHTML = ''; // Clear previous messages
+
+            if (response.status === '1') {
+                alert("{{ _('Done!') }}");
+                window.close();
+            }
+
+            if (response.status === '0') {
+                // Handle empty product name
+                mistakesDiv.innerHTML = safeMessage(response.answer);
+                mistakesDiv.style.color = 'red';
+                mistakesDiv.style.display = 'flex';
+
+                // Scroll the window to the mistakesDiv with smooth behavior
+                mistakesDiv.scrollIntoView({ behavior: 'smooth' });
+
+                saveButton.classList.remove('hidden');
+                saving.classList.add('hidden');
+
+            } 
+
+        } else {
+            // Handle error response
+            saveButton.classList.remove('hidden');
+            saving.classList.add('hidden');
+
+            console.error('Error adding category:', xhr.responseText);
+        }
+    };
+
+    // Send the request with the FormData object
+    xhr.send(formData);
+});
+
+</script>
+
+<script nonce="{{ csp_nonce() }}" type="text/javascript" src="{{ url_for('static', filename='JS/custom.js')}}"></script>
+<script nonce="{{ csp_nonce() }}" type="text/javascript">
+ 
+    // Dynemically creat drop-down elements
+    const ptID = "{{ ptID }}" 
+    const dataLength = "{{ dataLength }}"
+    const prData = JSON.parse({{ prData | tojson }});
+    const storeID = "{{ storeID }}";
+ 
+    let dropDownContent = document.createElement('span');
+    if (parseInt(dataLength) > 0) {
+
+        let flag = prData[0].ID;
+        let newDivTitle = restoreUnwantedJsonChars(prData[0].Title);
+        let childerenData = '';
+      
+        prData.forEach((row) => {
+         
+            if (flag === row['ID']) {
+
+                childerenData = childerenData + row['ptID'] + '_sp_' + restoreUnwantedJsonChars(row['ptTitle']) + '_sppr_';
+
+            } else {
+                
+                let newDiv = document.createElement('div');
+                    newDiv.className = 'option';
+                    newDiv.dataset.parent = newDivTitle;
+                    newDiv.dataset.value = flag;
+                    newDiv.textContent = newDivTitle;
+                    newDiv.dataset.children = childerenData.slice(0, -6);    
+                
+                let childOptions = document.createElement('div');
+                    childOptions.className = "child-options hidden"
+
+                newDiv.appendChild(childOptions)
+                dropDownContent.append(newDiv);
+
+                flag = row['ID']
+                newDivTitle = restoreUnwantedJsonChars(row['Title'])
+                childerenData = row['ptID'] + '_sp_' + restoreUnwantedJsonChars(row['ptTitle']) + '_sppr_';
+
+            }               
+
+        });
+
+        let newDiv = document.createElement('div');
+            newDiv.className = 'option';
+            newDiv.dataset.parent = newDivTitle;
+            newDiv.dataset.value = flag;
+            newDiv.textContent = newDivTitle;
+            newDiv.dataset.children = childerenData.slice(0, -6);    
+        
+        let childOptions = document.createElement('div');
+            childOptions.className = "child-options hidden"
+
+        newDiv.appendChild(childOptions)
+        dropDownContent.append(newDiv);
+
+    } else {
+        let newA = document.createElement('a');
+        newA.href = window.origin + '/product/new';
+        let newDiv = document.createElement('div');
+            let newDivTitle ="{{ _('Click on me to add a product') }}";
+            newDiv.className = 'option';
+            newDiv.dataset.parent = newDivTitle;
+            newDiv.textContent = newDivTitle;
+        
+        let childOptions = document.createElement('div');
+            childOptions.className = "child-options hidden"
+
+        newDiv.appendChild(childOptions)
+        newA.appendChild(newDiv)
+        dropDownContent.append(newA);
+    }
+    
+    document.getElementById('parent-options').appendChild(dropDownContent);
+
+
+    // If ptID is True
+    if (ptID !== 'None') {
+        prData.forEach((row) => {
+            // console.log(`${ptID} === ${row['ptID']}`)
+            // console.log(`${typeof(ptID)} === ${typeof(row['ptID'])}`)
+            if (parseInt(ptID) === row['ptID']) {
+                
+                const parentDiv = document.querySelector(`[data-parent="${restoreUnwantedJsonChars(row['Title'])}"]`);
+                const childContainer = parentDiv.querySelector('.child-options');
+                const children = parentDiv.getAttribute('data-children').split('_sppr_');
+                children.forEach((childInfo) => {
+
+                    let childArr = childInfo.split('_sp_');
+                    let childValue = childArr[0];
+                    let childName = childArr[1];    
+                    
+                    const childDiv = document.createElement('div');
+
+                    childDiv.className = 'child-option';
+                    childDiv.textContent = childName.trim();
+                    childDiv.dataset.value = childValue.trim();
+                    
+                    if (childValue === ptID) {
+                        childDiv.classList.add('selected-child');
+                    }
+                        
+                    childContainer.appendChild(childDiv);
+                });
+
+
+                const selectedLabel = document.getElementById('selected-label');
+                    selectedLabel.textContent = restoreUnwantedJsonChars(row['Title']) + ': ' + restoreUnwantedJsonChars(row['ptTitle']);
+                    selectedLabel.dataset.value = row['ptID'];
+
+                childContainer.classList.remove('hidden');    
+
+            }
+        });    
+    }
+
+
+    // document.getElementById('parent-options').classList.remove('hidden')
+    // console.log(document.getElementById('parent-options'));
+
+    if (ptID!== 'None') {
+        // Child click event
+        childDiv = document.querySelectorAll('.child-option');
+        childDiv.forEach(div => {
+        
+            div.onclick = function(childEvent) {
+                childEvent.stopPropagation(); // Prevent parent click
+                // 2a) Revert style of previously selected child (if any)
+
+                let lastSelectedChild = document.querySelector('.selected-child');
+                if (lastSelectedChild) {
+                lastSelectedChild.classList.remove('selected-child');
+                }
+                
+                const clickedElement = childEvent.target;
+                // 2b) Highlight the newly selected child
+                clickedElement.classList.add('selected-child');
+                lastSelectedChild = clickedElement;
+
+                // 2c) Update top label to the child's name
+                const selectedLabel = document.getElementById('selected-label');
+                const parentItem = clickedElement.parentNode.parentNode;
+                selectedLabel.textContent = parentItem.getAttribute('data-parent') + ': ' + clickedElement.textContent;
+                selectedLabel.dataset.value = clickedElement.getAttribute('data-value');
+                // 2d) Hide the entire dropdown (parent list)
+                document.getElementById('parent-options').classList.add('hidden');
+                
+            }
+        });
+
+   }
+
+    // Create drop-down for store
+  
+    const storeData = JSON.parse({{ storeData | tojson }});
+    
+    const storeSelect = document.createElement('select');
+    storeSelect.id = 'store';
+    storeSelect.name = 'store';
+    storeSelect.className = 'styled-select';
+    storeSelect.style.width = '100%';
+    storeSelect.style.marginBottom = '0px';
+
+
+    const option = document.createElement('option');
+        option.value = '';
+        option.textContent = "{{ _('Choose Store') }}";
+        storeSelect.appendChild(option);
+
+    storeData.forEach(item => {
+        const option = document.createElement('option');
+        option.value = item.ID;
+        option.textContent = item.Name;
+
+        if (storeID == item.ID) {
+            option.selected = "selected";
+        }
+        storeSelect.appendChild(option);
+    }); 
+    
+    if (storeSelect.options.length == 2) {
+        storeSelect.options[1].selected = true;
+        storeSelect.disabled = true;
+    }
+    
+    const dropdownPlaceholder = document.getElementById('store-label');
+
+    dropdownPlaceholder.parentNode.insertBefore(storeSelect, dropdownPlaceholder.nextSibling);
+    // document.getElementById('product-category-form').appendChild(storeSelect);
+
+    // End of store drop-down
+</script>
+
+<script nonce="{{ csp_nonce() }}" type="text/javascript" src="{{ url_for('static', filename='JS/drop-down-tree.js')}}"></script>
+
+<!-- 3. Bootstrap 5 JS (Popper included) -->
+<script nonce="{{ csp_nonce() }}" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- 4. jQuery -->
+<script nonce="{{ csp_nonce() }}" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+
+<!-- 5. flatpickr (calendars) -->
+<script nonce="{{ csp_nonce() }}" src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<script nonce="{{ csp_nonce() }}">
+  // Keyboard support for the product tree, whose items are plain divs built at runtime
+  (function () {
+    const toggle = document.getElementById('selected-label');
+    const list = document.getElementById('parent-options');
+    const saveButton = document.getElementById('saveButton');
+
+    function makeFocusable(root) {
+      root.querySelectorAll('.option, .child-option').forEach(item => {
+        if (!item.hasAttribute('tabindex')) {
+          item.setAttribute('tabindex', '0');
+          item.setAttribute('role', 'button');
+        }
+      });
+    }
+    makeFocusable(list);
+    new MutationObserver(function () {
+      makeFocusable(list);
+      toggle.setAttribute('aria-expanded', list.classList.contains('hidden') ? 'false' : 'true');
+    }).observe(list, { attributes: true, attributeFilter: ['class'], childList: true, subtree: true });
+
+    function pressOnEnter(event) {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        event.target.click();
+      }
+    }
+    toggle.addEventListener('keydown', pressOnEnter);
+    saveButton.addEventListener('keydown', pressOnEnter);
+    list.addEventListener('keydown', function (event) {
+      if (event.target.matches('.option, .child-option')) {
+        pressOnEnter(event);
+      }
+    });
+
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape' && !list.classList.contains('hidden')) {
+        list.classList.add('hidden');
+        toggle.focus();
+      }
+    });
+  })();
+
+  function str_to_date(dateString) {
+    const parts = dateString.split("/");  // parts = ["27", "01", "2025"]
+
+    // Convert parts to integers. Note: month is zero-indexed in JavaScript Date.
+    const day = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1; // monthIndex: 0 for January, 1 for February, etc.
+    const year = parseInt(parts[2], 10);
+
+    return new Date(year, month, day);
+  }  
+
+  // Initialize the date picker on our input
+  const productionDate = str_to_date("{{ resultQuantity[0].productionDate }}");
+  const expDate = str_to_date("{{ resultQuantity[0].expDate }}")
+
+  // Calendars: the same flatpickr calendar as the Add/Edit Slide pages (phone/tablet layout in static/calendar.css).
+  // Same date format as before (MM-DD-YYYY); typing a date (or deleting it) still works.
+  const calendarOptions = { dateFormat: 'm-d-Y', allowInput: true, disableMobile: true };
+  flatpickr('#productionDate', Object.assign({}, calendarOptions, { defaultDate: productionDate }));
+  flatpickr('#expDate', Object.assign({}, calendarOptions, { defaultDate: expDate }));
+
+  // The calendar icon next to each date field opens its calendar too
+  document.querySelectorAll('.input-group-text').forEach(function (icon) {
+    const input = icon.parentElement.querySelector('input');
+    if (input && input._flatpickr) {
+      icon.style.cursor = 'pointer';
+      icon.addEventListener('click', function () { input._flatpickr.open(); });
+    }
+  });
+
+
+
+ 
+
+</script>
+
+{% endblock %}

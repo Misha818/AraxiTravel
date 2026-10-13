@@ -1,0 +1,219 @@
+/* ===== Rich text editors (Quill 1.3.6, "snow" theme) =====
+   Shared by product.html, send-email.html and transfer-funds.html.
+   Load it after quill.snow.css, styles.css and the page's own <style>. */
+
+/* ---- Editing area ---- */
+.ql-container.ql-snow {
+  width: 100%;
+  box-sizing: border-box;
+  background-color: #fff;
+}
+
+/* "Sans Serif" (Quill's default font) is what text gets when no font is chosen;
+   the local quill.snow.css leaves it out, so the page font (often Times) leaked in */
+.ql-container.ql-snow .ql-editor {
+  min-height: 160px;
+  font-family: Helvetica, Arial, sans-serif;
+  /* text starts at the line start (left, or right in RTL paragraphs) unless an
+     alignment is chosen in the toolbar */
+  text-align: start;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Page-wide rules centre plain <p>s; inside the editor only the toolbar decides */
+.ql-editor p {
+  text-align: inherit;
+}
+
+.ql-editor.ql-blank::before {
+  font-family: Helvetica, Arial, sans-serif;
+}
+
+/* Pasted or inserted media never pushes the editor wider than the screen */
+.ql-editor img,
+.ql-editor .ql-video {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ---- Toolbar: wraps onto more rows on narrow screens instead of overflowing ---- */
+.ql-toolbar.ql-snow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  row-gap: 4px;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.ql-toolbar.ql-snow .ql-formats {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-right: 8px !important;
+}
+
+.ql-toolbar.ql-snow .ql-formats:last-child {
+  margin-right: 0 !important;
+}
+
+/* Long lists (sizes, fonts) scroll instead of running off the bottom of the screen */
+.ql-snow .ql-picker.ql-expanded .ql-picker-options {
+  max-height: 260px;
+  max-width: calc(100vw - 24px);
+  overflow-y: auto;
+  z-index: 20;
+}
+
+.ql-snow .ql-picker-label::before {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  vertical-align: top;
+}
+
+.ql-snow .ql-picker:not(.ql-color-picker):not(.ql-icon-picker) .ql-picker-label {
+  padding-right: 18px;
+}
+
+/* Link editing bubble stays inside the screen */
+.ql-snow .ql-tooltip {
+  max-width: calc(100vw - 24px);
+  box-sizing: border-box;
+  white-space: normal;
+}
+
+.ql-snow .ql-tooltip input[type="text"] {
+  width: min(170px, 45vw);
+}
+
+/* Colour picker (Pickr): its trigger buttons are hidden (the toolbar's colour buttons open it),
+   so it had nothing to anchor to and opened in the top-left corner, partly off-screen.
+   Show it centred on the screen instead, never wider than the screen. */
+.pcr-app.visible {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%);
+  max-width: calc(100vw - 24px);
+  max-height: calc(100vh - 24px);
+  overflow-y: auto;
+  box-sizing: border-box;
+  z-index: 1100;
+}
+
+/* Bigger tap targets on touch screens */
+@media (pointer: coarse) {
+  .ql-snow.ql-toolbar button {
+    width: 34px;
+    height: 34px;
+    padding: 6px 7px;
+  }
+
+  .ql-snow .ql-picker {
+    height: 34px;
+  }
+
+  .ql-snow .ql-picker-label {
+    display: flex;
+    align-items: center;
+  }
+
+  .ql-snow .ql-picker.ql-expanded .ql-picker-options .ql-picker-item {
+    padding: 6px 0;
+  }
+}
+
+/* ---- Font picker ---- */
+.ql-snow .ql-picker.ql-font {
+  width: 132px;
+}
+
+/* a soft, slightly transparent outline so the font dropdown reads as a dropdown;
+   while it is open Quill's own #ccc outline takes over */
+.ql-snow .ql-picker.ql-font .ql-picker-label {
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 4px;
+}
+
+/* No font chosen = Sans Serif (never an empty label) */
+.ql-snow .ql-picker.ql-font .ql-picker-label:not([data-value])::before,
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value=""]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item:not([data-value])::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value=""]::before {
+  content: 'Sans Serif';
+  font-family: Helvetica, Arial, sans-serif;
+}
+
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="montserrat"]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="montserrat"]::before {
+  content: 'Montserrat';
+  font-family: 'Montserrat', sans-serif;
+}
+
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="lato"]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="lato"]::before {
+  content: 'Lato';
+  font-family: 'Lato', sans-serif;
+}
+
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="roboto"]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="roboto"]::before {
+  content: 'Roboto';
+  font-family: 'Roboto', sans-serif;
+}
+
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="raleway"]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="raleway"]::before {
+  content: 'Raleway';
+  font-family: 'Raleway', sans-serif;
+}
+
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="oswald"]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="oswald"]::before {
+  content: 'Oswald';
+  font-family: 'Oswald', sans-serif;
+}
+
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="playfair-display"]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="playfair-display"]::before {
+  content: 'Playfair Display';
+  font-family: 'Playfair Display', serif;
+}
+
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="cursive"]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="cursive"]::before {
+  content: 'Cursive';
+  font-family: cursive, 'Kurland';
+}
+
+/* ---- Size picker ---- */
+/* Room for "Normal"; a global rule squeezed it to 40px */
+.ql-snow .ql-picker.ql-size {
+  width: 76px !important;
+}
+
+/* Point sizes show as plain numbers in the menu and on the button */
+.ql-snow .ql-picker.ql-size [data-value="8px"]::before { content: "8" !important; }
+.ql-snow .ql-picker.ql-size [data-value="9px"]::before { content: "9" !important; }
+.ql-snow .ql-picker.ql-size [data-value="10px"]::before { content: "10" !important; }
+.ql-snow .ql-picker.ql-size [data-value="11px"]::before { content: "11" !important; }
+.ql-snow .ql-picker.ql-size [data-value="12px"]::before { content: "12" !important; }
+.ql-snow .ql-picker.ql-size [data-value="14px"]::before { content: "14" !important; }
+.ql-snow .ql-picker.ql-size [data-value="16px"]::before { content: "16" !important; }
+.ql-snow .ql-picker.ql-size [data-value="18px"]::before { content: "18" !important; }
+.ql-snow .ql-picker.ql-size [data-value="20px"]::before { content: "20" !important; }
+.ql-snow .ql-picker.ql-size [data-value="24px"]::before { content: "24" !important; }
+.ql-snow .ql-picker.ql-size [data-value="28px"]::before { content: "28" !important; }
+.ql-snow .ql-picker.ql-size [data-value="32px"]::before { content: "32" !important; }
+.ql-snow .ql-picker.ql-size [data-value="36px"]::before { content: "36" !important; }
+.ql-snow .ql-picker.ql-size [data-value="48px"]::before { content: "48" !important; }
+.ql-snow .ql-picker.ql-size [data-value="72px"]::before { content: "72" !important; }
+
+/* No size chosen = the editor's normal size (it used to show "8") */
+.ql-snow .ql-picker.ql-size .ql-picker-label:not([data-value])::before,
+.ql-snow .ql-picker.ql-size .ql-picker-item:not([data-value])::before {
+  content: 'Normal' !important;
+}

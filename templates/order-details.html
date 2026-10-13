@@ -1,0 +1,630 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {{ _("Order Details") }}
+{% endblock %}
+
+
+{% block head %}
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #fdf6ec;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
+        }
+        .card {
+            border: none;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.06);
+            border-radius: 16px;
+            animation: fadeIn 1s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from {opacity: 0; transform: translateY(20px);}
+            to {opacity: 1; transform: translateY(0);}
+        }
+        .summary-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #eceff3;
+        }
+        .summary-total {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #555;
+        }
+        .btn-primary {
+            background-color: #FCC628;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background-color: #ffaa00;
+            border: none;
+        }
+        .btn-outline-secondary:hover {
+            background-color: #FCC628;
+            border: none;
+        }
+
+        .btn-outline-secondary {
+            border-color: #FCC628;
+            color: #FCC628;
+        }
+
+        .text-success {
+            color: #FCC628!important;
+        }
+        .recommendation-card img {
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+        }
+        .recommendation-card {
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            border-radius: 12px;
+            transition: transform 0.3s;
+        }
+        .recommendation-card:hover {
+            transform: translateY(-5px);
+        }
+        .cp-price {
+            text-decoration: line-through !important;
+        }
+        .summary-item a {
+            color: black;
+            text-decoration: none;
+        }
+  
+        /* Remove all borders except the bottom border of rows */
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        table th, table td {
+            border: none; /* Remove all cell borders */
+            padding: 8px; /* Add some padding for spacing */
+        }
+
+        table tbody tr {
+            border-bottom: 1px solid #ddd; /* Add a bottom border to each row */
+        }
+
+        table thead tr {
+            border-bottom: 2px solid #333; /* Add a thicker bottom border for the header */
+        }
+        thead {
+            border-top: unset;
+        }
+
+        table a {
+            text-decoration: none;
+            color: #333;
+        }
+
+                /* Modal Styles */
+                .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.6);
+        }
+
+        .modal-content {
+            background-color: #fff;
+            margin: 3% auto;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+        }
+
+        .close-btn {
+            float: right;
+            font-size: 25px;
+            cursor: pointer;
+            margin: -15px 98%;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        #edit, #loading {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 150px;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            position: absolute;
+            background-color: white!important;
+            color: #333;
+            border: 1px solid #333;
+            font-weight: 600;
+        }
+
+        #loading {
+            width: 140px;
+        }
+
+
+    </style>
+{% endblock %}
+
+{% block content %} 
+{{ sideBar | safe }}
+<div class="container py-5">
+    <div class="card p-5 text-center">
+        <h4 class="text-muted">{{ _('Order') }} #{{ result[0]['ID']}}</h4>
+
+        <div class="row my-4" style="flex-direction: column;">
+            <button class="btn btn-primary hidden" id="loading"         
+                        >{{ _('Loading...') }}</button>
+            <div class="text-start">
+                <h5 class="mb-3">{{ _('Order Details') }}</h5>
+                <span id="products">
+
+                </span>
+            </div>
+
+            <h5 class="mb-3 text-start" style="margin-top: 30px;">{{ _('Client Information') }}</h5>
+            <div class="text-start" id="tickets" style="margin-top: 30px;">
+                
+            </div>
+        </div>
+
+
+
+    </div>
+
+    <div id="modalEdit" class="modal">
+        
+    </div>
+
+</div>
+<script nonce="{{ csp_nonce() }}" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script nonce="{{ csp_nonce() }}">
+    let csrfToken = "{{ csrf_token() }}";
+    const result = {{ result | tojson }};
+
+    console.log(result)
+    const mainURL = `${window.location.protocol}//${window.location.hostname}${window.location.port ? `:${window.location.port}` : ''}/`;
+    let display = 'display: none!important;';
+
+    let price = result[0].price * result.length;
+    let discountPrice = 0;
+    let discount = '';
+    let hidden = 'hidden';
+    let cpPrice = '';
+
+    if (result[0].discount != null) {
+        discountPrice = result[0].price * result.length - result[0].price * result.length * result[0].discount / 100;
+        hidden = '';
+        cpPrice = 'cp-price';
+        discount = `(${result[0].discount}%)`;
+        display='display: table-cell;';
+    }
+
+    let productRows = `
+        <tr>
+            <td style="width: 55%"><a href="${escapeHtml(mainURL + hyphen(result[0].prTitle) + '&' + hyphen(result[0].ptTitle))}" target="_BLANK">${escapeHtml(result[0].prTitle + ' ' + result[0].ptTitle)}</a></td>
+            <td class="${cpPrice}">{{ mainCurrency }} ${price}</td>
+            <td style="${display}">${discount}</td>
+            <td class="discountPrice" style="${display}">{{ mainCurrency }} ${discountPrice}</td>
+        </tr>
+    `;
+
+    // Generate the table and the total summary
+    const tableHTML = `
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>{{ _('Product') }}</th>
+                    <th>{{ _('Price') }}</th>
+                    <th style="${display}">{{ _('Discount') }}</th>
+                    <th style="${display}">{{ _('Discounted') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${productRows}
+            </tbody>
+        </table>
+    `;
+
+    const totalHTML = `
+        <div class="summary-item summary-total d-flex justify-content-between mt-3">
+            <span>{{ _('Total') }}</span>
+            <span class="price">{{ mainCurrency }} ${result[0].final_price}</span>
+        </div>
+    `;
+
+    // Combine the table and the total summary
+    document.getElementById('products').innerHTML = tableHTML + totalHTML;
+
+    let ticketRows = '';
+    result.forEach(row => {
+        ticketRows += `<tr>
+            <td>${escapeHtml(row['FirstName'])} ${escapeHtml(row['LastName'])}</td>
+            <td>${escapeHtml(row['phone'])}</td>
+            <td>${escapeHtml(row['email'])}</td>
+            <td>${escapeHtml(row['timestamp'])}</td>
+            <td><button class="btn btn-primary edit_ticket" data-id="${escapeHtml(row['ID'])}" data-ecID="${escapeHtml(row['ecID'])}" style="">{{ _('Edit') }}</button></td>
+        </tr>`
+    });
+    
+    const ticketsTableHTML = `
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>{{ _('Initials') }}</th>
+                    <th>{{ _('Phone') }}</th>
+                    <th>{{ _('Email') }}</th>
+                    <th>{{ _('Ordered') }}</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                ${ticketRows}
+            </tbody>
+        </table>
+    `;
+
+    document.getElementById('tickets').innerHTML = ticketsTableHTML;
+
+    // Helper function to convert spaces to hyphens
+    function hyphen(str) {
+        return str.replace(/\s+/g, '-');
+    }
+
+function formatInternationalNumber(phoneNumber) {
+    // Remove any non-digit characters
+    let cleaned = phoneNumber.replace(/\D/g, '');
+
+    // General cases
+    if (cleaned.length === 11 && cleaned.startsWith('1')) {
+        // US/Canada: +1 (123) 456-7890
+        return `+1 (${cleaned.slice(1,4)}) ${cleaned.slice(4,7)}-${cleaned.slice(7,11)}`;
+    } else if (cleaned.length === 11 && cleaned.startsWith('374')) {
+        // Armenia: +374 (33) 151-580
+        return `+374 (${cleaned.slice(3,5)}) ${cleaned.slice(5,7)}-${cleaned.slice(7,9)}-${cleaned.slice(9,11)}`;
+    } else if (cleaned.length > 10) {
+        // General international format: +CC XXX XXX XXXX (adjustable based on length)
+        let countryCode = cleaned.slice(0, cleaned.length - 10);
+        let area = cleaned.slice(-10, -7);
+        let firstPart = cleaned.slice(-7, -4);
+        let secondPart = cleaned.slice(-4);
+        return `+${countryCode} (${area}) ${firstPart}-${secondPart}`;
+    } else if (cleaned.length === 10) {
+        // Generic 10-digit format (no country code): (123) 456-7890
+        return `(${cleaned.slice(0,3)}) ${cleaned.slice(3,6)}-${cleaned.slice(6,10)}`;
+    } else {
+        // Return original if unknown format
+        return phoneNumber;
+    }
+}
+
+const editBtns = document.querySelectorAll('.edit_ticket');
+const loading = document.getElementById('loading');
+
+if (editBtns) {
+    editBtns.forEach(editBtn => {
+
+        editBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            // editBtn.classList.add('hidden');
+            // loading.classList.remove('hidden');
+
+            const orderID = e.target.getAttribute('data-id');
+            const ecID = e.target.getAttribute('data-ecID');
+            let formData = new FormData();
+            formData.append('orderID', orderID);
+            formData.append('ecID', ecID);
+            
+
+            // Create a new XMLHttpRequest object
+            let xhr = new XMLHttpRequest();
+
+            // Configure the request
+            xhr.open('POST', '/get-order-details');
+            xhr.setRequestHeader('X-CSRFToken', csrfToken);
+
+                // Define what happens on successful data submission
+                xhr.onload = function () {
+            if (xhr.status === 200) {
+                let response = JSON.parse(xhr.responseText);
+
+                loading.classList.add('hidden');    
+                if (response.status === '1') {
+                    creatModal(response.data[0], response.statusList)
+                } else {
+                    alert("{{ _('Something Went Wrong!') }}");
+                    editBtn.classList.remove('hidden');
+                }
+
+            } else {
+                // Handle error response
+                console.error('Error adding category:', xhr.responseText);
+            }
+            };
+
+            // Send the request with the FormData object
+            xhr.send(formData);
+
+
+            function creatModal(data, statusList) {
+                const modalEdit = document.getElementById('modalEdit');
+
+                const modalContent = document.createElement('div');
+                modalContent.className = 'modal-content';
+
+                const closeBtn = document.createElement('span');
+                closeBtn.className = 'close-btn';
+                closeBtn.innerHTML = '&times;';
+                modalContent.appendChild(closeBtn);
+
+                // const heading = document.createElement('h2');
+                // heading.textContent = "{{ _('Billing address') }}";
+                // modalContent.appendChild(heading);
+
+                const form = document.createElement('form');
+                form.id = 'editForm';
+
+                // First name
+                const group1 = document.createElement('div');
+                group1.className = 'form-group';
+                const label1 = document.createElement('label');
+                label1.textContent = "{{ _('First name') }} *";
+                const input1 = document.createElement('input');
+                input1.type = 'text';
+                input1.value = data.FirstName;
+                input1.required = true;
+                input1.name = 'firstName';
+                group1.appendChild(label1);
+                group1.appendChild(input1);
+                form.appendChild(group1);
+
+                // Last name
+                const group2 = document.createElement('div');
+                group2.className = 'form-group';
+                const label2 = document.createElement('label');
+                label2.textContent = "{{ _('Last name') }} *";
+                const input2 = document.createElement('input');
+                input2.type = 'text';
+                input2.value = data.LastName;
+                input2.required = true;
+                input2.name = 'lastName';
+                group2.appendChild(label2);
+                group2.appendChild(input2);
+                form.appendChild(group2);
+
+                // Phone Number
+                const group3 = document.createElement('div');
+                group3.className = 'form-group';
+                const label3 = document.createElement('label');
+                label3.textContent = "{{ _('Phone Number') }} *";
+                const input3 = document.createElement('input');
+                input3.type = 'tel';
+                input3.value = data.phone;
+                input3.placeholder = '37477123456';
+                input3.required = true;
+                input3.name = 'phone';
+                group3.appendChild(label3);
+                group3.appendChild(input3);
+                form.appendChild(group3);
+
+                // Email
+                const group4 = document.createElement('div');
+                group4.className = 'form-group';
+                const label4 = document.createElement('label');
+                label4.textContent = "{{ _('Email') }}";
+                const input4 = document.createElement('input');
+                input4.type = 'email';
+                input4.value = data.email;
+                input4.name = 'email';
+                group4.appendChild(label4);
+                group4.appendChild(input4);
+                form.appendChild(group4);
+
+                // Address
+                const group5 = document.createElement('div');
+                group5.className = 'form-group';
+                const label5 = document.createElement('label');
+                label5.textContent = "{{ _('Address') }}";
+                const input5 = document.createElement('input');
+                input5.type = 'text';
+                input5.value = data.address;
+                // input5.required = true;
+                input5.name = 'address';
+                group5.appendChild(label5);
+                group5.appendChild(input5);
+                form.appendChild(group5);
+
+                // Status
+                const group6 = document.createElement('div');
+                group6.className = 'form-group';
+                const label6 = document.createElement('label');
+                label6.textContent = "{{ _('Status') }} *";
+                const select = document.createElement('select');
+                select.required = true;
+                select.name = 'status';
+
+                Object.entries(statusList).forEach(([key, value]) => {
+                    const option = document.createElement('option');
+                    option.value = key;
+                    option.textContent = value;
+
+                    if (parseInt(key) == parseInt(data.Status)) {
+                        option.selected = true;
+                    }
+
+                    select.appendChild(option);
+                });
+
+                group6.appendChild(label6);
+                group6.appendChild(select);
+                form.appendChild(group6);
+
+                // Submit Button
+                const submitBtn = document.createElement('div');
+                submitBtn.className = 'btn';
+                submitBtn.style.border = '1px solid #333';
+                submitBtn.id = 'submitEdits';
+                submitBtn.textContent = "{{ _('Submit') }}";
+                submitBtn.dataset.id = orderID;
+                submitBtn.dataset.ecid = ecID;
+                form.appendChild(submitBtn);
+            
+                // Loading
+                const loadingBtn = document.createElement('div');
+                loadingBtn.classList = 'btn hidden';
+                loadingBtn.style.border = '1px solid #333';
+                loadingBtn.id = 'loadingBtn';
+                loadingBtn.textContent = "{{ _('Loading...') }}";
+                form.appendChild(loadingBtn);
+
+                modalContent.appendChild(form);
+                modalEdit.appendChild(modalContent);
+
+                modalEdit.style.display = 'block';
+
+                closeBtn.onclick = function () {
+                    modalEdit.innerHTML = '';
+                    modalEdit.style.display = 'none';
+                    loading.classList.add('hidden');
+                    editBtn.classList.remove('hidden');
+                };
+
+                // Add form validation
+                submitBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    submitBtn.classList.add('hidden');
+                    loadingBtn.classList.remove('hidden');
+
+                    let isValid = true;
+                    const errors = [];
+                    let formData = new FormData();
+
+                    // Validate First Name
+                    if (!input1.value.trim()) {
+                        isValid = false;
+                        errors.push("{{ _('First name is required.') }}");
+                    }
+                    // Validate Last Name
+                    if (!input2.value.trim()) {
+                        isValid = false;
+                        errors.push("{{ _('Last name is required.') }}");
+                    }
+
+                    // Validate Phone Number
+                    if (!input3.value.trim()) {
+                        isValid = false;
+                        errors.push("{{ _('Valid phone number is required.') }}");
+                    }
+
+                    // Validate Email (if provided)
+                    // if (input4.value.trim() && !/\S+@\S+\.\S+/.test(input4.value)) {
+                    //     isValid = false;
+                    //     errors.push("{{ _('Valid email is required.') }}");
+                    // }
+
+                    // Validate Address
+                    // if (!input5.value.trim()) {
+                    //     isValid = false;
+                    //     errors.push("{{ _('Address is required.') }}");
+                    // }
+
+                    // Validate Status
+                    if (!select.value) {
+                        isValid = false;
+                        errors.push("{{ _('Status is required.') }}");
+                    }
+
+                    if (!isValid) {
+                        alert(errors.join('\n'));
+                        loadingBtn.classList.add('hidden');
+                        submitBtn.classList.remove('hidden');
+
+                    } else {
+                        // Submit the form if valid                
+                        const orderID = this.getAttribute('data-id');
+                        const ecID = this.getAttribute('data-ecid');
+
+                        let formData = new FormData();
+                        formData.append('orderID', orderID);
+                        formData.append('ecID', ecID);
+                        formData.append('firstname', input1.value.trim());
+                        formData.append('lastname', input2.value.trim());
+                        formData.append('phone', input3.value.trim());
+                        formData.append('email', input4.value.trim());
+                        formData.append('address', input5.value.trim());
+                        formData.append('status', select.value);                
+
+                        // Create a new XMLHttpRequest object
+                        let xhr = new XMLHttpRequest();
+
+                        // Configure the request
+                        xhr.open('POST', '/edit-order-details');
+                        xhr.setRequestHeader('X-CSRFToken', csrfToken);
+
+                            // Define what happens on successful data submission
+                            xhr.onload = function () {
+                            if (xhr.status === 200) {
+                                let response = JSON.parse(xhr.responseText);
+                                if (response.status === '1') {
+                                    alert("{{ _('Form submitted successfully!') }}");
+                                    window.location.reload();
+                                } else {
+                                    alert(response.answer);
+                                    // alert("{{ _('Something Went Wrong!') }}");
+                                    loadingBtn.classList.add('hidden');
+                                    submitBtn.classList.remove('hidden');
+                                }
+
+                            } else {
+                                // Handle error response
+                                console.error('Error adding category:', xhr.responseText);
+                                loadingBtn.classList.add('hidden');
+                                submitBtn.classList.remove('hidden');
+                            }
+                        };
+
+                        // Send the request with the FormData object
+                        xhr.send(formData);
+
+                        
+                    }
+                });
+            }
+
+        });
+
+    });
+
+}
+   
+</script>
+{% endblock %}

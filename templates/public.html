@@ -1,0 +1,713 @@
+<!doctype html>
+<html lang="{{ current_locale }}">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="UTF-8">
+    <script nonce="{{ csp_nonce() }}" src="{{ url_for('static', filename='JS/security.js') }}"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- ICO format -->
+    
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.png') }}" >
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <title>
+        {% block title %}
+
+        {% endblock %}
+    </title>
+
+    <script nonce="{{ csp_nonce() }}">
+
+      window.addEventListener('load', () => {
+        document.querySelector('body').classList.add('loaded');
+      });
+          
+      // Function to get the CSRF token from the meta tag
+      function getCsrfToken() {
+          return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+      }
+
+
+      
+    </script>
+    
+    {% block head %}
+    
+    {% endblock %}
+  </head>
+  <body>    
+      <input type="hidden" id="full-basket" value="{{ url_for('static', filename='images/icons/full-basket.png') }}">
+      <input type="hidden" id="empty-basket" value="{{ url_for('static', filename='images/icons/empty-basket.png') }}">
+      <input type="hidden" id="redFields" value="{{ _('Please improve all field marked in red') }}">
+      {% set ns = namespace(selectedOption='', options='') %}
+      {% if supportedLangsData | length > 1%}
+
+        {% for row in supportedLangsData %}
+          {% if row['Prefix'] == activeLangPrefix %}
+            {% set ns.selectedOption = '<div class="selected-option" data-value="' ~ row["Prefix"] ~ '"><img src="https://cdn.jsdelivr.net/npm/flag-icons@6.6.6/flags/4x3/' ~ row["Flag"] ~ '" alt="' ~ row["Language"] ~ '" class="lang-flag"></div>' %}
+          {% else %}
+            {% set ns.options = ns.options + '<div class="option-lang" data-value="' ~ row["Prefix"] ~ '"> <img src="https://cdn.jsdelivr.net/npm/flag-icons@6.6.6/flags/4x3/' ~ row["Flag"] ~ '" alt="' ~ row["Language"] ~ '" class="lang-flag"></div>'%}
+          {% endif %}
+        {% endfor %}
+      {% else %}
+        {% set ns.selectedOption = '<div class="selected-option" data-value="' ~ supportedLangsData[0]["Prefix"] ~ '"><img src="https://cdn.jsdelivr.net/npm/flag-icons@6.6.6/flags/4x3/' ~ supportedLangsData[0]["Flag"] ~ '" alt="Armenia" class="lang-flag"></div>' %}
+      {% endif %}
+
+      <!-- Header Section -->
+      <header class="header_public">
+
+        <a href="{{ url_for('home') }}" class="logo-container">
+          <img src="{{ url_for('static', filename='images/logo.png')}}" alt='{{ _("Araxi Travel Logo") }}' class="logo_public" />
+          <div>{{ _('company') }}</div>
+        </a>
+
+        <div class="mobile-menu">☰</div>
+        <div class="lang-container"></div>
+        <div class="custom-language-select change-language">
+
+           {{ ns.selectedOption | safe }}
+
+          <div class="options" style="position: unset;padding: unset;background: unset;">
+            {{ ns.options | safe }}
+
+          </div>
+        </div>
+        
+        <span class="notification" style="display: none;">0</span>
+      </header>
+      
+      <script nonce="{{ csp_nonce() }}" type="text/javascript" src="{{ url_for('static', filename='JS/cookie.umd.min.js') }}"></script>
+      <script nonce="{{ csp_nonce() }}" type="text/javascript" src="{{ url_for('static', filename='JS/header.js') }}"></script>
+      <!-- End of Header -->
+      
+    {% block content %}
+
+    {% endblock %}
+      <div style="background-color: #ffffff;
+                  padding: 3px 0px;
+                  width: 100%;
+                  margin-top: 10px;"></div>
+      <footer class="public-footer">
+      <div style="display: flex; justify-content: space-between; flex-wrap: wrap; max-width: 1720px; margin: 0 auto;">
+
+      <div class="contact-follow">
+      <h3 style="color: #333333bd; margin-bottom: 20px; text-align: left;" id="contacts">{{ _('Contact and Follow') }}</h3>
+      <span style="color: #6c757d;" class="social-media footer-contacts"><!-- {{ _('123 Street Name') }}<br>{{ _('City, State, 12345') }}<br>-->
+        <!-- <div><span>{{ _('Email') }}:</span> <span>info@mammysbreat.am</span></div> -->
+        <!-- <div><span>{{ _('Phone') }}:</span> <span><a href="tel:0" style="text-decoration: none; color: #6c757d;">0</a></span></div> -->
+      </span>
+      <div style="margin-top: 10px;" class="social-media sm-buttons">
+        <a href="https://t.me" class="fa fa-telegram" style="color: #0088cc;" target="_blank"></a>
+            <a href="https://facebook.com" class="fa fa-facebook" style="color: #1877F2;" target="_blank"></a>
+            <a href="https://instagram.com" class="fa fa-instagram" style="color: #E1306C;" target="_blank"></a>
+            <a href="https://linkedin.com" class="fa fa-linkedin" style="color: #0A66C2; font-size: 2.6rem; padding-left: unset;" target="_blank"></a>
+            <a href="mailto:info@araxitravel.am" class="fa fa-envelope" style="color: #e1d7cc; font-size: 2.6rem; padding-left: unset;" target="_blank"></a>
+
+      </div>
+      </div>
+
+      <div style="flex: 1; min-width: 200px; padding: 20px;">
+      <h3 style="color: #333333bd; margin-bottom: 20px; text-align: left;">{{ _('Subscribe to us!') }}</h3>
+      <span style="color: #6c757d;">{{ _('Be the first to know about upcoming events and new opportunities.') }}</span>
+      <p class="hidden" id="subscribe-message" style="color: #f54242; text-align: left;">{{ _('Please specify valid email address!') }}</p>
+      <div>
+      <input type="text" name="subscribe-email" id="subscribe-email" style="width: 90%; margin-bottom: 10px; border: 1px solid #000;"/>
+      <div class="pcButtonS" id="subscribe" style="
+                                                  margin-top: unset;
+                                                  background-color: unset;
+                                                  border: 1px solid #000;
+                                                  color: #000;"
+                                                  >
+      {{ _('Submit') }}
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<form class="messageForm hidden">
+  <p class="hidden" id="error-message" style="color: #f54242; text-align: left;"></p>
+  <div class="form-group">
+    <input type="email" class="form-control" id="emailMessage" style="width: 100%;" placeholder="{{ _('Your email:') }} name@example.com">
+  </div>
+  
+  <div class="form-group">
+    <input type="text" class="form-control" id="nameMessage" style="width: 100%;" placeholder="{{ _('Your name:') }} {{ _('John Snow') }}">
+  </div>
+  <div class="form-group">
+    <input type="text" class="form-control" id="subjectMessage" style="width: 100%;" placeholder="{{ _('Subject') }} ">
+  </div>
+  
+  <div class="form-group">
+    <textarea class="form-control" id="textareaMessage" rows="3" placeholder="{{ _('You message') }}"></textarea>
+  </div>
+  <div class="pcButtonS" id="message" style="margin-top: unset; background-color: #FCC628;">{{ _('Submit') }}</div>
+</form>
+
+  </footer>
+      <!-- <p style="
+                position: fixed;
+                bottom: 0;
+                z-index: 999;
+                color: #fff; 
+                margin-top: 15px;
+                margin-bottom: unset!important;
+                text-align: center;
+                background-color: red;
+                padding: 10px; width: 100%;"> {{ _('Thank you for visiting! Our platform is still under construction. Buying options will be available soon.') }} 
+      </p> -->
+
+      <p style="
+                color: #6c757d; 
+                margin-top: 15px;
+                margin-bottom: unset!important;
+                text-align: center;
+                background-color: white;
+                padding: 10px; width: 100%;">&copy; {{ current_year }} {{ _('Your Company. All rights reserved.') }} 
+      </p>
+
+    <!-- Full-Screen Overlay Nav -->
+    <div class="mobile-nav-overlay">
+      <nav class="mobile-nav-content">
+        <button class="mobile-menu-close" aria-label="Close Mobile Menu">
+          ✕
+        </button>
+        <ul class="mobile-nav-links">
+          <li><a href="{{ url_for('home') }}">{{ _('Home') }}</a></li>
+          <!-- <li><a href="{{ url_for('favorites') }}">{{ _('Favorites') }}</a></li> -->
+          <li><a href="{{ url_for('events') }}">{{ _('Events') }}</a></li>
+          <li><a href="{{ url_for('activities') }}">{{ _('Activities') }}</a></li>
+          <li><a href="{{ url_for('about') }}">{{ _('About') }}</a></li>
+          <li><a href="{{ url_for('contacts') }}">{{ _('Contacts') }}</a></li>
+        </ul>
+
+        </select>
+      </nav>
+    </div>
+    
+    <script nonce="{{ csp_nonce() }}">
+      let xhr = new XMLHttpRequest();
+      let csrfToken = "{{ csrf_token() }}";
+      const redFields = document.getElementById('redFields').value;
+
+      csrfInput = document.createElement('input');
+      csrfInput.type = 'hidden';
+      csrfInput.id = 'csrfToket';
+      csrfInput.value = csrfToken;
+
+      document.body.appendChild(csrfInput);
+
+      // function myLoader(color) {
+      //   if (color === undefined) {
+      //     color = 'crimson'
+      //   }
+      //   let loader = document.createElement('div'); // Create a div element for the loader
+      //     loader.id = 'gear';
+      //     loader.style.color = color;
+      //     loader.style.fontSize = '20px';
+      //     loader.style.display = 'inline-block';
+      //     loader.textContent = '⚙';
+      //     return loader;
+      // }
+
+      
+      function myLoader(color, gearID) {
+          if (color === undefined) {
+            color = 'crimson'
+          }
+
+          if (gearID === undefined) {
+            gearID = 'gear'
+          }
+          let loader = document.createElement('div'); // Create a div element for the loader
+            loader.id = gearID;
+            loader.style.color = color;
+            loader.style.fontSize = '20px';
+            loader.style.display = 'inline-block';
+            loader.textContent = '⚙';
+            return loader;
+      }
+
+      
+      function rotate(gearElement) {
+          let angle = 0;
+          setInterval(() => {
+              angle = (angle + 5) % 360; 
+              gearElement.style.transform = `rotate(${angle}deg)`;
+          }, 50); 
+      
+      }
+
+
+        
+
+
+
+      // Define an array of language objects
+      // let languages = [
+      //     { value: "en", text: "En", selected: true }
+      // ];
+
+      // // Create the select element and set its class
+      // const select = document.createElement("select");
+      // select.className = "change-language";
+
+      // // Add an event listener for the change event
+      // select.addEventListener("change", function() {
+      //   let refKey = '';
+      //   if (document.getElementById('RefKey')) {
+      //     refKey = document.getElementById('RefKey').value;
+      //   }
+      //   window.location.href = '/setlang?lang=' + this.value + '&RefKey=' + refKey;
+
+      // });
+
+      // Configure the request
+      // xhr.open('POST', '/get_langs');  
+      // xhr.setRequestHeader('X-CSRFToken', csrfToken);                 
+
+      // // Define what happens on successful data submission
+      // xhr.onload = function () {
+      //     if (xhr.status === 200) {
+      //       languages = JSON.parse(xhr.responseText);
+
+      //       // Loop through the languages array to create and append options
+      //       languages.forEach(lang => {
+      //         const option = document.createElement("option");
+      //         option.value = lang.value;
+      //         let text = lang.value.charAt(0).toUpperCase() + lang.value.slice(1);
+      //         option.textContent = text;
+              
+      //         if (lang.selected) {
+      //           option.setAttribute("selected", "selected");
+      //         } 
+                
+      //         select.appendChild(option);
+      //       });
+
+      //     } else {
+
+      //       // Loop through the languages array to create and append options
+      //       languages.forEach(lang => {
+      //         const option = document.createElement("option");
+      //         option.value = lang.value;
+      //         let text = lang.value.charAt(0).toUpperCase() + lang.value.slice(1);
+      //         option.textContent = text;
+              
+      //         if (lang.selected) {
+      //           option.setAttribute("selected", "selected");
+      //         }
+
+      //         select.appendChild(option);
+      //       });
+
+      //     }
+            
+      //     // document.querySelector('.header_public').prepend(select);
+
+      //     let mobileNavSelect = select.cloneNode(true);
+
+      //     mobileNavSelect.className = "change-language-menu";
+      //     // mobileNavSelect.addEventListener("change", function() {
+      //     //   window.location.href = '/setlang?lang=' + this.value;
+      //     // });
+
+      //     // Add an event listener for the change language menu
+      //     mobileNavSelect.addEventListener("change", function() {
+      //       let refKey = '';
+      //       if (document.getElementById('RefKey')) {
+      //         refKey = document.getElementById('RefKey').value;
+      //       }
+      //       window.location.href = '/setlang?lang=' + this.value + '&RefKey=' + refKey;
+
+      //     });
+
+      //     if (document.querySelector('.mobile-nav-content')) {
+      //       document.querySelector('.mobile-nav-content').append(mobileNavSelect);
+      //     }
+
+
+
+      // };
+
+      // Send the request with the FormData object
+      // xhr.send();
+
+
+        // Grab elements
+        const mobileMenuButton = document.querySelector('.mobile-menu');
+        const mobileNavOverlay = document.querySelector('.mobile-nav-overlay');
+        const mobileMenuCloseButton = document.querySelector('.mobile-menu-close');
+
+        // Open the overlay when the hamburger is clicked
+        mobileMenuButton.addEventListener('click', () => {
+          mobileNavOverlay.classList.add('open');
+        });
+
+        // Close the overlay when the close button is clicked
+        if (mobileMenuCloseButton) {
+
+          mobileMenuCloseButton.addEventListener('click', () => {
+            mobileNavOverlay.classList.remove('open');
+          });
+          
+        }
+        
+        let sFlag = false;
+        document.getElementById('subscribe').addEventListener('click', function() {
+          if (sFlag) {
+            return;
+          }
+
+          sFlag = true;
+          document.getElementById('subscribe-message').classList.add('hidden')
+          let Email = document.getElementById('subscribe-email').value;
+          if (Email === '') {
+            document.getElementById('subscribe-message').classList.remove('hidden');
+            sFlag = false;
+            return;
+          }
+
+          let loader = myLoader('#fff');    
+          
+          document.getElementById('subscribe').innerHTML = '';
+          document.getElementById('subscribe').appendChild(loader);
+        
+            let gearElement = document.getElementById('gear');
+            if (!gearElement) {
+              gearElement.remove();
+              document.getElementById('subscribe').textContent = `{{ _('Submit') }}`;
+              sFlag = false;
+              return;
+            } 
+        
+            rotate(gearElement);
+
+
+          let formData = new FormData();
+
+          formData.append('Email', Email)     
+
+          // Create a new XMLHttpRequest object
+          let xhr = new XMLHttpRequest();
+
+          // Configure the request
+          xhr.open('POST', '/subscribe');
+          xhr.setRequestHeader('X-CSRFToken', csrfToken);
+
+          // Define what happens on successful data submission
+          xhr.onload = function () {
+              if (xhr.status === 200) {
+                  const response = JSON.parse(xhr.responseText);
+                  gearElement.remove();
+                  document.getElementById('subscribe').textContent = `{{ _('Submit') }}`;
+                  if (response.status === '1') {
+                      let content = safeMessage(response.answer);
+                      document.querySelector('#subscribe-message').innerHTML = content;
+                      document.querySelector('#subscribe-message').style.color = 'green';
+                      
+                  }
+                  
+                  if (response.status === '0') {
+                    let content = safeMessage(response.answer);
+                    document.querySelector('#subscribe-message').innerHTML = content;
+                  }
+                    
+                    document.querySelector('#subscribe-message').classList.remove('hidden');
+              } 
+              sFlag = false;
+          };
+
+          // Define what happens in case of error
+          xhr.onerror = function () {
+              console.error('Request failed.');
+          };
+
+          // Send the request with the JSON data
+          xhr.send(formData);
+        });
+
+        let cmFlag = false;
+        document.getElementById('message').addEventListener('click', function() {
+          event.preventDefault();
+          if (cmFlag) {
+            return;
+          } 
+          
+          cmFlag = true;
+          let loader = myLoader('#fff');    
+          
+          document.getElementById('message').innerHTML = '';
+          document.getElementById('message').appendChild(loader);
+        
+            let gearElement = document.getElementById('gear');
+            if (!gearElement) {
+              gearElement.remove();
+              document.getElementById('message').textContent = `{{ _('Submit') }}`;
+              cmFlag = false;
+              return;
+            } 
+        
+            rotate(gearElement);
+
+          let errorMC = document.getElementById('error-message');
+          errorMC.classList.add('hidden')
+          const form = document.querySelector('.messageForm');
+
+          let isValid = true;
+          let errorMessages = [];
+          
+          // Get all input and textarea elements inside the form
+          const elements = form.querySelectorAll('input, textarea');
+          let formData = new FormData();
+
+           
+          elements.forEach(function(element) {
+            // Get the element's ID and trimmed value
+            const id = element.getAttribute('id');
+            const value = element.value.trim();
+            
+            // Log values for debugging purposes
+            
+            // Check if the value exists (non-empty)
+            if (value === '') {
+              isValid = false;
+              // errorMessages.push(`The field '${id}' is required.`);
+              document.getElementById(id).style.border = '1px solid red';
+            }
+            
+            // If the element is an email input, perform email validation
+            if (element.type === 'email' && value !== '') {
+              // Simple email validation regex pattern
+              const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+              if (!emailRegex.test(value)) {
+                isValid = false;
+                document.getElementById(id).style.border = '1px solid red';
+                document.getElementById(id).style.color = 'red';
+                errorMessages.push(`{{ _('Please specify valid email address!') }}`);
+              }
+            }
+
+            formData.append(id, value); 
+          });
+          
+          // If there are validation errors, display them and do not proceed
+          if (!isValid) {
+            errorMC.innerHTML = `<p>${redFields}` + '</p><p>' + errorMessages.join('</p>');
+            errorMC.classList.remove('hidden');
+            gearElement.remove();
+            document.getElementById('message').textContent = `{{ _('Submit') }}`;
+            cmFlag = false;
+            return;  // Stop here if any error was found
+          }
+          
+          // Otherwise, the form is valid. You can process the form data or submit it.
+          form.querySelectorAll('input, textarea').forEach(function(element) {
+            element.style.border = '1px solid #ccc'; // Reset border color
+            element.style.color = '#000'; // Reset text color
+          });          
+
+          formData.append('languageID', languageID); 
+
+          // Create a new XMLHttpRequest object
+          let xhr = new XMLHttpRequest();
+
+          // Configure the request
+          xhr.open('POST', '/client-message');
+          xhr.setRequestHeader('X-CSRFToken', csrfToken);
+
+          // Define what happens on successful data submission
+          xhr.onload = function () {
+              if (xhr.status === 200) {
+                  const response = JSON.parse(xhr.responseText);
+                  gearElement.remove();
+                  document.getElementById('message').textContent = `{{ _('Submit') }}`;
+                  // cmFlag = false;
+                  if (response.status === '1') {
+                      let content = safeMessage(response.answer);
+                      errorMC.innerHTML = content;
+                      errorMC.style.color = 'green';
+                      
+                    }
+                    
+                  if (response.status === '0') {
+                      let content = safeMessage(response.answer);
+                      errorMC.style.color = 'red';
+                      errorMC.innerHTML = content;
+                  }
+                    
+                    errorMC.classList.remove('hidden');
+              } 
+              cmFlag = false;
+          };
+
+          // Define what happens in case of error
+          xhr.onerror = function () {
+              console.error('Request failed.');
+          };
+
+          // Send the request with the JSON data
+          xhr.send(formData);
+        });
+
+        document.getElementById('emailMessage').addEventListener('keyup', function() {
+          this.style.border = '1px solid #ccc';
+          this.style.color = '#000';
+        });
+
+
+        let mobileNavSelect = document.querySelector('.custom-language-select').cloneNode(true);
+        mobileNavSelect.className = "change-language-menu";
+
+        // mobileNavSelect.addEventListener("change", function() {
+        //   window.location.href = '/setlang?lang=' + this.value;
+        // });
+
+        // Add an event listener for the change language menu
+        // mobileNavSelect.addEventListener("change", function() {
+        //   const options = mobileNavSelect.querySelector('.options');
+
+        //   if (options) {
+        //     options.style.display = 'block';
+        //   }
+        //   alert('AAA')
+        //   let refKey = '';
+        //   if (document.getElementById('RefKey')) {
+        //     refKey = document.getElementById('RefKey').value;
+        //   }
+        //   // window.location.href = '/setlang?lang=' + this.value + '&RefKey=' + refKey;
+
+        // });
+
+        if (document.querySelector('.mobile-nav-content')) {
+          document.querySelector('.mobile-nav-content').append(mobileNavSelect);
+        }
+
+
+        document.querySelector('.selected-option').addEventListener('click', function () {
+          this.parentNode.classList.toggle('open');
+        });
+        
+        document.querySelectorAll('.option-lang').forEach(function (opt) {
+          opt.addEventListener('click', function () {
+
+            let refKey = '';
+            if (document.getElementById('RefKey')) {
+              refKey = document.getElementById('RefKey').value;
+            }
+            // console.log('/setlang?lang=' + this.getAttribute('data-value') + '&RefKey=' + refKey)
+            window.location.href = '/setlang?lang=' + this.getAttribute('data-value') + '&RefKey=' + refKey;
+
+          });
+        });
+
+        document.querySelector('.change-language-menu').addEventListener('click', function () {
+          document.querySelector('.change-language-menu .options').style.position = 'unset';
+          document.querySelector('.change-language-menu .options').style.padding = 'unset';
+          document.querySelector('.change-language-menu .options').style.background = 'unset';
+          document.querySelectorAll('.change-language-menu img').forEach(function (img) {
+            img.style.width = '42px';
+            img.style.height = '32px';
+          });
+        });
+
+          let x = 0;
+          document.querySelector('.change-language-menu .selected-option').addEventListener('click', function () {
+            let mobileOptions = document.querySelector('.change-language-menu .options');
+            if (x == 0) {
+              mobileOptions.style.display = 'block';
+              x = 1;
+            } else {
+              mobileOptions.style.display = 'none';
+              x = 0;
+            }
+            
+          });
+
+
+        let supported_langs = JSON.parse({{ jsonifiedSupportedLangsData | tojson }});
+        let current_locale = "{{ current_locale }}";
+
+        const langContainer = document.querySelector(".lang-container");
+
+        const active = supported_langs.find(l => l.Prefix === current_locale) || supported_langs[0];
+
+        // Button
+        const btn = document.createElement("button");
+        btn.className = "language-button";
+        btn.id = "language-button";
+        btn.type = "button";
+        const label = document.createElement("span");
+        label.textContent = active.Language;
+        const caret = document.createElement("span");
+        caret.textContent = "▼";
+        btn.append(label, caret);
+
+        // Dropdown (exclude active)
+        const dropdown = document.createElement("div");
+        dropdown.className = "language-dropdown";
+        dropdown.id = "language-dropdown";
+
+        supported_langs
+            .filter(l => l.Prefix !== active.Prefix)
+            .forEach(l => {
+            const opt = document.createElement("div");
+            opt.className = "language-option";
+            opt.dataset.lang = l.Prefix;
+
+            const name = document.createElement("span");
+            name.textContent = l.Language;
+
+            opt.appendChild(name);
+            dropdown.appendChild(opt);
+            });
+
+        langContainer.append(btn, dropdown);
+
+
+        const languageButton = document.getElementById('language-button');
+        const languageDropdown = document.getElementById('language-dropdown');
+        const languageOptions = document.querySelectorAll('.language-option');
+
+        if (languageButton && languageDropdown) {
+            languageButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                languageDropdown.classList.toggle('active');
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', () => {
+                languageDropdown.classList.remove('active');
+            });
+
+            languageOptions.forEach(option => {
+                option.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    // const flag = option.querySelector('span:first-child').textContent;
+                    // // const code = option.dataset.lang.toUpperCase();
+                    // languageButton.querySelector('span:first-child').textContent = `${flag}`;
+                    // languageDropdown.classList.remove('active');
+                    value = e.currentTarget.dataset.lang;
+                    let refKey = '';
+                    if (document.getElementById('RefKey')) {
+                      refKey = document.getElementById('RefKey').value;
+                    }
+
+                    window.location.href = '/setlang?lang=' + value + '&RefKey=' + refKey;  
+
+                });
+            });
+        }
+
+
+
+      </script>
+
+    </body>
+
+  
+
+</html>

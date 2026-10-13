@@ -1,0 +1,265 @@
+{% extends 'base.html' %}
+{% block title %}
+{{ _('Promo Codes') }}
+{% endblock %}
+
+
+{% block head %}
+    <style>
+      table {
+  border-spacing: 0;
+  width: 100%;
+  border: 1px solid #ddd;
+}
+
+th {
+  cursor: pointer;
+}
+
+th, td {
+  text-align: left;
+  padding: 16px;
+}
+
+tr:nth-child(even) {
+  background-color: #f2f2f2
+}
+
+.promo-affiliate {
+  display: flex;
+  flex-direction: column;
+}
+
+.promo-affiliate small {
+  color: #666;
+  overflow-wrap: anywhere;
+}
+
+.promo-expired {
+  color: red;
+}
+
+.expired-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+#myTable td.row-actions {
+  width: 1%;
+  white-space: nowrap;
+  text-align: center;
+}
+
+#myTable td.row-actions a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  min-height: 40px;
+  border-radius: 6px;
+  text-decoration: none;
+}
+
+#myTable td.row-actions a:hover,
+#myTable td.row-actions a:focus-visible {
+  background-color: #fbe9e4;
+}
+
+#myTable td.row-actions a:focus-visible {
+  outline: 3px solid #264653;
+  outline-offset: 2px;
+}
+
+.sort-icons i {
+  padding: 2px 4px;
+}
+
+.promo-empty {
+  padding: 24px;
+  text-align: center;
+  color: #666;
+}
+
+@media (max-width: 768px) {
+  /* beats the inline width: 80% */
+  .container.promo-page {
+    width: 92% !important;
+  }
+
+  .promo-page #tableDaddy {
+    margin-left: 0 !important;
+  }
+
+  #myTable tr {
+    padding: 12px 16px;
+  }
+
+  #myTable td {
+    align-items: center;
+    gap: 12px;
+    font-size: 15px;
+    text-align: right;
+  }
+
+  #myTable td::before {
+    flex-shrink: 0;
+    text-align: left;
+  }
+
+  #myTable td .promo-affiliate {
+    align-items: flex-end;
+  }
+
+  #myTable td.row-actions {
+    width: auto;
+    gap: 4px;
+    border-top: 1px dashed #e5e5e5;
+    margin-top: 4px;
+  }
+
+  /* Keep the action icons together on the right */
+  #myTable td.row-actions::before {
+    margin-right: auto;
+  }
+}
+    </style>
+{% endblock %}
+
+{% block content %}
+
+{{ sideBar | safe }}
+<div class="container promo-page" style="width: 80%;">
+  
+{% if result.length > 0 %}
+<div class="table-container toRight" id="tableDaddy" style="max-width: unset;">
+  <table id="myTable">
+    <thead>
+      <tr>
+        <th>
+          <div style="display: flex; align-items: center;">
+           {{ _('Promo Code') }} 
+  
+            <div class="sort-icons" style="margin-left: 5px;">
+              <i class="fas fa-sort-up myup" data-onclick='["sortTable", "$this", 0, "up"]'></i>
+              <i class="fas fa-sort-down mydown" data-onclick='["sortTable", "$this", 0, "down"]'></i>
+            </div>
+          </div>
+        </th>
+        
+        <th>
+          <div style="display: flex; align-items: center;">
+           {{ _('Affiliate') }} 
+  
+            <div class="sort-icons" style="margin-left: 5px;">
+              <i class="fas fa-sort-up myup" data-onclick='["sortTable", "$this", 1, "up"]'></i>
+              <i class="fas fa-sort-down mydown" data-onclick='["sortTable", "$this", 1, "down"]'></i>
+            </div>
+          </div>
+        </th>
+
+        <th>
+          <div style="display: flex; align-items: center;">
+           {{ _('Expiration Date') }} 
+  
+            <div class="sort-icons" style="margin-left: 5px;">
+              <i class="fas fa-sort-up myup" data-onclick='["sortTable", "$this", 2, "up"]'></i>
+              <i class="fas fa-sort-down mydown" data-onclick='["sortTable", "$this", 2, "down"]'></i>
+            </div>
+          </div>
+        </th>
+
+        <th>
+          <div style="display: flex; align-items: center;">
+            {{ _('Status') }} 
+            <div class="sort-icons" style="margin-left: 5px;">
+              <i class="fas fa-sort-up myup" data-onclick='["sortTable", "$this", 3, "up"]'></i>
+              <i class="fas fa-sort-down mydown" data-onclick='["sortTable", "$this", 3, "down"]'></i>
+            </div>
+          </div>
+        </th>
+        <th></th>
+      </tr>
+      </thead>
+    <tbody>
+{% for row in result.data %}
+  {% set status = _('Active') %}
+  {% if row['Status'] == 0 %}
+    {% set status = _('Inactive') %}
+  {% endif %}
+  {% set expired = row['expDate'] < currentDate %}
+  
+  {% set editUrl = 'edit-promo-code/' + row['ID'] | string %}
+    <tr>
+      <td data-label="{{ _('Promo Code') }}"><strong>{{ row['Promo'] }}</strong></td>
+      {% if row['Firstname'] == None %}
+        <td data-label="{{ _('Affiliate') }}" data-sort=""></td>
+      {% else %}
+        <td data-label="{{ _('Affiliate') }}" data-sort="{{ row['Firstname'] ~ ' ' ~ row['Lastname'] }}">
+          <span class="promo-affiliate">
+            <span>{{ row['Firstname'] + ' ' + row['Lastname'] }}</span>
+            <small>{{ row['Email'] }}</small>
+          </span>
+        </td>
+      {% endif %}
+      <td data-label="{{ _('Expiration Date') }}" data-sort="{{ row['expDate'] }}"{% if expired %} class="promo-expired"{% endif %}>{{ row['expDate'] }}{% if expired %}<span class="expired-tag">{{ _('Expired') }}</span>{% endif %}</td>
+      <td data-label="{{ _('Status') }}">{{ status }}</td>
+      <td class="row-actions" data-label="{{ _('Actions') }}">
+        {% set promoFilters = 'promoCode=' + row['Promo'] | string + '&affiliate=' + row['affiliateID'] | string %}
+        <a href="{{ url_for('stuff_promo_code_details', filters=promoFilters ) }}" target="_blank" title="{{ _('Promo Code Details') }}" aria-label="{{ _('Promo Code Details') }}: {{ row['Promo'] }}"><i class="fa-solid fa-eye" style="font-size: 20px; color: #E76F51;" aria-hidden="true"></i></a>
+        <a href="{{ url_for('home', _external=True) + editUrl }}" target="_blank" title="{{ _('Edit') }}" aria-label="{{ _('Edit') }}: {{ row['Promo'] }}"><i class="fa-solid fa-pen-to-square" style="font-size: 20px; color: #E76F51;" aria-hidden="true"></i></a>
+      </td>
+    </tr>
+    
+    
+{% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% else %}
+<div class="table-container">
+  <h3 class="promo-empty">{{ _('No data to show!') }}</h3>
+</div>
+{% endif %}
+</div>
+
+
+
+<script nonce="{{ csp_nonce() }}">
+
+window.addEventListener('load', () => {
+  document.querySelector('body').classList.add('loaded');
+});
+
+// Sorts the table rows by the clicked column: "up" = A to Z / smallest first, "down" = the reverse.
+function sortTable(arrowElement, column, direction) {
+  const tbody = document.getElementById('myTable').tBodies[0];
+  if (!tbody) {
+    return;
+  }
+  const rows = Array.from(tbody.rows);
+
+  const cellValue = row => {
+    const cell = row.cells[column];
+    if (!cell) {
+      return '';
+    }
+    return (cell.dataset.sort !== undefined ? cell.dataset.sort : cell.textContent).trim();
+  };
+
+  rows.sort((a, b) => {
+    const result = cellValue(a).localeCompare(cellValue(b), undefined, { numeric: true, sensitivity: 'base' });
+    return direction === 'down' ? -result : result;
+  });
+  rows.forEach(row => tbody.appendChild(row));
+
+  document.querySelectorAll('.sort-icons i').forEach(icon => icon.style.color = '#fff');
+  arrowElement.style.color = '#ff0000';
+}
+
+</script>
+{% endblock %}

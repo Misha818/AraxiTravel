@@ -1,0 +1,492 @@
+{% extends 'base.html' %}
+{% block title %}
+  {{ result['data'][0].Firstname + ' ' + result['data'][0].Lastname }}
+{% endblock %}
+
+
+{% block head %}
+
+<!-- Bootstrap CSS -->
+<link  rel="stylesheet"  href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"/>
+    
+  <style>
+    body {
+        background-color: #fdf6ec;
+    }
+
+    .container {
+      padding-top: 30px;
+    }
+    table {
+      border-spacing: 0;
+      width: 100%;
+      border: 1px solid #ddd;
+    }
+
+    th {
+      cursor: pointer;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 16px;
+    }
+
+
+
+    * {
+      box-sizing: border-box;
+    }
+
+    #cancelBtn {
+      border-radius: 25px;
+      background-color: white;
+      border-color: #333;
+      color: #333;
+    }
+    /* Stepper container */
+    .stepper {
+      display: flex;
+      justify-content: space-between;
+      position: relative;
+      margin: 40px 0;
+    }
+    /* Each step item */
+    .step {
+      flex: 1;
+      text-align: center;
+      position: relative;
+    }
+    /* The connecting line between steps */
+    /* .step::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      right: -50%;
+      width: 100%;
+      height: 2px;
+      background-color: #dcdcdc;
+      z-index: -1;
+    } */
+    /* Remove line for the last step */
+    .step:last-child::after {
+      content: none;
+    }
+    /* The circle indicator */
+    .circle {
+      width: 90px;
+      height: 90px;
+      margin: 0 auto;
+      border-radius: 50%;
+      background-color: white;
+      line-height: 80px;
+      font-weight: bold;
+      color: black;
+      /* padding: 15px; */
+      
+    }
+    /* Completed steps style */
+    .step.completed .circle {
+      background-color: #E76F51;
+    }
+    /* active1 (current) step style */
+    .step.active1 .circle {
+      background-color: #FCC628!important;
+    }
+
+    
+    .Voided {
+      border: 5px solid #2a9d8f;
+      /* border: 5px solid #E76F51; */
+    }
+
+    .Pending {
+      border: 5px solid #2a9d8f;
+      /* border: 5px solid #E76F51; */
+    }
+
+    .Approved  {
+      border: 5px solid #2a9d8f;
+      /* border: 5px solid #E76F51; */
+    }
+
+    .Settled {
+      border: 5px solid #2a9d8f;
+      /* border: 5px solid #E76F51; */
+    }
+
+    a {
+      color: #333!important;
+    }
+
+
+
+    /* Mobile adjustments: stack steps vertically */
+    @media (max-width: 576px) {
+      .stepper {
+        flex-direction: column;
+        align-items: center;
+      }
+      .step {
+        width: 100%;
+        margin-bottom: 20px;
+      }
+      .step::after {
+        content: none;
+      }
+      /* .circle {
+        width: 30px;
+        height: 30px;
+        line-height: 30px;
+        } */
+        .step p {
+          font-size: 0.9rem;
+        }
+      }
+
+
+    @media (min-width: 576px) {
+
+      .last-container {
+        margin-bottom: 100px;
+      }
+    }
+
+    /* ---- Reward steps: each one is a link to the matching orders ---- */
+    .stepper {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    a.step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 4px;
+      border-radius: 12px;
+      text-decoration: none;
+      transition: background-color 0.2s ease;
+    }
+
+    a.step:hover,
+    a.step:focus-visible {
+      background-color: #fbe9e4;
+      text-decoration: none;
+    }
+
+    a.step:focus-visible {
+      outline: 3px solid #264653;
+      outline-offset: 2px;
+    }
+
+    a.step .circle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      font-size: 1.25rem;
+    }
+
+    .step-label {
+      font-weight: 600;
+    }
+
+    /* ---- Promo code table ---- */
+    .promo-expired {
+      color: red;
+    }
+
+    #myTable td.row-actions {
+      width: 1%;
+      white-space: nowrap;
+      text-align: center;
+    }
+
+    #myTable td.row-actions a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 40px;
+      min-height: 40px;
+      border-radius: 6px;
+      text-decoration: none;
+    }
+
+    #myTable td.row-actions a:hover,
+    #myTable td.row-actions a:focus-visible {
+      background-color: #fbe9e4;
+    }
+
+    #myTable td.row-actions a:focus-visible {
+      outline: 3px solid #264653;
+      outline-offset: 2px;
+    }
+
+    #myTable td.table-empty {
+      text-align: center;
+      font-size: 18px;
+    }
+
+    .sort-icons i {
+      padding: 2px 4px;
+    }
+
+    @media (max-width: 768px) {
+      .affiliate-page h2 {
+        font-size: 1.5rem;
+      }
+
+      .last-container #tableDaddy {
+        margin-left: 0 !important;
+      }
+
+      #myTable tr {
+        padding: 12px 16px;
+      }
+
+      #myTable td {
+        align-items: center;
+        gap: 12px;
+        font-size: 15px;
+        text-align: right;
+      }
+
+      #myTable td::before {
+        flex-shrink: 0;
+        text-align: left;
+      }
+
+      #myTable td.row-actions {
+        width: auto;
+      }
+
+      #myTable td.table-empty {
+        justify-content: center;
+      }
+
+      #myTable td.table-empty::before {
+        display: none;
+      }
+    }
+
+    /* Phones: a 2 x 2 grid instead of four stacked circles */
+    @media (max-width: 576px) {
+      .stepper {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        margin: 24px 0;
+      }
+
+      .step {
+        margin-bottom: 0;
+      }
+
+      a.step .circle {
+        width: 70px;
+        height: 70px;
+        font-size: 1.1rem;
+      }
+    }
+
+      
+    </style>
+{% endblock %}
+
+{% block content %}
+
+{{ sideBar | safe }}
+
+<div class="container affiliate-page">
+  {% set welcome = _('Welcome dear') %}
+  {% set welcome2 = _('Below is the summary of your payment and reward progress.') %}
+  {% if stuff == True %}
+    {% set welcome = _('Window for') %}
+    {% set welcome2 = _('Below is the summary of payment and reward progress of the current affiliate.') %}
+  
+  {% endif %}
+  <h2 class="text-center mt-2">{{ welcome }} {{ result['data'][0].Firstname + ' ' + result['data'][0].Lastname }}</h2>
+  <p class="text-center mt-1">{{ welcome2 }}</p>
+  <!-- Stepper container -->
+  <div id="stepper" class="stepper"></div>
+</div>
+
+<div class="container last-container" >
+{% if resultP.length > 0 %}  
+<div class="table-container toRight" id="tableDaddy">
+  <table id="myTable">
+    <thead>
+      <tr>
+        <th>
+          <div style="display: flex; align-items: center;">
+           {{ _('Promo Code') }} 
+  
+            <div class="sort-icons" style="margin-left: 5px;">
+              <i class="fas fa-sort-up myup" data-onclick='["sortTable", "$this", 0, "up"]'></i>
+              <i class="fas fa-sort-down mydown" data-onclick='["sortTable", "$this", 0, "down"]'></i>
+            </div>
+          </div>
+        </th>
+        
+        <th>
+          <div style="display: flex; align-items: center;">
+           {{ _('Expiration Date') }}
+
+            <div class="sort-icons" style="margin-left: 5px;">
+              <i class="fas fa-sort-up myup" data-onclick='["sortTable", "$this", 1, "up"]'></i>
+              <i class="fas fa-sort-down mydown" data-onclick='["sortTable", "$this", 1, "down"]'></i>
+            </div>
+          </div>
+        </th>
+
+        <th>
+          <div style="display: flex; align-items: center;">
+            {{ _('Status') }}
+            <div class="sort-icons" style="margin-left: 5px;">
+              <i class="fas fa-sort-up myup" data-onclick='["sortTable", "$this", 2, "up"]'></i>
+              <i class="fas fa-sort-down mydown" data-onclick='["sortTable", "$this", 2, "down"]'></i>
+            </div>
+          </div>
+        </th>
+        <th>{{ _('Details') }}</th>
+        <th title="{{ _('Purchase History') }}">{{ _('P/H') }}</th>
+      </tr>
+      </thead>
+      <tbody>
+
+  {% for row in resultP.data %}
+    {% set status = _('Active') %}
+    {% if row['Status'] == 0 %}
+      {% set status = _('Inactive') %}
+    {% elif row['expDate'] is not none %}
+      {% if row['expDate'] < currentDate %}
+        {% set status = _('Expired') %}
+      {% endif %}
+    {% endif %}
+    {% set expired = row['expDate'] is not none and row['expDate'] < currentDate %}
+  
+  
+    <tr>
+      {% if row['Promo'] is none %}
+        <td class="table-empty" colspan="5">{{ _('No promo code registered') }}</td>
+      {% else %}
+        <td data-label="{{ _('Promo Code') }}"><strong>{{ row['Promo'] }}</strong></td>
+
+        <td data-label="{{ _('Expiration Date') }}"{% if expired %} class="promo-expired"{% endif %}>{{ row['expDate'] }}</td>
+        <td data-label="{{ _('Status') }}">{{ status }}</td>
+        <td class="row-actions" data-label="{{ _('Details') }}">
+          {% set promoDetailsUrl = '' %}
+          {% set affiliateOrdersUrl = '' %}
+
+          {% if row['Promo'] %}
+            {% set promoDetailsUrl = url_for('promo_code_details', promo=row['Promo']) %}
+            {% set affiliateOrdersUrl = url_for('home') + 'affiliate-orders/page=1&status=all&promoCode=' + row['Promo'] %}
+            
+              {% if stuff == True %}
+                {% set promoDetailsUrl = url_for('home') + 'stuff-promo-code-details/promoCode=' + row['Promo'] + '&affiliate=' + affID %}
+                {% set affiliateOrdersUrl = url_for('home') + 'stuff-affiliate-orders/page=1&status=all&promoCode=' + row['Promo'] + '&affiliate=' + affID %}
+              {% endif %}
+          {% endif %}
+          <a href="{{ promoDetailsUrl }}" title="{{ _('Details') }}" aria-label="{{ _('Details') }}: {{ row['Promo'] }}"><i class="fas fa-eye" style="font-size: 20px; color: #E76F51;" aria-hidden="true"></i></a>
+        </td>
+        <td class="row-actions" data-label="{{ _('Purchase History') }}">
+          <a href="{{ affiliateOrdersUrl }}" title="{{ _('Purchase History') }}" aria-label="{{ _('Purchase History') }}: {{ row['Promo'] }}"><i class="fas fa-info-circle" style="font-size: 20px; color: #E76F51;" aria-hidden="true"></i></a>
+        </td>
+      </tr>
+      
+      
+      {% endif %}
+    {% endfor %}
+      </tbody>
+  </table>
+</div>
+
+{% else %}
+<h3 style="text-align: center;">{{ _('No promo code registered') }}</h3>
+{% endif %}
+</div>
+
+<script nonce="{{ csp_nonce() }}">
+
+  const resultRevardsList = JSON.parse({{ resultRevardsList | tojson }});
+
+// Set the initial order status (starting at "Purchased")
+let currentStatus = 1;
+
+// Generate the stepper UI (excluding Cancelled status)
+const stepper = document.getElementById("stepper");
+// Get keys for steps (excluding key "0") sorted in numerical order
+const stepsKeys = Object.keys(resultRevardsList);
+  // .filter(key => key !== "0")
+  // .sort((a, b) => a - b);
+
+
+stepsKeys.forEach(key => {
+  // The whole step (count + label) links to the matching orders
+  const stepDiv = document.createElement("a");
+  stepDiv.classList.add("step");
+  stepDiv.setAttribute("data-status", key);
+  stepDiv.href = "{{ url_for('home', _external=True) }}" + resultRevardsList[key][3];
+
+  // Create the circular indicator
+  const circle = document.createElement("span");
+  circle.classList.add("circle", resultRevardsList[key][2]);
+  circle.innerText = resultRevardsList[key][1];
+
+  // Create the label for the status
+  const label = document.createElement("span");
+  label.classList.add("step-label");
+  label.innerText = resultRevardsList[key][0];
+
+  // Append the circle and label to the step container
+  stepDiv.appendChild(circle);
+  stepDiv.appendChild(label);
+  // Append the step to the stepper container
+  stepper.appendChild(stepDiv);
+});
+
+
+// Event handler for canceling the order
+if (document.getElementById("cancelBtn")) {
+
+  document.getElementById("cancelBtn").addEventListener("click", () => {
+    currentStatus = 0;
+    updateStepper();
+    alert("Order Cancelled");
+  });
+  
+}
+// Initialize the stepper UI on page load
+// updateStepper();
+
+window.addEventListener('load', () => {
+  document.querySelector('body').classList.add('loaded');
+});
+
+// Sorts the table rows by the clicked column: "up" = A to Z / smallest first, "down" = the reverse.
+function sortTable(arrowElement, column, direction) {
+  const tbody = document.getElementById('myTable').tBodies[0];
+  if (!tbody) {
+    return;
+  }
+  const rows = Array.from(tbody.rows);
+
+  const cellValue = row => {
+    const cell = row.cells[column];
+    return cell ? cell.textContent.trim() : '';
+  };
+
+  rows.sort((a, b) => {
+    const result = cellValue(a).localeCompare(cellValue(b), undefined, { numeric: true, sensitivity: 'base' });
+    return direction === 'down' ? -result : result;
+  });
+  rows.forEach(row => tbody.appendChild(row));
+
+  document.querySelectorAll('.sort-icons i').forEach(icon => icon.style.color = '#fff');
+  arrowElement.style.color = '#ff0000';
+}
+
+</script>
+{% endblock %}

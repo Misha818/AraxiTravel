@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+
+{% block head %}
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='dropzon.css') }}">  
+    <link rel="stylesheet" href="{{ url_for('static', filename='dropzone.min.css') }}">  
+    <link rel="stylesheet" href="{{ url_for('static', filename='cropper.min.css') }}">  
+
+    <style>
+        .dz-details:hover {
+            cursor: pointer;
+        }
+    
+        .dz-remove-btn:hover {
+            background-color: #c82333;
+            cursor: pointer;
+        }
+    
+    
+        .alt-input:hover {
+            cursor: auto;
+        }
+    
+    </style>
+{% endblock %}
+{% block title %}
+    {{ _('Add Teammate') }}
+{% endblock %}
+
+
+
+{% block content %}
+
+{{ sideBar | safe }}
+
+<div class="overlay" id="overlay"></div>
+<div class="containerS admin-form-card">
+    <h1>{{ _('Add Teammate') }}</h1>
+    <div id="mistakes" style="width: 100%;" role="alert" aria-live="polite"></div>
+
+    <form class="admin-form" novalidate>
+        <label for="email" class="field-label">{{ _('Email') }}</label>
+        <input type="email" id="email" class="text-field" placeholder="{{ _('Email') }}" inputmode="email" autocomplete="off">
+
+        <label for="roles" class="field-label">{{ _('Position') }}</label>
+        <div class="form-group row" id="rolesDropDown"></div>
+
+
+        <input type="hidden" id="language-id" value="{{ languageID }}">
+
+        <div id="saveButton" class="pcButtonS modifiedB" role="button" tabindex="0">{{ _('Submit') }}</div>
+        <div id="saving" class="pcButtonS hidden modifiedB" aria-live="polite">{{ _('Saving...') }}</div>
+    </form>
+
+
+</div>
+
+
+<script nonce="{{ csp_nonce() }}">
+
+document.addEventListener('DOMContentLoaded', function() {
+    
+    let csrfToken = "{{ csrf_token() }}"
+
+    function rolesDropDown() {
+
+        const roles = {{ result | tojson }}
+
+        const dropdownContainer = document.getElementById('rolesDropDown');
+        if (roles['length'] > 0) {
+            const select = document.createElement('select');
+            select.name = 'roles';
+            select.id = 'roles';
+            select.classList.add('form-control');
+            select.classList.add('styled-select');
+           
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = '{{ _("Choose Position") }}';
+            // defaultOption.disabled = true;
+            select.appendChild(defaultOption);
+
+            roles.data.forEach(val => {
+                const optVal = val['Position'];
+                if (optVal !== null) {
+                    const option = document.createElement('option');
+                    option.value = val['ID'];
+                 
+                    option.textContent = optVal;
+
+                    // option.selected = true;
+                    select.appendChild(option);
+                }
+            });
+
+            dropdownContainer.appendChild(select); // Append the select element to the body or any other specific location
+        }
+    };
+
+    rolesDropDown();
+
+    // When the form is submitted
+    const saveButton = document.getElementById('saveButton');
+
+    // Enter in a field submits through the Submit button (a plain form submit would reload the page)
+    const adminForm = document.querySelector('.admin-form');
+    adminForm.addEventListener('submit', function (event) {
+        event.preventDefault();
+    });
+    adminForm.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' && event.target.classList.contains('text-field')) {
+            event.preventDefault();
+            if (!saveButton.classList.contains('hidden')) {
+                saveButton.click();
+            }
+        }
+    });
+    saveButton.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            saveButton.click();
+        }
+    });
+
+    saveButton.addEventListener('click', function (event) {
+
+        event.preventDefault();
+        
+        const saveButton = document.getElementById('saveButton');
+        const saving = document.getElementById('saving');
+        
+        saveButton.classList.add('hidden');
+        saving.classList.remove('hidden');
+        
+        let formData = new FormData();
+         
+        let languageID = document.getElementById('language-id').value;
+        let RoleID = document.getElementById('roles').value;
+        let Email = document.getElementById('email').value;
+
+        
+
+        
+        // Create a new FormData object
+        formData.append('languageID', languageID);
+        formData.append('RoleID', RoleID);
+        formData.append('Email', Email);
+        
+
+        // Create a new XMLHttpRequest object
+        let xhr = new XMLHttpRequest();
+
+        // Configure the request
+        xhr.open('POST', '/add-teammate');
+        xhr.setRequestHeader('X-CSRFToken', csrfToken);
+
+        // Define what happens on successful data submission
+        xhr.onload = function () {
+            if (xhr.status === 200) {
+                let response = JSON.parse(xhr.responseText);
+
+                let mistakesDiv = document.getElementById('mistakes');
+                mistakesDiv.innerHTML = ''; // Clear previous messages
+
+                if (response.status === '0') {
+                    // Handle empty product name
+                    mistakesDiv.innerHTML = safeMessage(response.answer);
+                    mistakesDiv.style.color = 'red';
+                    mistakesDiv.style.display = 'flex';
+
+                    // Scroll the window to the mistakesDiv with smooth behavior
+                    mistakesDiv.scrollIntoView({ behavior: 'smooth' });
+
+                    csrfToken = response.newCSRFtoken;
+
+                    saveButton.classList.remove('hidden');
+                    saving.classList.add('hidden');
+
+                } 
+                
+                if (response.status === '1') {
+
+                    mistakesDiv.style.display = 'none';
+                    saveButton.classList.remove('hidden');
+                    saving.classList.add('hidden');
+                    alert(response.answer)
+                    // let prURL = window.location.origin  + '/roles';
+                    // location.href = prURL;
+
+                    // location.reload();
+                }
+            } else {
+                // Handle error response
+                saveButton.classList.remove('hidden');
+                saving.classList.add('hidden');
+
+                console.error('Error adding category:', xhr.responseText);
+            }
+        };
+
+        // Send the request with the FormData object
+        xhr.send(formData);
+    });
+
+});
+
+</script>
+
+
+{% endblock %}

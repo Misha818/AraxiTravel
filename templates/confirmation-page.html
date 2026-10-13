@@ -1,0 +1,779 @@
+{% extends 'public.html' %}
+
+{% block title %}
+    {{ _("Confirmation Page") }}
+{% endblock %}
+
+
+{% block head %}
+
+    <meta name="robots" content="noindex, nofollow" />
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #fdf6ec;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
+            font-family: 'Kurland', cursive, Georgia, 'Times New Roman', Times, serif; 
+            color:#333;
+        }
+        .card {
+            border: none;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.06);
+            border-radius: 16px;
+            animation: fadeIn 1s ease-in-out;
+            width: 1500px;
+        }
+        @keyframes fadeIn {
+            from {opacity: 0; transform: translateY(20px);}
+            to {opacity: 1; transform: translateY(0);}
+        }
+        .summary-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #eceff3;
+        }
+        .summary-total {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #555;
+        }
+        .btn-primary {
+            background-color: #FCC628;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background-color: #ffaa00;
+            border: none;
+        }
+        .btn-outline-secondary:hover {
+            background-color: #FCC628;
+            border: none;
+        }
+
+        .btn-outline-secondary {
+            border-color: #FCC628;
+            color: #FCC628;
+        }
+
+        .text-success {
+            color: #212529!important;
+            margin-top: 15px!important;
+        }
+        .recommendation-card img {
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+        }
+        .recommendation-card {
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            border-radius: 12px;
+            transition: transform 0.3s;
+        }
+        .recommendation-card:hover {
+            transform: translateY(-5px);
+        }
+        .cp-price {
+            text-decoration: line-through !important;
+        }
+        .summary-item a {
+            color: black;
+            text-decoration: none;
+        }
+
+        
+        /* Remove all borders except the bottom border of rows */
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        table th, table td {
+            border: none; /* Remove all cell borders */
+            padding: 8px; /* Add some padding for spacing */
+        }
+
+        table tbody tr {
+            border-bottom: 1px solid #ddd; /* Add a bottom border to each row */
+        }
+
+        table thead tr {
+            border-bottom: 2px solid #333; /* Add a thicker bottom border for the header */
+        }
+        thead {
+            border-top: unset;
+        }
+
+        a {
+            text-decoration: none;
+            color: #333;
+        }
+
+        @media (min-width: 770px) and (max-width: 1200px) {
+          .card {
+                background-color: unset!important;
+                box-shadow: unset!important;
+                padding-left: 15px !important;
+                padding-right: 15px !important;
+                width: 370px;
+            }
+        }
+
+        @media (max-width: 770px) {
+            td {
+                width: 100%!important;
+                font-size: 20px!important;
+                background-color: unset!important;
+                padding: 0.2rem .5rem!important;
+            }
+
+            tr td {
+                justify-content: unset!important;
+
+            }
+
+            tr:nth-child(even) {
+                background-color: unset!important;
+            }
+
+            td a {
+                font-size: 22px!important;
+                font-weight: 600!important;
+            }
+
+            .card {
+                background-color: unset!important;
+                box-shadow: unset!important;
+                padding-left: 15px !important;
+                padding-right: 15px !important;
+                width: 370px;
+            }
+
+            .summary-total {
+                justify-content: center !important;
+                align-items: center !important;
+                gap: 10px;
+                flex-wrap: wrap;
+            }
+
+            .deliveryInfo {
+                text-align: center;
+                margin-top: 20px;
+            }
+        } 
+
+
+
+
+
+
+        :root {
+      --border: 1px solid #d9d9d9;
+    }
+    html, body { margin: 0; height: 100%; }
+    body {
+      font: 16px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: #111; background: #f6f7fb;
+    }
+
+    /* Toolbar */
+    #toolbar {
+      max-width: 1400px;
+      margin: 12px auto 0;
+      padding: 0 12px;
+      display: flex;
+      justify-content: flex-end;
+    }
+    .toolbar-btn {
+      padding: 10px 14px;
+      border: 1px solid #d0d0d0;
+      background: #fff;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,.06);
+      margin-bottom: 15px;
+    }
+    .toolbar-btn:hover { box-shadow: 0 4px 12px rgba(0,0,0,.12); }
+
+   :root {
+  --card: 320px;   /* card width on ≥1200px screens; adjust as needed */
+  --gap: 16px;
+}
+
+/* Responsive grid (mobile/tablet) */
+#ticket-grid {
+  display: grid;
+  gap: var(--gap);
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+/* Large screens: use flex so fewer than 4 cards center as a tight group */
+@media (min-width: 1200px) {
+  #ticket-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--gap);
+    justify-content: center;
+    /* cap row to exactly 4 columns worth of space and center it */
+    max-width: calc(4 * var(--card) + 3 * var(--gap));
+    margin-inline: auto;
+  }
+  /* make each card a fixed-width flex item */
+  #ticket-grid > * {
+    flex: 0 0 var(--card);
+    max-width: var(--card);
+  }
+}
+      
+    
+    #ticket-grid > * { min-width: 0; }
+
+    /* Ticket */
+    .ticket-wrapper { position: relative; }
+    .ticket-container {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 4px 18px rgba(0,0,0,.08);;
+      overflow: hidden;
+      border: var(--border);
+      display: grid;
+      grid-template-rows: auto 10px auto;
+    }
+
+    .ticket-card-1 {
+      margin: 14px 14px 0px 14px;
+      padding: 18px;
+      border-radius: 12px;
+      border: var(--border);
+      background: #fff;
+    }
+    .ticket-card-2 {
+      margin: 0px 14px 14px 14px;
+      padding: 18px;
+      border-radius: 12px;
+      border: var(--border);
+      background: #fff;
+    }
+
+    .ticket-header {
+      font-weight: 900;
+      font-size: 28px;
+      letter-spacing: .5px;
+      text-align: center;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .details { 
+        margin-top: 12px; 
+        display: grid; 
+        gap: 5px; 
+        text-align: justify;
+    }
+    .row { 
+        display: grid; 
+        /* grid-template-columns: 110px 1fr;  */
+        gap: 3px; 
+        align-items: baseline; 
+    }
+    .label { color: #6b7280; font-weight: 700; }
+    .value.bold { font-weight: 800; }
+    .status-ok { color: #16a34a; font-weight: 800; }
+    .value { overflow-wrap: anywhere; }
+
+    .qr-card { display: grid; place-items: center; row-gap: 10px; }
+    .qr-box {
+      width: 140px; height: 140px;
+      display: grid; place-items: center;
+      border-radius: 10px;
+      background: #fff;
+    }
+    .qr-box svg { display: block; width: 120px; height: 120px; }
+
+    .caption { color: #374151; }
+    .url { color: #6b7280; font-size: 14px; }
+
+    /* Per-ticket button (ignored while capturing) */
+    .ticket-action {
+      position: absolute;
+      right: 12px;
+      bottom: 12px;
+      padding: 8px 12px;
+      border: 1px solid #d0d0d0;
+      background: #fff;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,.08);
+      color: #E1306C;
+    }
+    .ticket-action:hover { box-shadow: 0 4px 12px rgba(0,0,0,.14); }
+
+    </style>
+{% endblock %} 
+
+{% block content %} 
+
+<div class="py-5">
+    <div class="card p-5 text-center">
+        <h2 class="mb-3 text-success">🏷️ {{ _('Order Confirmed!') }} </h2>
+        <p class="mb-4">{{ _("Dear") + ' ' + result[0]['FirstName'] + ', ' + _('Thank you for shopping with us. We are preparing your order now!') }}</p>
+        <!-- <h6 class="text-muted">{{ _('Order') }} #{{ result[0]['ID'] }}</h6> -->
+
+         <div id="toolbar"></div>
+        <div class="" id="ticket-grid"></div>
+            
+    </div>
+
+    <!-- <div class="mt-5">
+        <h5 class="mb-4">Recommended for You</h5>
+        <div class="row">
+            <div class="col-md-3 col-sm-6 mb-4">
+                <div class="card recommendation-card">
+                    <img src="https://via.placeholder.com/300" class="card-img-top" alt="Product">
+                    <div class="card-body">
+                        <h6 class="card-title">Stylish Product</h6>
+                        <a href="#" class="btn btn-sm btn-outline-secondary">View Product</a>
+                    </div>
+                </div>
+            </div>
+
+            
+        </div>
+    </div> -->
+</div>
+<script nonce="{{ csp_nonce() }}" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script nonce="{{ csp_nonce() }}">
+    const result = {{ result | tojson }};
+    console.log(result)
+    let productRows = '';
+    const mainURL = `${window.location.protocol}//${window.location.hostname}${window.location.port ? `:${window.location.port}` : ''}/`;
+    let display = 'display: none!important;';
+
+    function cunstructTicketData() {
+        const host = window.location.hostname;
+        const needsWww = !/^www\./i.test(host) && host !== 'localhost' && !/^\d{1,3}(\.\d{1,3}){3}$/.test(host);
+        const hostWithWww = needsWww ? `www.${host}` : host;
+        // -> "www.example.com" (or unchanged)
+
+        const tktDetails = {{ resultPtDetails.data | tojson }};
+        const nameTxt = `{{ _('Name') }}`;
+        const eventTxt = `{{ _('Event') }}`;
+
+        const quantity = result.length;
+        let tickets = [];
+        let i = 0;
+        while(i < quantity) {
+            let item = {};
+            item[nameTxt] = result[i].FirstName + ' ' + result[i].LastName;
+            item[eventTxt] = result[i].prTitle + ' ' + result[i].ptTitle;
+            tktDetails.forEach(row => {
+                item[row.Title] = row.Value;
+            });
+            
+
+            item['qrUrl'] = hostWithWww + '/ticket/' + `{{ pdUrl }}`; 
+            item['footerText'] = hostWithWww;
+            tickets.push(item)
+            i++
+        }
+        console.log(tickets)
+        return tickets;
+
+    }
+    
+
+    // Generate table rows for each product
+    result.forEach(row => {
+        let productTitle = row.prTitle + ' ' + row.ptTitle;
+        let productURL = mainURL + hyphen(row.Url) + '&' + hyphen(row.ptTitle);
+        let price = row.price * row.quantity;
+        let discountPrice = 0;
+        let discount = '';
+        let hidden = 'hidden';
+        let cpPrice = '';
+
+        if (row.discount != null) {
+            discountPrice = row.price * row.quantity - row.price * row.quantity * row.discount / 100;
+            hidden = '';
+            cpPrice = 'cp-price';
+            discount = `${row.discount}%`;
+            display='display: table-cell;';
+        }
+
+        if (row.quantity > 1) {
+            productTitle = row.prTitle + ' ' + row.ptTitle + ' (' + row.quantity + ')';
+        }
+        let discountedPriceVal = '';
+        if (discountPrice > 0) {
+            discountedPriceVal = "{{ mainCurrency }} " + discountPrice.toString();
+        }
+
+        productRows += `
+            <tr>
+                <td style="width: 55%;"><a href="${productURL}" target="_BLANK">${productTitle}</a></td>
+                <td class="${cpPrice}">{{ mainCurrency }} ${price}</td>
+                <td style="${display}">${discount}</td>
+                <td class="discountPrice" style="${display}">${discountedPriceVal}</td>
+            </tr>
+        `;
+    });
+
+    // Generate the table and the total summary
+    const tableHTML = `
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>{{ _('Product') }}</th>
+                    <th>{{ _('Price') }}</th>
+                    <th style="${display}">{{ _('Discount') }}</th>
+                    <th style="${display}">{{ _('Discounted Price') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${productRows}
+            </tbody>
+        </table>
+    `;
+
+    const totalHTML = `
+        <div class="summary-item summary-total d-flex justify-content-between mt-3">
+            <span>{{ _('Total') }}</span>
+            <span class="price">{{ mainCurrency }} ${result[0].final_price}</span>
+        </div>
+    `;
+
+    // Combine the table and the total summary
+    // document.getElementById('products').innerHTML = tableHTML + totalHTML;
+
+    // const result = {{ result | tojson }};
+    // let product = '';
+    // let hidden = 'hidden';
+    // let cpPrice = '';
+    // const mainURL = `${window.location.protocol}//${window.location.hostname}${window.location.port ? `:${window.location.port}` : ''}/`;
+                
+
+    // result.forEach(row => {
+    //     let productTitle = row.prTitle + ' ' + row.ptTitle;
+    //     let productURL = mainURL + hyphen(row.prTitle) + '&' + hyphen(row.ptTitle);
+    //     let price = row.price * row.quantity;        
+    //     let discountPrice = 0;
+    //     if (row.discount != null) {
+    //         discountPrice = row.price * row.quantity - row.price * row.quantity * row.discount / 100;
+    //         hidden = '';
+    //         cpPrice = 'cp-price';
+    //     }
+
+    //     if (row.quantity > 1) {
+    //         productTitle = row.prTitle + ' ' + row.ptTitle + ' (' + row.quantity + ')';
+    //     }
+    //     product = product + `
+    //         <div class="summary-item d-flex justify-content-between">
+    //             <span><a href="${productURL}" target="_BLANK">${productTitle}</a></span>
+    //             <span class="${cpPrice}">{{ mainCurrency }} ${price.toFixed(2)}</span>
+    //             <span class="discountPrice ${hidden}">{{ mainCurrency }} ${discountPrice.toFixed(2)}</span>
+    //         </div>
+    //     `;
+
+    // });
+
+    // product = product + `
+    //     <div class="summary-item summary-total d-flex justify-content-between mt-3">
+    //         <span>{{ _('Total') }}</span>
+    //         <span class="price">{{ mainCurrency }} ${result[0].final_price}</span>
+    //     </div>
+    // `;
+
+    // document.getElementById('products').innerHTML = product;
+    // // console.log(result[0].CMD);
+
+
+function hyphen(str) {
+    return str.replace(/\s+/g, '-');
+}
+
+
+function formatInternationalNumber(phoneNumber) {
+    // Remove any non-digit characters
+    let cleaned = phoneNumber.replace(/\D/g, '');
+
+    // General cases
+    if (cleaned.length === 11 && cleaned.startsWith('1')) {
+        // US/Canada: +1 (123) 456-7890
+        return `+1 (${cleaned.slice(1,4)}) ${cleaned.slice(4,7)}-${cleaned.slice(7,11)}`;
+    } else if (cleaned.length === 11 && cleaned.startsWith('374')) {
+        // Armenia: +374 (33) 151-580
+        return `+374 (${cleaned.slice(3,5)}) ${cleaned.slice(5,7)}-${cleaned.slice(7,9)}-${cleaned.slice(9,11)}`;
+    } else if (cleaned.length > 10) {
+        // General international format: +CC XXX XXX XXXX (adjustable based on length)
+        let countryCode = cleaned.slice(0, cleaned.length - 10);
+        let area = cleaned.slice(-10, -7);
+        let firstPart = cleaned.slice(-7, -4);
+        let secondPart = cleaned.slice(-4);
+        return `+${countryCode} (${area}) ${firstPart}-${secondPart}`;
+    } else if (cleaned.length === 10) {
+        // Generic 10-digit format (no country code): (123) 456-7890
+        return `(${cleaned.slice(0,3)}) ${cleaned.slice(3,6)}-${cleaned.slice(6,10)}`;
+    } else {
+        // Return original if unknown format
+        return phoneNumber;
+    }
+}
+
+// let phone = formatInternationalNumber(result[0].phone);
+
+// document.getElementById('phone').innerHTML = "📞 " + phone;
+
+// Examples:
+// console.log(formatInternationalNumber("37433151580"));  // +374 (33) 151-580 (Armenia)
+// console.log(formatInternationalNumber("11234567890"));  // +1 (123) 456-7890 (US/Canada)
+// console.log(formatInternationalNumber("4915123456789")); // +49 (151) 234-56789 (Germany)
+// console.log(formatInternationalNumber("33123456789"));   // +33 (123) 456-789 (France)
+// console.log(formatInternationalNumber("1234567890"));    // (123) 456-7890 (No country code)
+
+</script>
+
+
+<!-- QR library (inline SVG capable) -->
+  <script nonce="{{ csp_nonce() }}" src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+  <!-- DOM → image exporter -->
+  <script nonce="{{ csp_nonce() }}" src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.min.js"></script>
+
+  <script nonce="{{ csp_nonce() }}">
+    // Map each ticket container → Promise that resolves when its QR is rendered
+    const ticketReady = new WeakMap();
+
+    /** Render QR as inline SVG and resolve when inserted. */
+    function renderQRAsSVG(qrContainer, text) {
+      return new Promise((resolve) => {
+        try {
+          // qrcode(typeNumber, errorCorrectionLevel)
+          // typeNumber 0 = automatic best fit
+          const qr = qrcode(0, 'M');
+          qr.addData(text);
+          qr.make();
+          // Create SVG tag string (cellSize=4, margin=2)
+          const svg = qr.createSvgTag(4, 2);
+          qrContainer.innerHTML = svg;
+
+          // Normalize sizing
+          const el = qrContainer.querySelector('svg');
+          if (el) {
+            el.setAttribute('width', '120');
+            el.setAttribute('height', '120');
+            el.style.display = 'block';
+          }
+        } catch (e) {
+          console.error('QR generation failed:', e);
+          qrContainer.innerHTML = '<div style="width:120px;height:120px;border:1px dashed #aaa;border-radius:6px;"></div>';
+        }
+        resolve();
+      });
+    }
+
+    /** Wait for raster images only (logos etc.). */
+    async function waitForImages(el) {
+      const imgs = Array.from(el.querySelectorAll('img'));
+      await Promise.all(imgs.map(img => (img.decode ? img.decode().catch(()=>{}) : Promise.resolve())));
+    }
+
+    /** Export an element to JPEG using html-to-image. */
+    async function downloadElementAsJPEG(el, filename) {
+      // Ensure QR SVG is in the DOM and any images decoded
+      const ready = ticketReady.get(el) || Promise.resolve();
+      await ready;
+      await waitForImages(el);
+
+      const dataUrl = await htmlToImage.toJpeg(el, {
+        quality: 0.95,
+        pixelRatio: Math.max(2, window.devicePixelRatio || 1),
+        backgroundColor: '#ffffff',
+        // Exclude elements marked as ignored (our buttons)
+        filter: (node) => !(node.dataset && node.dataset.ignore === 'true')
+      });
+
+      const a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+
+    function filenameForTicket(idOrIndex) {
+      return `ticket-${idOrIndex}.jpg`;
+    }
+
+    /** Build a ticket DOM and return its wrapper. */
+    function generateTicket(ticket) {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'ticket-wrapper';
+
+      const container = document.createElement('div');
+      container.className = 'ticket-container';
+
+      // Card 1: header + details
+      const card1 = document.createElement('div');
+      card1.className = 'ticket-card-1';
+
+      const header = document.createElement('div');
+      header.className = 'ticket-header';
+      header.textContent = 'ARAXI TRAVEL';
+      card1.appendChild(header);
+
+      const details = document.createElement('div');
+      details.className = 'details';
+
+        const omit = new Set(['index', 'qrUrl', 'footerText']);
+        const rows = Object.entries(ticket)
+            .filter(([k]) => !omit.has(k) && isNaN(+k)); // drop numeric keys if any
+
+    //   const rows = [
+    //     ['Event:', ticket.event],
+    //     ['Date:', ticket.date],
+    //     ['Amount:', ticket.amount],
+    //     ['Status:', ticket.status],
+    //     ['Status1:', ticket.status],
+    //     ['Status2:', ticket.status]
+    //   ];
+      rows.forEach(([label, value]) => {
+        const r = document.createElement('div'); r.className = 'row';
+        const l = document.createElement('div'); l.className = 'label'; l.textContent = label;
+        const v = document.createElement('div'); v.className = 'value'; v.textContent = value;
+        if (label === 'Amount:') v.classList.add('bold');
+        if (label === 'Status:' && /completed/i.test(value)) v.classList.add('status-ok');
+        r.append(l, v); details.appendChild(r);
+      });
+
+      card1.appendChild(details);
+      container.appendChild(card1);
+
+      // Spacer
+      const spacer = document.createElement('div'); spacer.style.height = '0px';
+      container.appendChild(spacer);
+
+      // Card 2: QR
+      const card2 = document.createElement('div'); card2.className = 'ticket-card-2 qr-card';
+      const qrBox = document.createElement('div'); qrBox.className = 'qr-box';
+      card2.appendChild(qrBox);
+      const caption = document.createElement('div'); caption.className = 'caption'; caption.textContent = `{{ _('Scan this code to enter!') }}`;
+      const url = document.createElement('div'); url.className = 'url'; url.textContent = ticket.footerText || 'www.araxitravel.am';
+      card2.appendChild(caption); card2.appendChild(url);
+      container.appendChild(card2);
+
+      // Per-ticket Download button (ignored in capture)
+      const dlBtn = document.createElement('button');
+      dlBtn.className = 'ticket-action';
+      dlBtn.dataset.ignore = 'true';
+      dlBtn.type = 'button';
+      dlBtn.addEventListener('click', () =>
+        downloadElementAsJPEG(container, filenameForTicket(ticket.id || ticket.index))
+      );
+
+      const icon = document.createElement('i');
+      icon.classList.add('fa-solid', 'fa-download'); // Font Awesome 6
+      icon.setAttribute('aria-hidden', 'true');      // decorative  
+      dlBtn.appendChild(icon);
+
+      wrapper.appendChild(container);
+      wrapper.appendChild(dlBtn);
+
+      // Render QR and store readiness promise
+      const ready = renderQRAsSVG(qrBox, ticket.qrUrl);
+      ticketReady.set(container, ready);
+
+      return wrapper;
+    }
+
+    /** Render list of tickets and wire buttons. */
+    function renderTickets(tickets) {
+      const grid = document.getElementById('ticket-grid');
+      const toolbar = document.getElementById('toolbar');
+      grid.innerHTML = ''; toolbar.innerHTML = '';
+
+      tickets.forEach((t, i) => {
+        t.index = i + 1;
+        grid.appendChild(generateTicket(t));
+      });
+
+      if (tickets.length > 1) {
+        const allBtn = document.createElement('button');
+        allBtn.className = 'toolbar-btn';
+        allBtn.dataset.ignore = 'true';
+        allBtn.textContent = `{{ _('Download all') }}`;
+        allBtn.addEventListener('click', async () => {
+          const items = Array.from(document.querySelectorAll('.ticket-container'));
+          for (let i = 0; i < items.length; i++) {
+            const id = tickets[i]?.id || (i + 1);
+            await downloadElementAsJPEG(items[i], filenameForTicket(id));
+          }
+        });
+        toolbar.appendChild(allBtn);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const tickets = cunstructTicketData()
+    // Demo data
+    //   const tickets = [
+    //     {
+    //       id: '35-T75JIZV',
+    //       event: 'Demo Ski!',
+    //       date: '06/04/2018 11:15:08',
+    //       amount: '260.00 SEK',
+    //       status: 'Completed',
+    //       status1: 'Completed',
+    //       status2: 'Completed',
+    //       qrUrl: 'https://www.araxitravel.am/ticket/35-T75JIZV',
+    //       footerText: 'www.araxitravel.am'
+    //     },
+    //     {
+    //       id: '35-T75JIZV',
+    //       event: 'Demo Ski!',
+    //       date: '06/04/2018 11:15:08',
+    //       amount: '260.00 SEK',
+    //       status: 'Completed',
+    //       status1: 'Completed',
+    //       status2: 'Completed',
+    //       qrUrl: 'https://www.araxitravel.am/ticket/35-T75JIZV',
+    //       footerText: 'www.araxitravel.am'
+    //     },
+    //     {
+    //       id: '35-T75JIZV',
+    //       event: 'Demo Ski!',
+    //       date: '06/04/2018 11:15:08',
+    //       amount: '260.00 SEK',
+    //       status: 'Completed',
+    //       status1: 'Completed',
+    //       status2: 'Completed',
+    //       qrUrl: 'https://www.araxitravel.am/ticket/35-T75JIZV',
+    //       footerText: 'www.araxitravel.am'
+    //     },
+    //     {
+    //       id: '35-T75JIZV',
+    //       event: 'Demo Ski!',
+    //       date: '06/04/2018 11:15:08',
+    //       amount: '260.00 SEK',
+    //       status: 'Completed',
+    //       status1: 'Completed',
+    //       status2: 'Completed',
+    //       qrUrl: 'https://www.araxitravel.am/ticket/35-T75JIZV',
+    //       footerText: 'www.araxitravel.am'
+    //     },
+    //     {
+    //       id: '36-K82MXYZ',
+    //       event: 'Summer Festival',
+    //       date: '07/15/2018 14:30:00',
+    //       amount: '350.00 SEK',
+    //       status: 'Completed',
+    //       status1: 'Completed',
+    //       status2: 'Completed',
+    //       qrUrl: 'https://www.araxitravel.am/ticket/36-K82MXYZ',
+    //       footerText: 'www.araxitravel.am'
+    //     }
+    //   ];
+      renderTickets(tickets);
+    });
+  </script>
+{% endblock %}

@@ -1,0 +1,812 @@
+{% extends 'base.html' %}
+{% block title %}
+{{ _('Corporate Emails') }}
+{% endblock %}
+
+
+{% block head %}
+
+<!-- jQuery -->
+<script nonce="{{ csp_nonce() }}" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+
+
+<!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">   -->
+
+<!-- International Telephone Input CSS -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/8.4.6/css/intlTelInput.css" rel="stylesheet">
+
+<link rel="stylesheet" href="{{ url_for('static', filename='quill.snow.css') }}">
+<style>
+
+#eStatus {
+    background-color: white;
+    color: #333;
+    padding: 10px 20px;
+    border: 1px solid #333;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 5px;
+}
+.my-phone-control {
+  padding-top: 7px!important;
+  padding-bottom: 7px!important;
+  border-radius: 5px!important;
+}
+
+.filter-inputs {
+  background-color: white;
+  color: #333;
+  padding: 10px 20px;
+  border: 1px solid #333;
+  font-size: 16px;
+  border-radius: 5px;
+  /* margin-right: 1px; */
+}
+
+.dropbtn, .filter {
+  background-color: #E76F51; 
+  color: white; 
+  padding: 10px 20px; 
+  border: none; 
+  cursor: pointer; 
+  font-size: 16px; 
+  border-radius: 5px; 
+  flex: 1; 
+  min-width: 50px;
+}
+
+.filter-container {
+  margin-bottom: 20px; 
+  display: flex; 
+  gap: 10px; 
+  align-items: center; 
+  flex-wrap: wrap;
+}
+
+.cancelled {
+  text-decoration: line-through !important;
+}
+
+
+.ql-snow .ql-picker.ql-font .ql-picker-label::before, .ql-snow .ql-picker.ql-font .ql-picker-item::before {
+    content: 'Roboto';
+}
+
+.ql-snow .ql-picker.ql-font {
+    width: 120px;
+}
+
+
+.product-container {
+    background-color: white;
+    margin-top: unset;
+    padding: 0px 20px;
+}
+
+.pt-quantity-modal-content {
+    width: 50%;
+}
+
+.edit-user span:hover {
+  cursor: pointer;
+}
+
+
+/* ---- Filters ---- */
+.mail-filters {
+  margin: 0;
+}
+
+.mail-filters.mail-filters-end {
+  justify-content: flex-end;
+}
+
+.mail-filters .filter-inputs,
+.mail-filters #eStatus {
+  flex: 1 1 200px;
+  max-width: 250px;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.mail-filters .filter,
+.mail-filters .dropbtn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 42px;
+  box-sizing: border-box;
+  text-decoration: none;
+}
+
+.mail-filters .filter:focus-visible,
+.mail-filters .dropbtn:focus-visible,
+#myTable .row-actions [role="button"]:focus-visible,
+#myTable .row-actions a:focus-visible,
+.pagination [role="button"]:focus-visible,
+.pt-quantity-close:focus-visible {
+  outline: 3px solid #264653;
+  outline-offset: 2px;
+}
+
+/* ---- Table ---- */
+#myTable td.row-actions {
+  width: 1%;
+  white-space: nowrap;
+}
+
+#myTable td.row-actions > span,
+#myTable td.row-actions > a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  min-height: 40px;
+  border-radius: 6px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+#myTable td.row-actions > span:hover,
+#myTable td.row-actions > a:hover {
+  background-color: #fbe9e4;
+}
+
+.sort-icons i {
+  padding: 2px 4px;
+}
+
+#myTable td.table-empty {
+  text-align: center;
+  padding: 24px;
+  font-size: 18px;
+  color: #666;
+}
+
+.pagination {
+  flex-wrap: wrap;
+  gap: 6px 0;
+}
+
+/* ---- Modal ---- */
+.transfer-details-modal .pt-quantity-modal-content {
+  max-width: 760px;
+}
+
+#injectEmail {
+  font-size: 1.25rem;
+  padding-right: 30px;
+  overflow-wrap: anywhere;
+}
+
+#editorContent {
+  overflow-wrap: anywhere;
+}
+
+#emailToEdit {
+  width: 100%;
+  padding: 12px 14px;
+  margin: 10px 0;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.pt-quantity-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  min-height: 40px;
+  line-height: 1;
+}
+
+@media (max-width: 900px) {
+  .pt-quantity-modal-content {
+    width: 92%;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    width: 92%;
+  }
+
+  #tableDaddy,
+  .tableDaddy {
+    margin-left: 0 !important;
+  }
+
+  #myTable tr {
+    padding: 12px 16px;
+  }
+
+  #myTable td {
+    align-items: center;
+    gap: 12px;
+    font-size: 15px;
+    overflow-wrap: anywhere;
+  }
+
+  #myTable td::before {
+    flex-shrink: 0;
+    text-align: left;
+  }
+
+  #myTable td {
+    text-align: right;
+  }
+
+  /* Keep the action icons together on the right */
+  #myTable td.row-actions {
+    gap: 4px;
+  }
+
+  #myTable td.row-actions::before {
+    margin-right: auto;
+  }
+
+  #myTable td.row-actions {
+    width: auto;
+    border-top: 1px dashed #e5e5e5;
+    margin-top: 4px;
+  }
+
+  #myTable td.table-empty {
+    justify-content: center;
+  }
+
+  #myTable td.table-empty::before {
+    display: none;
+  }
+
+  /* Rows of the "associated employees" table are built with inline table-cell styles */
+  #myModalTable td {
+    display: flex !important;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 8px;
+    padding: 6px 0 !important;
+    overflow-wrap: anywhere;
+  }
+
+  /* Label on its own line above the value: the modal is too narrow for side-by-side */
+  #myModalTable td::before {
+    flex-basis: 100%;
+  }
+
+  #myModalTable td.edit-user {
+    justify-content: flex-end;
+  }
+
+  #injectEmail {
+    font-size: 1.05rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .mail-filters .filter-inputs {
+    flex: 1 1 100%;
+    max-width: none;
+  }
+
+  .mail-filters #eStatus {
+    flex: 1 1 0;
+    max-width: none;
+  }
+}
+
+</style>
+
+{% endblock %}
+
+{% block content %}
+
+{{ sideBar | safe }}
+
+<div class="container" >
+  {% if message != ''%}
+    <h2 style="text-align: center; margin: 20px auto; color: red">{{ message }} </h2>
+  {% endif %}
+
+  <div class="table-container toRight tableDaddy" style="max-width: 1320px; box-shadow: unset; background-color: unset">
+    {# eStatus defaults to 0 even when no status filter is applied: only preselect it when it was asked for #}
+    {% set statusFiltered = 'eStatus' in (request.view_args.get('filters') or '') %}
+    <div class="filter-container mail-filters mail-filters-end">
+      <input type="text" id="email" class="filter-inputs" placeholder="{{ _('Search by email') }}" aria-label="{{ _('Search by email') }}" value="{{ email }}" inputmode="email" autocomplete="off">
+      <select id="eStatus" aria-label="{{ _('Filter by status') }}">
+        <option value="" >{{ _('Filter by status') }}</option>
+
+
+        <option value="2"  {% if statusFiltered and eStatus == 2 %}selected="selected"{% endif %}>{{ _('All') }}</option>
+        <option value="1"  {% if statusFiltered and eStatus == 1 %}selected="selected"{% endif %}>{{ _('Active') }}</option>
+        <option value="0"  {% if statusFiltered and eStatus == 0 %}selected="selected"{% endif %}>{{ _('Passive') }}</option>
+        
+      </select>
+
+      <button type="button" class="filter" title="{{ _('Apply') }}" aria-label="{{ _('Apply') }}">
+        <i class="fas fa-search" aria-hidden="true"></i>
+      </button>
+      
+      <a  href="{{ url_for('corporate_emails', filters='page=1') }}"
+      class="dropbtn" title="{{ _('Clear filters') }}" aria-label="{{ _('Clear filters') }}">
+      <i class="fas fa-xmark" aria-hidden="true"></i>
+    </a>
+      </div>
+    </div>
+    <br>  
+      
+    <div class="table-container toRight" id="tableDaddy" style="max-width: 1320px;">
+      <table id="myTable">
+        <thead>
+          <tr>
+            <th>
+              <div style="display: flex; align-items: center;">
+              {{ _('Email') }} 
+
+                <div class="sort-icons" style="margin-left: 5px;">
+                  <i class="fas fa-sort-up myup" data-onclick='["sortTable", "$this", 0, "up"]'></i>
+                  <i class="fas fa-sort-down mydown" data-onclick='["sortTable", "$this", 0, "down"]'></i>
+                </div>
+              </div>
+            </th>
+
+            <th>
+              <div style="display: flex; align-items: center;">
+              {{ _('Status') }} 
+
+                <div class="sort-icons" style="margin-left: 5px;">
+                  <i class="fas fa-sort-up myup" data-onclick='["sortTable", "$this", 1, "up"]'></i>
+                  <i class="fas fa-sort-down mydown" data-onclick='["sortTable", "$this", 1, "down"]'></i>
+                </div>
+              </div>
+            </th>
+            <th>{{ _('Actions') }}</th>
+        </tr>
+      </thead>
+  {% if result.length > 0 %}
+    <tbody>
+      {% for row in result.data %}
+      {% set Status = _('Active') %}
+      {% if row['Status'] == 0 %}
+        {% set Status = _('Passive') %} 
+      {% endif %}
+
+      <tr>
+        
+        <td data-label="{{ _('Email') }}">
+          {{ row['email']  }}
+        </td>
+        
+        <td data-label="{{ _('Status') }}">
+          {{ Status }}
+        </td>
+   
+
+        <td class="edit-user row-actions" data-label="{{ _('Actions') }}">
+            <span data-value="{{ row['ID'] }}" class="show-associated-employees" role="button" tabindex="0" title="{{ _('Show associated employees') }}" aria-label="{{ _('Show associated employees') }}" style="color:#E76F51"><i class="fas fa-eye" aria-hidden="true"></i></span>
+            <span data-value="{{ row['ID'] }}" class="edit-corporate-email" role="button" tabindex="0" title="{{ _('Edit email') }}" aria-label="{{ _('Edit email') }}" style="color:#E76F51"><i class="fas fa-pencil-alt" aria-hidden="true"></i></span>
+        </td>
+
+      </tr>
+      {% endfor %}
+      
+      {% else %}
+      <tr><td class="table-empty" colspan="3">{{ _('Nothing found.') }}</td></tr>  
+    {% endif %}
+  </tbody>
+  </table>
+
+  {% from '_pagination.html' import pagination as pagination_bar %}
+  {{ pagination_bar(page, numRows, pagination, pbc) }}
+
+  <div id="myModal" class="transfer-details-modal hidden" >
+    <div class="pt-quantity-modal-content" role="dialog" aria-modal="true">
+      <span id="closeModalBtn" class="pt-quantity-close" role="button" tabindex="0" aria-label="{{ _('Close') }}">×</span>
+      <div class="product-container">
+        <h2 style="margin-bottom: 5px;" id="injectEmail"></h2>
+
+        <div id="editorContentParent">
+            <span id="editorContent" class="ql-editor" style="padding-left: unset;">
+               
+            </span>
+        </div>
+            
+      </div>
+    
+    </div>
+</div>
+
+
+<script nonce="{{ csp_nonce() }}">
+const csrfToken = "{{ newCSRFtoken }}";
+const languageID = "{{ languageID }}";
+window.addEventListener('load', () => {
+  document.querySelector('body').classList.add('loaded');
+  document.querySelector('.pt-quantity-close').addEventListener('click', function () {
+    document.querySelector('.transfer-details-modal').classList.toggle('hidden');
+    document.querySelector('#editorContent').innerHTML = '';
+  });
+
+
+  if (document.querySelectorAll('.show-associated-employees')) {
+    const showDetailsBtn = document.querySelectorAll('.show-associated-employees');
+    showDetailsBtn.forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.querySelector('#editorContent').innerHTML = "<p>{{ _('Loading.....') }}</p>";
+        document.querySelector('.transfer-details-modal').classList.toggle('hidden');
+        document.getElementById('closeModalBtn').focus();
+
+        emailID = btn.getAttribute('data-value');
+        
+        let formData = new FormData();
+
+        formData.append('emailID', emailID);     
+        formData.append('languageID', languageID);     
+
+        // Create a new XMLHttpRequest object
+        let xhr = new XMLHttpRequest();
+
+        // Configure the request
+        xhr.open('POST', '/get-associated-employees');
+        xhr.setRequestHeader('X-CSRFToken', csrfToken);
+
+        // Define what happens on successful data submission
+        xhr.onload = function () {
+            if (xhr.status === 200) {
+                const response = JSON.parse(xhr.responseText);
+                if (response.status === '1') {
+                    document.querySelector('#injectEmail').innerHTML = `{{ _('Employees associated with email') }} ` + escapeHtml(response.data[0]['CorporateEmail']);
+                    let tableContent = '';
+                    response.data.forEach(row => {
+                      tableContent += `<tr id="target_row_${row['ID']}">
+                                        <td data-label="{{ _('Employee') }}" class="flex" style="display: table-cell; padding: 0px 15px;">
+                                          <span style="font-size: 20px;">${ escapeHtml(row['Initials']) }</span> <span style="font-style: italic; font-size: 16px;">${escapeHtml(row['email'])}</span>
+                                        </td>
+                                        
+                                        <td data-label="{{ _('Position') }}" class="flex" style="display: table-cell; padding: 0px 15px;">
+                                          ${escapeHtml(row['Position']) }
+                                        </td>
+
+                                        <td class="edit-user" style="padding: 0px 15px;">
+                                            <span data-value="${escapeHtml(row['ID']) }" style="color:red;" class="remove-email-from-employee" title="{{ _('Remove email from employee') }}" ><i class="fas fa-user-minus"></i></span>
+                                        </td>
+                                      </tr>`;
+                    });
+
+
+                    let messageHeaders = `<input type="hidden" value="${response.data[0]['ceID']}" id="emailToRM" />
+                                          <table id="myModalTable">
+                                            <thead>
+                                              <tr>
+                                                <th style="padding: 10px 15px; white-space: unset;">
+                                                  {{ _('Employee') }} 
+                                                </th>
+                                                <th style="padding: 10px 15px; white-space: unset;">
+                                                    {{ _('Position') }} 
+                                                </th>
+                                                <th></th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                              ${tableContent}
+                                            </tbody>
+                                          </table>`;
+                   
+                   
+                   
+                    document.querySelector('#editorContent').innerHTML = messageHeaders;
+
+                    
+                    if (document.querySelectorAll('.remove-email-from-employee')) {
+                      const rmEFE = document.querySelectorAll('.remove-email-from-employee');
+                      rmEFE.forEach(btn => {
+                          btn.addEventListener('click', function() {
+                            const stuffID = btn.dataset.value;
+                            const emailID = document.getElementById('emailToRM').value;
+                            if (!stuffID || !emailID) return;
+
+                            if (!confirm("{{ _('The employee will no longer have access to this email.') }}")) {
+                              return;
+                            }
+
+                            // build form data
+                            const removeForm = new FormData();
+                            removeForm.append('emailID', emailID);
+                            removeForm.append('stuffID', stuffID);
+
+                            // new XHR for removal
+                            const removeXhr = new XMLHttpRequest();
+                            removeXhr.open('POST', '/remove-email-from-employee');
+                            removeXhr.setRequestHeader('X-CSRFToken', csrfToken);
+
+                            removeXhr.onload = function () {
+                              if (removeXhr.status === 200) {
+                                const resp = JSON.parse(removeXhr.responseText);
+                                if (resp.status === '1') {
+                                  alert('done');
+                                  document.querySelector('#target_row_' + stuffID).remove();
+                                } else {
+                                  alert(resp.answer);
+                                }
+                              } else {
+                                console.error('Server returned status', removeXhr.status);
+                              }
+                            };
+
+                            removeXhr.onerror = function () {
+                              console.error('Remove request failed.');
+                            };
+
+                            // **only now** send on the opened XHR
+                            removeXhr.send(removeForm);
+                          });
+                        });
+
+                    }
+                    
+                }
+
+                if (response.status === '0') {
+                  let content = `<p>${escapeHtml(response.answer)}</p>`;
+                  document.querySelector('#editorContent').innerHTML = content;
+                }
+                    
+            } 
+        };
+
+        // Define what happens in case of error
+        xhr.onerror = function () {
+            console.error('Request failed.');
+        };
+
+        // Send the request with the JSON data
+        xhr.send(formData);
+      });
+    })
+  }
+
+
+
+  if (document.querySelectorAll('.edit-corporate-email')) {
+    const showDetailsBtn = document.querySelectorAll('.edit-corporate-email');
+    showDetailsBtn.forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.querySelector('#editorContent').innerHTML = "<p>{{ _('Loading.....') }}</p>";
+        document.querySelector('.transfer-details-modal').classList.toggle('hidden');
+        document.getElementById('closeModalBtn').focus();
+
+        emailID = btn.getAttribute('data-value');
+        
+        let formData = new FormData();
+
+        formData.append('emailID', emailID);     
+        formData.append('languageID', languageID);     
+
+        // Create a new XMLHttpRequest object
+        let xhr = new XMLHttpRequest();
+
+        // Configure the request
+        xhr.open('POST', '/edit-corporate-email-view');
+        xhr.setRequestHeader('X-CSRFToken', csrfToken);
+
+        // Define what happens on successful data submission
+        xhr.onload = function () {
+            if (xhr.status === 200) {
+                const response = JSON.parse(xhr.responseText);
+                if (response.status === '1') {
+                    document.querySelector('#injectEmail').innerHTML = `{{ _('The email to be edited is ')}}` + escapeHtml(response.row['email']);
+
+                    let messageHeaders = `<div>
+                                          <input type="hidden" value="${escapeHtml(response.row['ID'])}" id="emailID" />
+                                          <input type="text" value="${escapeHtml(response.row['email'])}" id="emailToEdit" style="width: 100%;" /> 
+                                          <div class="pcButtonS" id="editCE" role="button" tabindex="0" style="width: 100%; box-sizing: border-box;">{{ _('Submit') }}</div></div>`;
+
+                    document.querySelector('#editorContent').innerHTML = messageHeaders;
+                    document.getElementById('emailToEdit').addEventListener('keydown', function (event) {
+                      if (event.key === 'Enter') {
+                        event.preventDefault();
+                        document.getElementById('editCE').click();
+                      }
+                    });
+                    document.getElementById('editCE').addEventListener('click', function() {
+                      let emailID = document.getElementById('emailID').value;
+                      let emailToEdit = document.getElementById('emailToEdit').value;
+                      if (!emailID || !emailToEdit) return;
+
+                      // build form data
+                      const editForm = new FormData();
+                      editForm.append('emailID', emailID);
+                      editForm.append('emailToEdit', emailToEdit);
+
+                      // new XHR for removal
+                      const editXhr = new XMLHttpRequest();
+                      editXhr.open('POST', '/edit-corporate-email');
+                      editXhr.setRequestHeader('X-CSRFToken', csrfToken);
+
+                      editXhr.onload = function () {
+                        if (editXhr.status === 200) {
+                          const resp = JSON.parse(editXhr.responseText);
+                          if (resp.status === '1') {
+                            alert(resp.answer);
+                            window.location.reload();
+                          } else {
+                            alert(resp.answer);
+                          }
+                        } else {
+                          console.error('Server returned status', editXhr.status);
+                        }
+                      };
+
+                      editXhr.onerror = function () {
+                        console.error('Remove request failed.');
+                      };
+
+                      // **only now** send on the opened XHR
+                      editXhr.send(editForm);
+                    });
+
+                }
+
+                if (response.status === '0') {
+                  let content = `<p>${escapeHtml(response.answer)}</p>`;
+                  document.querySelector('#editorContent').innerHTML = content;
+                }
+                    
+            } 
+        };
+
+        // Define what happens in case of error
+        xhr.onerror = function () {
+            console.error('Request failed.');
+        };
+
+        // Send the request with the JSON data
+        xhr.send(formData);
+      });
+    })
+  }
+
+
+});
+
+// Sorts the table rows by the clicked column: "up" = A to Z / smallest first, "down" = the reverse.
+function sortTable(arrowElement, column, direction) {
+  const tbody = document.getElementById('myTable').tBodies[0];
+  if (!tbody) {
+    return;
+  }
+  const rows = Array.from(tbody.rows).filter(row => !row.querySelector('.table-empty'));
+
+  const cellValue = row => {
+    const cell = row.cells[column];
+    return cell ? cell.textContent.trim() : '';
+  };
+
+  rows.sort((a, b) => {
+    const result = cellValue(a).localeCompare(cellValue(b), undefined, { numeric: true, sensitivity: 'base' });
+    return direction === 'down' ? -result : result;
+  });
+  rows.forEach(row => tbody.appendChild(row));
+
+  document.querySelectorAll('.sort-icons i').forEach(icon => icon.style.color = '#fff');
+  arrowElement.style.color = '#ff0000';
+}
+
+// Icon buttons and page numbers are spans/divs: make Enter and Space work on them
+document.addEventListener('keydown', function (event) {
+  if (event.key !== 'Enter' && event.key !== ' ') {
+    return;
+  }
+  const target = event.target;
+  if (target.matches('#myTable [role="button"], .pagination [role="button"], .pt-quantity-close')) {
+    event.preventDefault();
+    target.click();
+  }
+});
+
+// The modal closes with Escape or a click on the dimmed backdrop, like its close button
+const detailsModal = document.querySelector('.transfer-details-modal');
+document.addEventListener('keydown', function (event) {
+  if (event.key === 'Escape' && detailsModal && !detailsModal.classList.contains('hidden')) {
+    document.getElementById('closeModalBtn').click();
+  }
+});
+if (detailsModal) {
+  detailsModal.addEventListener('click', function (event) {
+    if (event.target === detailsModal) {
+      document.getElementById('closeModalBtn').click();
+    }
+  });
+}
+
+// Enter in the email field applies the filters
+document.getElementById('email').addEventListener('keydown', function (event) {
+  if (event.key === 'Enter') {
+    event.preventDefault();
+    document.querySelector('.filter').click();
+  }
+});
+
+
+// $("#phone").intlTelInput({
+//     initialCountry: "am",
+//     utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/8.4.6/js/utils.js"
+// });
+
+
+// document.querySelector('.filter').addEventListener('click', function() {
+  
+//   let filterURL = constract_filter_url('1');
+//   if (filterURL.status == 1) {
+//     let affID = "{{ affID }}";
+//     let filterAff = '';
+//     if (affID) {
+//       filterAff = '&affiliate=' + affID;
+//     }
+//     window.location.href = filterURL.message + filterAff;
+
+//   } else {
+//     alert(filterURL.message)
+//   }
+
+
+// });
+
+if (document.querySelectorAll('.pagination div')) {
+  paginationDivs = document.querySelectorAll('.pagination div');
+  paginationDivs.forEach(div => {
+    div.addEventListener('click', function() {
+      let page = div.getAttribute('data-value');
+      filteredUrl = constract_filter_url(page);
+      if (filteredUrl.status = 1) {
+        window.location.href = filteredUrl.message;
+      } else {
+        alert('Something went wrong!')
+      }
+
+    });
+  });
+}
+
+
+
+function constract_filter_url(page) {
+  let filterURL = 'page='+page;
+  let eStatus = document.getElementById('eStatus').value;
+  if (eStatus !== '') {
+    filterURL += '&eStatus=' + eStatus;
+  } 
+  
+  let email = document.getElementById('email').value;
+  if (email !== '') {
+    filterURL += '&email=' + email;
+  } 
+
+  return {'status': 1, 'message': filterURL}
+  
+}
+
+
+document.querySelector('.filter').addEventListener('click', function() {
+  
+  let filterURL = constract_filter_url('1');
+  if (filterURL.status == 1) {
+    window.location.href = filterURL.message;
+    
+  } else {
+    alert(filterURL.message)
+  }
+
+
+});
+
+
+
+</script>
+
+
+{% endblock %}

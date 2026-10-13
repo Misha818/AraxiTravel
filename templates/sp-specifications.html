@@ -1,0 +1,476 @@
+{% extends "base.html" %}
+
+{% set title = _('Create Specifications for Product Type') %}
+{% set placeholderName =  _('Product Type Situation name') %}
+{% set refKey = '' %}
+
+{% if data | length > 0 %}
+    {% set title = _('Translate Specifications for Product Type') %}
+    {% set placeholderName = _('The field name to be translated:') + ' ' + data[0]['spsName'] %}
+    {% set refKey = spsRefKey %}
+{% endif %}
+{% block title %}
+    {{ title }}
+{% endblock %}
+
+
+{% block head %}
+<style>
+    .sps-card {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        width: 100%;
+        max-width: 760px;
+        margin: 0 auto 30px auto;
+        padding: 20px;
+        box-sizing: border-box;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .sps-card h1 {
+        margin: 0 0 12px 0;
+        font-size: 1.6rem;
+        text-align: center;
+        color: #333;
+    }
+
+    .sps-card .field-label {
+        margin: 8px 0 2px 0;
+        font-weight: bold;
+        color: #333;
+    }
+
+    .sps-card #response {
+        color: red;
+    }
+
+    .sps-card #response:empty {
+        display: none !important;
+    }
+
+    .sps-card .pr-name,
+    .sps-card .parent {
+        margin-bottom: 10px;
+        border-radius: 6px;
+    }
+
+    .sps-card .pr-name {
+        border: 1px solid #333;
+    }
+
+    .sps-card input[type="text"] {
+        width: 100%;
+        min-width: 0;
+        padding: 10px 12px;
+        font-size: 16px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+    }
+
+    .sps-card .remove {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 40px;
+        min-height: 40px;
+        padding: 0 !important;
+        line-height: 1;
+    }
+
+    .sps-actions {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+        padding: 0;
+        margin-top: 4px;
+    }
+
+    .sps-actions .plusDiv {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+    }
+
+    .sps-actions .pcButtonS {
+        width: 100%;
+        margin: 0;
+        padding: 15px;
+        font-size: 20px;
+        box-sizing: border-box;
+    }
+
+    .sps-card .remove:focus-visible,
+    .sps-actions .plusDiv:focus-visible,
+    .sps-actions .pcButtonS:focus-visible {
+        outline: 3px solid #264653;
+        outline-offset: 2px;
+    }
+
+    @media (max-width: 768px) {
+        /* beats the inline width: 70% */
+        .container.sps-page {
+            width: 92% !important;
+        }
+
+        #tableDaddy.sps-page {
+            margin-left: 0 !important;
+        }
+
+        .sps-card {
+            padding: 16px;
+        }
+
+        .sps-card h1 {
+            font-size: 1.35rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{{ sideBar | safe }}
+
+<div class="container toRight sps-page" id="tableDaddy" style="width: 70%;">
+<div class="sps-card">
+<h1>{{ title }}</h1>
+<div id="response" role="alert" aria-live="polite"></div>
+<input type="hidden" name="spsRefKey" id="spsRefKey" value="{{ refKey }}">
+<label for="name" class="field-label">{{ _('Name') }}</label>
+<div class="mb-3 containerSPS pr-name">
+    <input autocomplete="off" autofocus class="" id="name" name="name" placeholder="{{ placeholderName }}" type="text">
+</div>
+
+<span class="field-label">{{ _('Product Type Specifications') }}</span>
+<form id="myForm" >
+    <!-- Dynamic fields --> 
+    {% if spsRefKey is not none %}  
+        {% for row in data %}       
+        <div class="containerSPS parent" id="parent_{{ loop.index }}" draggable="true">
+            
+            <input type="text" name="text_{{ loop.index }}" placeholder="{{ _('The field name to be translated:') + ' ' + row['spssName']}}">
+            <!-- <input type="hidden" name="spssID" value="{{ row['spssID'] }}"> -->
+            <div class="remove" data-onclick='["handleRemoveClick", "$this"]' role="button" tabindex="0" title="{{ _('Remove') }}" aria-label="{{ _('Remove') }}">-</div>
+                    
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="containerSPS parent" id="parent_1" draggable="true">
+        
+        
+            <input type="text" name="text_1">
+            <div class="remove" data-onclick='["handleRemoveClick", "$this"]' role="button" tabindex="0" title="{{ _('Remove') }}" aria-label="{{ _('Remove') }}">-</div>
+            
+            
+    </div>
+    {% endif %}
+    <!-- End of dynamic fields -->
+    
+</form>
+
+<div class="containerH sps-actions">
+
+    <div id="plusDiv" class="plusDiv" data-onclick='["handlePlusClick", "$this"]' role="button" tabindex="0" title="{{ _('Add') }}" aria-label="{{ _('Add') }}">+</div>
+    <div class="pcButtonS" id="submit" role="button" tabindex="0">{{ _('Submit')}}</div>
+    <div class="pcButtonS hidden" id="saving" aria-live="polite">{{ _('Saving...')}}</div>
+</div>
+</div>
+</div>
+
+    <script nonce="{{ csp_nonce() }}">
+        const container = document.getElementById('myForm');
+
+        container.addEventListener('dragstart', (e) => {
+            if (e.target.classList.contains('parent')) {
+                e.target.classList.add('dragging');
+                e.dataTransfer.setData('text/plain', e.target.outerHTML); // Store the dragged element.
+            }
+        });
+
+        container.addEventListener('dragend', (e) => {
+            if (e.target.classList.contains('parent')) {
+                e.target.classList.remove('dragging');
+            }
+        });
+
+        container.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            const draggingElement = container.querySelector('.dragging');
+            const afterElement = getDragAfterElement(container, e.clientY);
+
+            if (afterElement == null) {
+                container.appendChild(draggingElement);
+            } else {
+                container.insertBefore(draggingElement, afterElement);
+            }
+        });
+
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.parent:not(.dragging)')];
+
+            return draggableElements.reduce(
+                (closest, child) => {
+                    const box = child.getBoundingClientRect();
+                    const offset = y - box.top - box.height / 2;
+                    if (offset < 0 && offset > closest.offset) {
+                        return { offset: offset, element: child };
+                    } else {
+                        return closest;
+                    }
+                },
+                { offset: Number.NEGATIVE_INFINITY }
+            ).element;
+        }
+    </script>
+
+    <script nonce="{{ csp_nonce() }}">
+        let csrfToken = "{{ csrf_token() }}";
+            document.getElementById('submit').onclick = function() {
+                event.preventDefault(); // Prevent form submission
+                let response = document.querySelector("#response");
+                response.innerHTML = "";
+                response.style.display = 'none';
+
+                const clickedBtn = document.getElementById('submit');
+                const savingBtn = document.getElementById('saving');
+
+                clickedBtn.classList.toggle('hidden');
+                savingBtn.classList.toggle('hidden');
+
+
+                let answer;
+                let flag = false;
+                const docFormData = new FormData(document.getElementById("myForm"));
+
+                let project_name = document.getElementById("name").value;
+                if (!project_name) {
+                    response.innerHTML = "{{ _('Please specify subproduct situation name!') }}";
+                    response.style.display = 'flex';
+                    document.getElementById("name").style.borderColor = "red";
+                    clickedBtn.classList.toggle('hidden');
+                    savingBtn.classList.toggle('hidden');
+                    return;
+                }
+
+                document.getElementById("name").style.borderColor = "black";
+
+                let formData = new FormData();
+            
+                let i = 0;
+                docFormData.forEach((value, key) => {
+                    const inputElement = document.querySelector(`[name="${key}"]`);
+                    const elementType = inputElement.type;
+
+                    let stringToSplit = key;
+                    let checker = stringToSplit.indexOf("_");
+                    let parentElementId = "";
+                    if (checker !== -1) {
+                        let splitArray = stringToSplit.split('_');
+                        let secondIndex = splitArray[1];
+                        parentElementId = "parent_" + secondIndex;
+                    }
+
+                    let emptyInput = document.querySelector(`#${parentElementId} input`);
+
+                    if (value === "") {
+                        flag = true;
+
+                        if (elementType === "select-one") {
+                            if (colorFrame) {
+                                colorFrame.style.color = "red";
+                            }
+                        } else {
+                            if (emptyInput) {
+                                emptyInput.style.borderColor = "red";
+                            }
+                        }
+                    } else {
+                        if (elementType === "select-one") {
+                            if (colorFrame) {
+                                colorFrame.style.color = "black";
+                            }
+                        } else {
+                            if (emptyInput) {
+                                emptyInput.style.borderColor = "black";
+                            }
+                        }
+                    }
+
+                    let check = key.split('_');
+                    if (check[0] !== "type") {
+                        formData.append('text_' + i.toString(), value)
+                        i++;
+                    }
+                });
+
+                if (flag) {
+                    answer = "{{ _('Please improve all red fields!') }}";
+                    response.textContent = answer;
+                    response.style.display = 'flex';
+                    clickedBtn.classList.toggle('hidden');
+                    savingBtn.classList.toggle('hidden');
+                    return;
+                }
+        let spsRefKey = document.querySelector("#spsRefKey").value;
+
+        formData.append('spsName', project_name)     
+        formData.append('spsRefKey', spsRefKey)     
+        document.querySelector("#response").textContent = answer;
+
+
+        // Create a new XMLHttpRequest object
+        let xhr = new XMLHttpRequest();
+        
+        // Configure the request
+        xhr.open('POST', '/add_sps');
+        xhr.setRequestHeader('X-CSRFToken', csrfToken);
+
+        // Define what happens on successful data submission
+        xhr.onload = function () {
+            if (xhr.status === 200) {
+                const response = JSON.parse(xhr.responseText);
+                if (response.status === '1') {
+                    let ptsURL = window.location.origin  + '/pt-specifications';
+                    location.href = ptsURL;
+                }
+                
+                if (response.status === '0') {
+                    document.querySelector("#response").textContent = response.answer;
+                    document.querySelector("#response").style.display = 'flex';
+
+                    clickedBtn.classList.toggle('hidden');
+                    savingBtn.classList.toggle('hidden');
+                } 
+                
+                if (response.status === 'test') {
+                    const jsonString = JSON.stringify(response.message);
+                    document.querySelector('#response').textContent = jsonString;
+
+                    clickedBtn.classList.toggle('hidden');
+                    savingBtn.classList.toggle('hidden');
+                }
+            } else {
+                console.error('Request failed with status: ' + xhr.status);
+
+                clickedBtn.classList.toggle('hidden');
+                savingBtn.classList.toggle('hidden');
+            }
+        };
+
+        // Define what happens in case of error
+        xhr.onerror = function () {
+            console.error('Request failed.');
+
+            clickedBtn.classList.toggle('hidden');
+            savingBtn.classList.toggle('hidden');
+                        
+        };
+
+        // Send the request with the JSON data
+        xhr.send(formData);
+    };
+
+
+        let num = parseInt("{{ num }}"); // total count of mobile elements. Starts from one
+        // + buttun manipulation
+        function handlePlusClick(plus) { 
+
+            // Function to find the highest number after the underscore in IDs
+            const elements = document.querySelectorAll('.parent'); // Select all elements with class 'parCh'
+            let maxNumber = -1; // Initialize the max number as -1
+
+            elements.forEach(element => {
+                const id = element.id; // Get the id of the element
+                const parts = id.split('_'); // Split the id by underscore
+                if (parts.length > 1) {
+                    const number = parseInt(parts[1], 10); // Convert the part after the underscore to an integer
+                    if (number > maxNumber) {
+                        maxNumber = number; // Update max number if current number is larger
+                    }
+                }
+            });
+
+            let strMaxNumber = maxNumber.toString();
+            let targetId = 'parent_' + strMaxNumber
+
+            // let originalParent = document.getElementById(targetId);
+            let originalParent = document.getElementById(targetId);
+            
+            // Clone the original parent container element
+            let clonedParent = originalParent.cloneNode(true);
+
+            num = num + 1
+            
+            strNum = (maxNumber + 1).toString()
+            
+            let inputElement = clonedParent.querySelector("input");
+            inputElement.value = '';
+            inputElement.name = 'text_' + strNum;
+            // Change the parent div's id
+            let newParentId = "parent_" + strNum
+            clonedParent.setAttribute("id", newParentId);
+
+            // Check if the ".remove" div already exists
+            let existingRemoveDiv = clonedParent.querySelector(".remove");
+            let plusDiv = document.getElementById('plusDiv');
+            
+            // Append the cloned elements after the original parent div
+            // originalParent.parentNode.insertBefore(clonedParent, plusDiv);
+            
+            let parentElement = document.getElementById('myForm');
+            parentElement.append(clonedParent);
+
+
+        }
+
+        // - buttun manipulations
+        function handleRemoveClick(plus) { 
+            
+            if (num === 1) {
+                return;
+            }
+
+            const plusDiveClone = document.getElementById('plusDiv');
+            
+            let parentId = plus.parentNode.id;
+            removeElementById(parentId);
+            num = num - 1;
+
+        }
+
+        function removeElementById(elementId) {
+            let element = document.getElementById(elementId);
+            if (element) {
+                while (element.firstChild) {
+                element.removeChild(element.firstChild);
+                }
+                let parentElement = element.parentNode;
+                parentElement.removeChild(element);
+            }
+        }
+
+        
+
+  
+    </script>
+
+    <script nonce="{{ csp_nonce() }}">
+        // The add / remove / submit controls are divs: let Enter and Space press them too
+        document.addEventListener('keydown', function (event) {
+            if (event.key !== 'Enter' && event.key !== ' ') {
+                return;
+            }
+            if (event.target.matches('.sps-card .remove, .sps-actions .plusDiv, .sps-actions #submit')) {
+                event.preventDefault();
+                event.target.click();
+            }
+        });
+    </script>
+
+{% endblock %}

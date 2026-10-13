@@ -1,0 +1,637 @@
+{% extends 'base.html' %}
+{% block title %}
+{{ _('Orders') }}
+{% endblock %}
+
+
+{% block head %}
+
+<!-- jQuery -->
+<script nonce="{{ csp_nonce() }}" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+
+<!-- International Telephone Input JS -->
+<script nonce="{{ csp_nonce() }}" src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/8.4.7/js/intlTelInput.js"></script>
+
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- International Telephone Input CSS -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/8.4.6/css/intlTelInput.css" rel="stylesheet">
+
+<style>
+#orderStatus {
+  background-color: white;
+  color: #333;
+  padding: 10px 20px;
+  border: 1px solid #333;
+  cursor: pointer;
+  font-size: 16px;
+  border-radius: 5px;
+}
+
+.my-phone-control {
+  padding-top: 7px!important;
+  padding-bottom: 7px!important;
+  border-radius: 5px!important;
+}
+
+.filter-inputs {
+  background-color: white;
+  color: #333;
+  padding: 10px 20px;
+  border: 1px solid #333;
+  font-size: 16px;
+  border-radius: 5px;
+  /* margin-right: 1px; */
+}
+
+.dropbtn, .filter {
+  background-color: #E76F51; 
+  color: white; 
+  padding: 10px 20px; 
+  border: none; 
+  cursor: pointer; 
+  font-size: 16px; 
+  border-radius: 5px; 
+  flex: 1; 
+  min-width: 50px;
+}
+
+.filter-container {
+  margin-bottom: 20px; 
+  display: flex; 
+  gap: 10px; 
+  align-items: center; 
+  flex-wrap: wrap;
+}
+
+/* ---- Filters ---- */
+.mail-filters {
+  margin: 0;
+}
+
+.mail-filters.mail-filters-end {
+  justify-content: flex-end;
+}
+
+.mail-filters .filter-inputs,
+.mail-filters #eStatus {
+  flex: 1 1 200px;
+  max-width: 250px;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.mail-filters .filter,
+.mail-filters .dropbtn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 42px;
+  box-sizing: border-box;
+  text-decoration: none;
+}
+
+.mail-filters .filter:focus-visible,
+.mail-filters .dropbtn:focus-visible,
+#myTable .row-actions [role="button"]:focus-visible,
+#myTable .row-actions a:focus-visible,
+.pagination [role="button"]:focus-visible,
+.pt-quantity-close:focus-visible {
+  outline: 3px solid #264653;
+  outline-offset: 2px;
+}
+
+/* ---- Table ---- */
+#myTable td.row-actions {
+  width: 1%;
+  white-space: nowrap;
+}
+
+#myTable td.row-actions > span,
+#myTable td.row-actions > a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  min-height: 40px;
+  border-radius: 6px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+#myTable td.row-actions > span:hover,
+#myTable td.row-actions > a:hover {
+  background-color: #fbe9e4;
+}
+
+.sort-icons i {
+  padding: 2px 4px;
+}
+
+#myTable td.table-empty {
+  text-align: center;
+  padding: 24px;
+  font-size: 18px;
+  color: #666;
+}
+
+.pagination {
+  flex-wrap: wrap;
+  gap: 6px 0;
+}
+
+/* ---- Modal ---- */
+.transfer-details-modal .pt-quantity-modal-content {
+  max-width: 760px;
+}
+
+#injectEmail {
+  font-size: 1.25rem;
+  padding-right: 30px;
+  overflow-wrap: anywhere;
+}
+
+#editorContent {
+  overflow-wrap: anywhere;
+}
+
+#emailToEdit {
+  width: 100%;
+  padding: 12px 14px;
+  margin: 10px 0;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.pt-quantity-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  min-height: 40px;
+  line-height: 1;
+}
+
+@media (max-width: 900px) {
+  .pt-quantity-modal-content {
+    width: 92%;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    width: 92%;
+  }
+
+  #tableDaddy,
+  .tableDaddy {
+    margin-left: 0 !important;
+  }
+
+  #myTable tr {
+    padding: 12px 16px;
+  }
+
+  #myTable td {
+    align-items: center;
+    gap: 12px;
+    font-size: 15px;
+    overflow-wrap: anywhere;
+  }
+
+  #myTable td::before {
+    flex-shrink: 0;
+  }
+
+  #myTable td.row-actions {
+    width: auto;
+    border-top: 1px dashed #e5e5e5;
+    margin-top: 4px;
+  }
+
+  #myTable td.table-empty {
+    justify-content: center;
+  }
+
+  #myTable td.table-empty::before {
+    display: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .mail-filters .filter-inputs {
+    flex: 1 1 100%;
+    max-width: none;
+  }
+
+  .mail-filters #eStatus {
+    flex: 1 1 0;
+    max-width: none;
+  }
+}
+
+/* ---- Orders filters ---- */
+.mail-filters {
+  margin-bottom: 16px;
+}
+
+.mail-filters #orderStatus {
+  flex: 1 1 200px;
+  max-width: 250px;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+@media (max-width: 600px) {
+  /* Two filters per row instead of one long column */
+  .mail-filters .filter-inputs {
+    flex: 1 1 calc(50% - 5px);
+    max-width: none;
+  }
+
+  .mail-filters #orderStatus {
+    flex: 1 1 100%;
+    max-width: none;
+  }
+}
+
+</style>
+
+{% endblock %}
+
+{% block content %}
+
+{{ sideBar | safe }}
+
+<div class="container" >
+  <div class="filter-container mail-filters toRight tableDaddy">
+    <select id="orderStatus" aria-label="{{ _('Status') }}">
+      <option value="all">{{ _('All Orders') }}</option>
+      
+      {% for key, val in orderStatusList.items() %}
+      
+        {% set selected = '' %}
+        {% if key | string == filters['status'] | string %}
+          {% set selected = 'selected' %}
+        {% endif %}
+
+        <option value="{{ key }}"  {{ selected }}>{{ val }}</option>
+      {% endfor %}
+
+    </select>
+    <input type="text" id="Firstname" placeholder="{{ _('Firstname') }}" aria-label="{{ _('Firstname') }}" value="{{ filters.Firstname if filters.Firstname else '' }}" class="filter-inputs" autocomplete="off">
+    <input type="text" id="Lastname" placeholder="{{ _('Lastname') }}" aria-label="{{ _('Lastname') }}" value="{{ filters.Lastname if filters.Lastname else '' }}" class="filter-inputs" autocomplete="off">
+    <input type="tel" id="phone" placeholder="{{ _('Phone') }}" aria-label="{{ _('Phone') }}" class="filter-inputs" value="{{ filters.phone if filters.phone else '' }}" autocomplete="off">
+    <input type="email" id="email" placeholder="{{ _('Email') }}" aria-label="{{ _('Email') }}" value="{{ filters.email if filters.email else '' }}" class="filter-inputs" autocomplete="off">
+    <input type="text" id="promoCode" placeholder="{{ _('Promo Code') }}" aria-label="{{ _('Promo Code') }}" value="{{ filters.promoCode if filters.promoCode else '' }}" class="filter-inputs" autocomplete="off">
+
+    <button type="button" class="filter" title="{{ _('Apply') }}" aria-label="{{ _('Apply') }}">
+      <i class="fas fa-search" aria-hidden="true"></i>
+    </button>
+
+    <a
+      href="{{ url_for('orders', filter='page=1&status=all') }}"
+      class="dropbtn" title="{{ _('Clear filters') }}" aria-label="{{ _('Clear filters') }}">
+        <i class="fas fa-xmark" aria-hidden="true"></i>
+  </a>
+  </div>
+  
+  <div class="table-container toRight" id="tableDaddy" style="max-width: 1320px;">
+  <table id="myTable">
+    <thead>
+      <tr>
+
+      <th>
+        <div style="display: flex; align-items: center;">
+         {{ _('Order ID') }} 
+
+          <div class="sort-icons" style="margin-left: 5px;">
+            <i class="fas fa-sort-up myup" data-onclick='["sortTable", "$this", 0, "up"]'></i>
+            <i class="fas fa-sort-down mydown" data-onclick='["sortTable", "$this", 0, "down"]'></i>
+          </div>
+        </div>
+      </th>
+
+      <th>
+        <div style="display: flex; align-items: center;">
+         {{ _('Client') }} 
+
+          <div class="sort-icons" style="margin-left: 5px;">
+            <i class="fas fa-sort-up myup" data-onclick='["sortTable", "$this", 1, "up"]'></i>
+            <i class="fas fa-sort-down mydown" data-onclick='["sortTable", "$this", 1, "down"]'></i>
+          </div>
+        </div>
+      </th>
+      
+      <th>
+        <div style="display: flex; align-items: center;">
+         {{ _('Phone') }} 
+
+          <div class="sort-icons" style="margin-left: 5px;">
+            <i class="fas fa-sort-up myup" data-onclick='["sortTable", "$this", 2, "up"]'></i>
+            <i class="fas fa-sort-down mydown" data-onclick='["sortTable", "$this", 2, "down"]'></i>
+          </div>
+        </div>
+      </th>
+
+      <th>
+        <div style="display: flex; align-items: center;">
+         {{ _('Email') }} 
+
+          <div class="sort-icons" style="margin-left: 5px;">
+            <i class="fas fa-sort-up myup" data-onclick='["sortTable", "$this", 3, "up"]'></i>
+            <i class="fas fa-sort-down mydown" data-onclick='["sortTable", "$this", 3, "down"]'></i>
+          </div>
+        </div>
+      </th>
+
+      <th>
+        <div style="display: flex; align-items: center;">
+         {{ _('Net') }} 
+
+          <div class="sort-icons" style="margin-left: 5px;">
+            <i class="fas fa-sort-up myup" data-onclick='["sortTable", "$this", 4, "up"]'></i>
+            <i class="fas fa-sort-down mydown" data-onclick='["sortTable", "$this", 4, "down"]'></i>
+          </div>
+        </div>
+      </th>
+
+      <th>
+        <div style="display: flex; align-items: center;">
+         {{ _('Promo Code') }} 
+
+          <div class="sort-icons" style="margin-left: 5px;">
+            <i class="fas fa-sort-up myup" data-onclick='["sortTable", "$this", 5, "up"]'></i>
+            <i class="fas fa-sort-down mydown" data-onclick='["sortTable", "$this", 5, "down"]'></i>
+          </div>
+        </div>
+      </th>
+
+      <th> 
+        <div style="display: flex; align-items: center;">
+          {{ _('Status') }}
+
+          <div class="sort-icons" style="margin-left: 5px;">
+            <i class="fas fa-sort-up myup" data-onclick='["sortTable", "$this", 6, "up"]'></i>
+            <i class="fas fa-sort-down mydown" data-onclick='["sortTable", "$this", 6, "down"]'></i>
+          </div>
+        </div>
+    </th>
+    
+      <th></th>
+      </tr>
+    </thead>
+  {% if result.length > 0 %}
+    <tbody>
+      {% for row in result.data %}
+      {% set statusStyle = 'status-open' %}
+      {% set status = _('Purchased') %}
+      {% if row.Status == 0 %}
+          {% set status = _('Cancelled') %}
+          {% set cancelled = 'cancelled' %}
+          {% set statusStyle = 'status-closed' %}
+      {% elif row.Status == 1 %}
+          {% set status = _('Panding') %}
+          {% set statusStyle = 'status-on-hold' %}
+      {% elif row.Status == 2 %}
+          {% set status = _('Purchased') %}
+          {% set statusStyle = 'status-open' %}
+      {% elif row.Status == 3 %}
+          {% set status = _('Preparing') %}
+          {% set statusStyle = 'status-preparing' %}
+      {% elif row.Status == 4 %}
+          {% set status = _('Ready for delivery') %}
+          {% set statusStyle = 'status-ready' %}
+      {% elif row.Status == 5 %}
+          {% set status = _('Delivered') %}
+          {% set statusStyle = 'status-delivered' %}
+      {% endif %}
+
+
+
+      
+      {% set phone = row['phone'] %}
+      {% if phone == none %}
+        {% set phone = _('N/A') %}
+      {% endif %}
+      
+      {% set email = row['email'] %}
+      {% if email == none %}
+        {% set email = _('N/A') %}
+      {% endif %}
+      
+      {% set promo = row['promo_code'] %}
+      {% if promo == none %}
+        {% set promo = _('N/A') %}
+      {% endif %}
+
+      <tr>
+        <td data-label="{{ _('Order ID') }}">
+          {{ row['ID'] }}
+        </td>
+        
+        <td data-label="{{ _('Client') }}">
+          {{ (row.FirstName or '') ~ ' ' ~ (row.LastName or '') }}
+        </td>
+        
+        <td data-label="{{ _('Phone') }}">
+          {{ phone }}
+        </td>
+        
+        <td data-label="{{ _('Email') }}">
+          {{ email }}
+        </td>
+        
+        <td data-label="{{ _('Net') }}">
+          {{ row['final_price'] if row['final_price'] is not none else _('N/A') }}
+        </td>
+        
+        <td data-label="{{ _('Promo Code') }}">
+          {{ promo }}
+        </td>
+
+        <td data-label="{{ _('Status') }}"><span class="status-label {{ statusStyle }}">{{ status }}</span></td>
+
+        <td class="edit-user row-actions" data-label="{{ _('Order Details') }}">
+          <a href="{{ url_for('order_details', pdID=row['ID'], _external=True) }}" target="_blank" title="{{ _('Order Details') }}" aria-label="{{ _('Order Details') }}: {{ row['ID'] }}" style="color:#E76F51">
+            <i class="fas fa-eye" aria-hidden="true"></i>
+            <!-- <i class="fas fa-pencil"></i> -->
+          </a>
+        </td>
+
+      </tr>
+      {% endfor %}
+      
+      {% else %}
+      <tr><td class="table-empty" colspan="8">{{ _('Nothing found.') }}</td></tr>  
+    {% endif %}
+  </tbody>
+  </table>
+
+  {% from '_pagination.html' import pagination as pagination_bar %}
+  {{ pagination_bar(page, numRows, pagination, pbc) }}
+
+
+<script nonce="{{ csp_nonce() }}">
+
+window.addEventListener('load', () => {
+  document.querySelector('body').classList.add('loaded');
+});
+
+// Sorts the table rows by the clicked column: "up" = A to Z / smallest first, "down" = the reverse.
+function sortTable(arrowElement, column, direction) {
+  const tbody = document.getElementById('myTable').tBodies[0];
+  if (!tbody) {
+    return;
+  }
+  const rows = Array.from(tbody.rows).filter(row => !row.querySelector('.table-empty'));
+
+  const cellValue = row => {
+    const cell = row.cells[column];
+    return cell ? cell.textContent.trim() : '';
+  };
+
+  rows.sort((a, b) => {
+    const result = cellValue(a).localeCompare(cellValue(b), undefined, { numeric: true, sensitivity: 'base' });
+    return direction === 'down' ? -result : result;
+  });
+  rows.forEach(row => tbody.appendChild(row));
+
+  document.querySelectorAll('.sort-icons i').forEach(icon => icon.style.color = '#fff');
+  arrowElement.style.color = '#ff0000';
+}
+
+// Icon buttons and page numbers are spans/divs: make Enter and Space work on them
+document.addEventListener('keydown', function (event) {
+  if (event.key !== 'Enter' && event.key !== ' ') {
+    return;
+  }
+  const target = event.target;
+  if (target.matches('#myTable [role="button"], .pagination [role="button"], .pt-quantity-close')) {
+    event.preventDefault();
+    target.click();
+  }
+});
+
+// The modal closes with Escape or a click on the dimmed backdrop, like its close button
+const detailsModal = document.querySelector('.transfer-details-modal');
+document.addEventListener('keydown', function (event) {
+  if (event.key === 'Escape' && detailsModal && !detailsModal.classList.contains('hidden')) {
+    document.getElementById('closeModalBtn').click();
+  }
+});
+if (detailsModal) {
+  detailsModal.addEventListener('click', function (event) {
+    if (event.target === detailsModal) {
+      document.getElementById('closeModalBtn').click();
+    }
+  });
+}
+
+// Enter in a filter field applies the filters
+document.querySelectorAll('.filter-container input').forEach(input => {
+  input.addEventListener('keydown', function (event) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      document.querySelector('.filter').click();
+    }
+  });
+});
+
+
+// $("#phone").intlTelInput({
+//     initialCountry: "am",
+//     utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/8.4.6/js/utils.js"
+// });
+
+
+document.querySelector('.filter').addEventListener('click', function() {
+
+  let filterURL = constract_filter_url('1');
+  if (filterURL.status == 1) {
+    window.location.href = filterURL.message;
+  } else {
+    alert(filterURL.message)
+  }
+
+
+});
+
+if (document.querySelectorAll('.pagination div')) {
+  paginationDivs = document.querySelectorAll('.pagination div');
+  paginationDivs.forEach(div => {
+    div.addEventListener('click', function() {
+      let page = div.getAttribute('data-value');
+      let filterURL = constract_filter_url(page);
+      if (filterURL.status == 1) {
+        window.location.href = filterURL.message;
+      } else {
+        alert(filterURL.message)
+      } 
+    });
+  });
+}
+
+
+
+function constract_filter_url(page) {
+  let filterURL = 'page='+page;
+  
+  let orderStatus = document.getElementById('orderStatus').value;
+  filterURL += '&status=' + orderStatus
+
+  // let counteryCodeStr = document.querySelector('.selected-flag').getAttribute('title');
+  // let counteryCodeArr = counteryCodeStr.split('+');
+  // let countryCode = counteryCodeArr[1];
+
+  
+  const filters = document.querySelectorAll('.filter-container input');
+  let flag = 0;
+  filters.forEach(input => {
+    if (input.value != '') {
+      if (input.id == 'phone') {
+        if (isValidPhoneString(input.value) === false) {
+          flag = 1;
+        }   
+        
+        let phoneVal = input.value;
+        if (phoneVal.startsWith('+')) {
+            phoneVal = phoneVal.replace('+', '');
+        }
+          
+        filterURL += '&' + input.id + '=' + phoneVal;
+          
+      } else {
+        filterURL += '&' + input.id + '=' + input.value;
+      }
+    }
+  });
+
+  if (flag === 1) {
+    return {'status': 0, 'message': "{{ _('Invalid phone number') }}"};
+  }
+  
+  return {'status': 1, 'message': filterURL}
+  
+}
+
+
+function isValidPhoneString(str) {
+  // The regex explanation:
+  // ^            : start of string
+  // [0-9()+\-]   : allowed characters: digits, parentheses, plus, hyphen (hyphen is escaped)
+  // +            : one or more of the allowed characters
+  // $            : end of string
+  const regex = /^[0-9()+\-]+$/;
+  return regex.test(str);
+}
+
+
+</script>
+
+
+{% endblock %}

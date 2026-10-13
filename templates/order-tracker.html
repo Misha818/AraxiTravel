@@ -1,0 +1,211 @@
+{% extends 'public.html' %}
+{% block title %}
+    {{ _("Order Tracker") }}
+{% endblock %}
+
+
+{% block head %}
+
+  <meta name="robots" content="noindex, nofollow" />
+  <!-- Bootstrap CSS -->
+  <link
+    rel="stylesheet"
+    href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+  />
+    <style>
+body {
+  /* font-family: Arial, Helvetica, sans-serif; */
+  background-color: #fdf6ec!important;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+#cancelBtn {
+  border-radius: 25px;
+  background-color: white;
+  border-color: #333;
+  color: #333;
+}
+/* Stepper container */
+.stepper {
+      display: flex;
+      justify-content: space-between;
+      position: relative;
+      margin: 40px 0;
+    }
+    /* Each step item */
+    .step {
+      flex: 1;
+      text-align: center;
+      position: relative;
+    }
+    /* The connecting line between steps */
+    .step::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      right: -50%;
+      width: 100%;
+      height: 2px;
+      background-color: #dcdcdc;
+      z-index: -1;
+    }
+    /* Remove line for the last step */
+    .step:last-child::after {
+      content: none;
+    }
+    /* The circle indicator */
+    .circle {
+      width: 40px;
+      height: 40px;
+      margin: 0 auto;
+      border-radius: 50%;
+      background-color: #dcdcdc;
+      line-height: 40px;
+      font-weight: bold;
+      color: #fff;
+    }
+    /* Completed steps style */
+    .step.completed .circle {
+      background-color: #28a745;
+    }
+    /* active1 (current) step style */
+    .step.active1 .circle {
+      background-color: #FCC628!important;
+    }
+
+    .container {
+      margin-top: 40px!important;
+    }
+
+    /* Mobile adjustments: stack steps vertically */
+    @media (max-width: 576px) {
+      .stepper {
+        flex-direction: column;
+        align-items: center;
+      }
+      .step {
+        width: 100%;
+        margin-bottom: 20px;
+      }
+      .step::after {
+        content: none;
+      }
+      .circle {
+        width: 30px;
+        height: 30px;
+        line-height: 30px;
+      }
+      .step p {
+        font-size: 0.9rem;
+      }
+    }
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<div class="container">
+  <h2 class="text-center mt-5">{{ _('Order') }} #{{ row['ID'] }}</h2>
+  <!-- Stepper container -->
+  <div id="stepper" class="stepper"></div>
+  <div class="text-center">
+    <!-- <button id="cancelBtn" class="btn btn-danger">{{ _('Cancel Order') }}</button> -->
+  </div>
+</div>
+
+<script nonce="{{ csp_nonce() }}">
+  // Define order statuses (the Cancelled status is key "0")
+  const orderStatusList = JSON.parse({{ orderStatusList | tojson }});
+
+
+  // Set the initial order status (starting at "Purchased")
+  let currentStatus = parseInt("{{ row['Status'] }}");
+
+  // Generate the stepper UI (excluding Cancelled status)
+  const stepper = document.getElementById("stepper");
+  // Get keys for steps (excluding key "0") sorted in numerical order
+  const stepsKeys = Object.keys(orderStatusList)
+    .filter(key => key !== "0")
+    .sort((a, b) => a - b);
+
+  stepsKeys.forEach(key => {
+    // Create a step container
+    const stepDiv = document.createElement("div");
+    stepDiv.classList.add("step");
+    stepDiv.setAttribute("data-status", key);
+
+    // Create the circular indicator
+    const circle = document.createElement("div");
+    circle.classList.add("circle");
+    circle.innerText = key;
+
+    // Create the label for the status
+    const label = document.createElement("p");
+    label.classList.add("mt-2");
+    label.innerText = orderStatusList[key];
+
+    // Append the circle and label to the step container
+    stepDiv.appendChild(circle);
+    stepDiv.appendChild(label);
+    // Append the step to the stepper container
+    stepper.appendChild(stepDiv);
+  });
+
+  // Function to update the stepper classes based on currentStatus
+  const updateStepper = () => {
+    const steps = document.querySelectorAll(".step");
+    steps.forEach(step => {
+      const status = parseInt(step.getAttribute("data-status"));
+      // If order is cancelled, remove all active1/completed classes.
+      if (currentStatus === 0) {
+        step.classList.remove("active1", "completed");
+      } else if (status < currentStatus+1) {
+        step.classList.add("completed");
+        step.classList.remove("active1");
+      } else if (status === currentStatus) {
+        step.classList.add("active1");
+        step.classList.remove("completed");
+      } else {
+        step.classList.remove("active1", "completed");
+      }
+      // if (currentStatus === 0) {
+      //   step.classList.remove("active1", "completed");
+      // } else if (status < currentStatus) {
+      //   step.classList.add("completed");
+      //   step.classList.remove("active1");
+      // } else if (status === currentStatus) {
+      //   step.classList.add("active1");
+      //   step.classList.remove("completed");
+      // } else {
+      //   step.classList.remove("active1", "completed");
+      // }
+    });
+  };
+
+  // Event handler for advancing the order status
+  // document.getElementById("nextBtn").addEventListener("click", () => {
+  //   if (currentStatus < 5) {
+  //     currentStatus++;
+  //     updateStepper();
+  //   }
+  // });
+
+  // Event handler for canceling the order
+  if (document.getElementById("cancelBtn")) {
+
+    document.getElementById("cancelBtn").addEventListener("click", () => {
+      currentStatus = 0;
+      updateStepper();
+      alert("Order Cancelled");
+    });
+    
+  }
+  // Initialize the stepper UI on page load
+  updateStepper();
+</script>
+
+{% endblock %}

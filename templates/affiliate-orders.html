@@ -1,0 +1,539 @@
+{% extends 'base.html' %}
+{% block title %}
+{{ _('Orders') }}
+{% endblock %}
+
+
+{% block head %}
+
+<!-- jQuery -->
+<script nonce="{{ csp_nonce() }}" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+
+<!-- International Telephone Input JS -->
+<script nonce="{{ csp_nonce() }}" src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/8.4.7/js/intlTelInput.js"></script>
+
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- International Telephone Input CSS -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/8.4.6/css/intlTelInput.css" rel="stylesheet">
+
+<style>
+  body {
+        background-color: #fdf6ec;
+    }
+#orderStatus {
+  background-color: white;
+  color: #333;
+  padding: 10px 20px;
+  border: 1px solid #333;
+  cursor: pointer;
+  font-size: 16px;
+  border-radius: 5px;
+}
+
+.my-phone-control {
+  padding-top: 7px!important;
+  padding-bottom: 7px!important;
+  border-radius: 5px!important;
+}
+
+.filter-inputs {
+  background-color: white;
+  color: #333;
+  padding: 10px 20px;
+  border: 1px solid #333;
+  font-size: 16px;
+  border-radius: 5px;
+  /* margin-right: 1px; */
+}
+
+.dropbtn, .filter {
+  background-color: #E76F51; 
+  color: white; 
+  padding: 10px 20px; 
+  border: none; 
+  cursor: pointer; 
+  font-size: 16px; 
+  border-radius: 5px; 
+  flex: 1; 
+  min-width: 50px;
+}
+
+.filter-container {
+  margin-bottom: 20px; 
+  display: flex; 
+  gap: 10px; 
+  align-items: center; 
+  flex-wrap: wrap;
+}
+
+.cancelled {
+  text-decoration: line-through !important;
+}
+
+@media (min-width: 1400px) {
+  .container {
+    max-width: 1200px!important;
+  }
+}
+
+
+</style>
+
+{% endblock %}
+
+{% block content %}
+
+{{ sideBar | safe }}
+<div class="container" >
+{% set filtersUrl = url_for('affiliate_orders', filter='page=1&status=all') %}  
+
+
+{% if affID %}
+  {% set promoCode = '' %}
+  {% if filters.promoCode %}
+    {% set promoCode = '&promoCode=' +filters.promoCode %}
+  {% endif %}
+  {% set fragments = 'page=1&status=all' + promoCode + '&affiliate=' + affID %}
+  {% set filtersUrl = url_for('stuff_affiliate_orders', filter=fragments) %}  
+{% endif %}
+
+
+{% if affID and result['length'] > 0 %}
+  <h2 class="toRight tableDaddy" style="text-align: left; margin: 20px auto;">{{ _('Purchase history related to promo code of') }}  <a href="{{ url_for('affiliate', affID=affID) }}">{{ result['data'][0]['affiliate'] }}</a> </h2>
+{% else %}
+  <h2 class="toRight tableDaddy" style="text-align: left; margin: 20px auto;">{{ _('Purchase history related to promo code') }} </h2>
+{% endif %}
+  <div class="filter-container toRight tableDaddy">
+    <select id="orderStatus" style="flex: 1; max-width: 135px;">
+      <option value="" {% if filters['status'] != 'pending' %}disabled{% endif %}>{{ _('Chose Order Status') }}</option>
+      <option value="all" {% if filters['status'] == 'all' %}selected{% endif %}>{{ _('All Orders') }}</option>
+      
+      {% for key, val in orderStatusList.items() %}
+      
+        {% set selected = '' %}
+        {% if key | string == filters['status'] | string %}
+          {% set selected = 'selected' %}
+        {% endif %}
+
+        <option value="{{ key }}"  {{ selected }}>{{ val }}</option>
+      {% endfor %}
+
+    </select>
+    <input type="text" id="Firstname" placeholder="{{ _('Firstname') }}" value="{{ filters.Firstname if filters.Firstname else '' }}" class="filter-inputs" style="flex: 1; min-width: 120px;">
+    <input type="text" id="Lastname" placeholder="{{ _('Lastname') }}" value="{{ filters.Lastname if filters.Lastname else '' }}" class="filter-inputs" style="flex: 1; min-width: 120px;">
+    <input type="text" id="promoCode" placeholder="{{ _('Promo Code') }}" value="{{ filters.promoCode if filters.promoCode else '' }}" class="filter-inputs" style="flex: 1; min-width: 120px;">
+    
+    <button class="filter" style="flex: 0 0 auto;">
+      <i class="fas fa-search" style="margin-right: 5px;"></i>
+    </button>
+    
+    <a  
+      href="{{ filtersUrl }}"
+      class="dropbtn" style="flex: 0 0 auto;">
+        <i class="fas fa-chevron-down" style="margin-right: 5px;"></i>
+  </a>
+  </div>
+  
+  <div class="table-container toRight" id="tableDaddy" style="max-width: 1320px;">
+  <script nonce="{{ csp_nonce() }}">
+    document.querySelector('.dropbtn').addEventListener('click', function() {
+      const dropdownContent = document.querySelector('.dropdown-content');
+      dropdownContent.style.display = dropdownContent.style.display === 'block' ? 'none' : 'block';
+    });
+
+    window.addEventListener('click', function(event) {
+      if (!event.target.matches('.dropbtn')) {
+        const dropdownContent = document.querySelector('.dropdown-content');
+        if (dropdownContent && dropdownContent.style.display === 'block') {
+          dropdownContent.style.display = 'none';
+        }
+      }
+    });
+  </script>
+  <table id="myTable">
+    <thead>
+      <tr>
+
+      <th>
+        <div style="display: flex; align-items: center;">
+         {{ _('Order ID') }} 
+
+          <div class="sort-icons" style="margin-left: 5px;">
+            <i class="fas fa-sort-up myup" data-onclick='["sortTable", "$this", 0, "up"]'></i>
+            <i class="fas fa-sort-down mydown" data-onclick='["sortTable", "$this", 0, "down"]'></i>
+          </div>
+        </div>
+      </th>
+
+      <th>
+        <div style="display: flex; align-items: center;">
+         {{ _('Client') }} 
+
+          <div class="sort-icons" style="margin-left: 5px;">
+            <i class="fas fa-sort-up myup" data-onclick='["sortTable", "$this", 0, "up"]'></i>
+            <i class="fas fa-sort-down mydown" data-onclick='["sortTable", "$this", 0, "down"]'></i>
+          </div>
+        </div>
+      </th>
+
+      
+      <th>
+        <div style="display: flex; align-items: center;">
+         {{ _('Promo Code') }} 
+
+          <div class="sort-icons" style="margin-left: 5px;">
+            <i class="fas fa-sort-up myup" data-onclick='["sortTable", "$this", 0, "up"]'></i>
+            <i class="fas fa-sort-down mydown" data-onclick='["sortTable", "$this", 0, "down"]'></i>
+          </div>
+        </div>
+      </th>
+
+ 
+      <th>
+        <div style="display: flex; align-items: center;">
+         {{ _('Net') }} 
+
+          <div class="sort-icons" style="margin-left: 5px;">
+            <i class="fas fa-sort-up myup" data-onclick='["sortTable", "$this", 0, "up"]'></i>
+            <i class="fas fa-sort-down mydown" data-onclick='["sortTable", "$this", 0, "down"]'></i>
+          </div>
+        </div>
+      </th>
+      
+      <th>
+        <div style="display: flex; align-items: center;">
+         {{ _('Discounted Price') }} 
+
+          <div class="sort-icons" style="margin-left: 5px;">
+            <i class="fas fa-sort-up myup" data-onclick='["sortTable", "$this", 0, "up"]'></i>
+            <i class="fas fa-sort-down mydown" data-onclick='["sortTable", "$this", 0, "down"]'></i>
+          </div>
+        </div>
+      </th>
+
+      <th>
+        <div style="display: flex; align-items: center;">
+         {{ _('Revard') }} 
+
+          <div class="sort-icons" style="margin-left: 5px;">
+            <i class="fas fa-sort-up myup" data-onclick='["sortTable", "$this", 0, "up"]'></i>
+            <i class="fas fa-sort-down mydown" data-onclick='["sortTable", "$this", 0, "down"]'></i>
+          </div>
+        </div>
+      </th>
+
+      <th> 
+        <div style="display: flex; align-items: center;">
+          {{ _('Status') }}
+
+          <div class="sort-icons" style="margin-left: 5px;">
+            <i class="fas fa-sort-up myup" data-onclick='["sortTable", "$this", 2, "up"]'></i>
+            <i class="fas fa-sort-down mydown" data-onclick='["sortTable", "$this", 2, "down"]'></i>
+          </div>
+        </div>
+    </th>
+    
+      <th></th>
+      </tr>
+    </thead>
+    <tbody>
+  {% if result.length > 0 %}
+      {% for row in result.data %}
+      {% set statusStyle = 'status-open' %}
+      {% set status = _('Purchased') %}
+      {% set cancelled = '' %}
+      {% if row.Status == 0 %}
+          {% set status = _('Cancelled') %}
+          {% set cancelled = 'cancelled' %}
+          {% set statusStyle = 'status-closed' %}
+      {% elif row.Status == 1 %}
+          {% set status = _('Panding') %}
+          {% set statusStyle = 'status-on-hold' %}
+      {% elif row.Status == 2 %}
+          {% set status = _('Purchased') %}
+          {% set statusStyle = 'status-open' %}
+      {% elif row.Status == 3 %}
+          {% set status = _('Preparing') %}
+          {% set statusStyle = 'status-preparing' %}
+      {% elif row.Status == 4 %}
+          {% set status = _('Ready for delivery') %}
+          {% set statusStyle = 'status-ready' %}
+      {% elif row.Status == 5 %}
+          {% set status = _('Delivered') %}
+          {% set statusStyle = 'status-delivered' %}
+      {% endif %}
+
+      {% set phone = row['phone'] %}
+      {% if phone == none %}
+        {% set phone = _('N/A') %}
+      {% endif %}
+      
+      {% set email = row['email'] %}
+      {% if email == none %}
+        {% set email = _('N/A') %}
+      {% endif %}
+      
+      {% set promo = row['promo_code'] %}
+      {% if promo == none %}
+        {% set promo = _('N/A') %}
+      {% endif %}
+
+      {% set client = [row['FirstName'], row['LastName']] | select | join(' ') %}
+      {% if not client %}
+        {% set client = _('N/A') %}
+      {% endif %}
+
+      <tr>
+        <td data-label="{{ _('Order ID') }}" class="flex" style="display: table-cell;">
+          {{ row['ID'] }}
+        </td>
+        
+        <td data-label="{{ _('Client') }}" class="flex" style="display: table-cell;">
+          {{ client }}
+        </td>
+        
+        <td data-label="{{ _('Promo Code') }}" class="flex" style="display: table-cell;">
+          {{ promo }}
+        </td>
+   
+        <td data-label="{{ _('Net') }}" class="flex" style="display: table-cell;">
+          {{ row['final_price'] }}
+        </td>
+   
+        <td data-label="{{ _('Discounted Price') }}" class="flex" style="display: table-cell;">
+          {{ row['Discounted_Price'] }}
+        </td>
+   
+        <td data-label="{{ _('Revard') }}" class="flex" style="display: table-cell;">
+          <span class="{{ cancelled }}">{{ row['RV'] }}</span>
+        </td>
+
+        <td data-label="{{ _('Status') }}"><span class="status-label {{ statusStyle }}">{{ status }}</span></td>
+
+        <td class="edit-user">
+          {% set orderDetailsUrl = url_for('affiliate_order_details', pdID=row['ID'], _external=True) %}
+          {% if affID %}
+            {% set orderDetailsUrl = url_for('order_details', pdID=row['ID'], _external=True) %}
+          {% endif %}
+          <a href="{{ orderDetailsUrl }}" title="{{ _('Order Details') }}" style="color:#E76F51">
+            <i class="fas fa-eye"></i>
+            <!-- <i class="fas fa-pencil"></i> -->
+          </a>
+        </td>
+
+      </tr>
+      {% endfor %}
+      
+      {% else %}
+      <tr><td><p style="padding: 15px; font-size: 26px;">{{ _('Nothing found.') }}</p></td></tr> 
+     
+    {% endif %}
+  </tbody>  
+  </table>
+
+</div> 
+</div>
+
+  {% from '_pagination.html' import pagination as pagination_bar %}
+  {{ pagination_bar(page, numRows, pagination, pbc) }}
+
+
+<script nonce="{{ csp_nonce() }}">
+
+window.addEventListener('load', () => {
+  document.querySelector('body').classList.add('loaded');
+});
+
+let trace;
+
+function sortTable(arrowElement, n, direction) {
+  
+  // console.log(n);
+  if (trace === String(n) + direction) {
+    return;
+  }
+
+  trace = String(n) + direction;
+  
+  document.querySelectorAll('.sort-icons i').forEach(icon => icon.style.color = '#fff');
+  arrowElement.style.color = '#ff0000';
+
+  let table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+  table = document.getElementById("myTable");
+  switching = true;
+  //Set the sorting direction to ascending:
+  dir = "asc"; 
+  /*Make a loop that will continue until
+  no switching has been done:*/
+  while (switching) {
+    //start by saying: no switching is done:
+    switching = false;
+    rows = table.rows;
+    /*Loop through all table rows (except the
+    first, which contains table headers):*/
+    for (i = 1; i < (rows.length - 1); i++) {
+      //start by saying there should be no switching:
+      shouldSwitch = false;
+      /*Get the two elements you want to compare,
+      one from current row and one from the next:*/
+      x = rows[i].getElementsByTagName("TD")[n];
+      y = rows[i + 1].getElementsByTagName("TD")[n];
+      /*check if the two rows should switch place,
+      based on the direction, asc or desc:*/
+      if (!isNaN(x.innerHTML) && !isNaN(y.innerHTML)) {
+        // Compare as numbers
+        if (dir == "asc") {
+          if (parseFloat(x.innerHTML) > parseFloat(y.innerHTML)) {
+            shouldSwitch = true;
+            break;
+          }
+        } else if (dir == "desc") {
+          if (parseFloat(x.innerHTML) < parseFloat(y.innerHTML)) {
+            shouldSwitch = true;
+            break;
+          }
+        }
+      } else {
+        // Compare as strings
+        if (dir == "asc") {
+          if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+            shouldSwitch = true;
+            break;
+          }
+        } else if (dir == "desc") {
+          if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+            shouldSwitch = true;
+            break;
+          }
+        }
+      }
+    }
+    if (shouldSwitch) {
+      /*If a switch has been marked, make the switch
+      and mark that a switch has been done:*/
+      rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+      switching = true;
+      //Each time a switch is done, increase this count by 1:
+      switchcount ++;      
+    } else {
+      /*If no switching has been done AND the direction is "asc",
+      set the direction to "desc" and run the while loop again.*/
+      if (switchcount == 0 && dir == "asc") {
+        dir = "desc";
+        switching = true;
+      }
+    }
+  }
+}
+
+
+// $("#phone").intlTelInput({
+//     initialCountry: "am",
+//     utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/8.4.6/js/utils.js"
+// });
+
+
+document.querySelector('.filter').addEventListener('click', function() {
+  
+  let filterURL = constract_filter_url('1');
+  if (filterURL.status == 1) {
+    let affID = "{{ affID }}";
+    let filterAff = '';
+    if (affID) {
+      filterAff = '&affiliate=' + affID;
+    }
+    window.location.href = filterURL.message + filterAff;
+
+  } else {
+    alert(filterURL.message)
+  }
+
+
+});
+
+if (document.querySelectorAll('.pagination div')) {
+  paginationDivs = document.querySelectorAll('.pagination div');
+  paginationDivs.forEach(div => {
+    div.addEventListener('click', function() {
+      let page = div.getAttribute('data-value');
+      let filterURL = constract_filter_url(page);
+      if (filterURL.status == 1) {
+        window.location.href = filterURL.message;
+      } else {
+        alert(filterURL.message)
+      } 
+    });
+  });
+}
+
+// Page numbers are divs: make Enter and Space work on them
+document.addEventListener('keydown', function (event) {
+  if (event.key !== 'Enter' && event.key !== ' ') {
+    return;
+  }
+  if (event.target.matches('.pagination [role="button"]')) {
+    event.preventDefault();
+    event.target.click();
+  }
+});
+
+
+
+function constract_filter_url(page) {
+  let filterURL = 'page='+page;
+  
+  let orderStatus = document.getElementById('orderStatus').value;
+  filterURL += '&status=' + orderStatus
+
+  // let counteryCodeStr = document.querySelector('.selected-flag').getAttribute('title');
+  // let counteryCodeArr = counteryCodeStr.split('+');
+  // let countryCode = counteryCodeArr[1];
+
+  
+  const filters = document.querySelectorAll('.filter-container input');
+  let flag = 0;
+  filters.forEach(input => {
+    if (input.value != '') {
+      if (input.id == 'phone') {
+        if (isValidPhoneString(input.value) === false) {
+          flag = 1;
+        }   
+        
+        let phoneVal = input.value;
+        if (phoneVal.startsWith('+')) {
+            phoneVal = phoneVal.replace('+', '');
+        }
+          
+        filterURL += '&' + input.id + '=' + phoneVal;
+          
+      } else {
+        filterURL += '&' + input.id + '=' + input.value;
+      }
+    }
+  });
+
+  if (flag === 1) {
+    return {'status': 0, 'message': "{{ _('Invalid phone number') }}"};
+  }
+  
+  return {'status': 1, 'message': filterURL}
+  
+}
+
+
+function isValidPhoneString(str) {
+  // The regex explanation:
+  // ^            : start of string
+  // [0-9()+\-]   : allowed characters: digits, parentheses, plus, hyphen (hyphen is escaped)
+  // +            : one or more of the allowed characters
+  // $            : end of string
+  const regex = /^[0-9()+\-]+$/;
+  return regex.test(str);
+}
+
+
+</script>
+
+
+{% endblock %}

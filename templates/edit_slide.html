@@ -1,0 +1,981 @@
+{% extends 'base.html' %}
+{% block title %}
+{{ _('Edit Slide') }}
+{% endblock %}
+
+{% block head %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='dropzon.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='dropzone.min.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='cropper.min.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='quill.snow.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/slide-form.css') }}">
+
+<!-- Pickr themes (Color picker for reach text editor) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/classic.min.css"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/monolith.min.css"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/nano.min.css"/>
+
+<!-- Include Flatpickr -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='calendar.css') }}">
+
+
+<style>
+    .dz-details:hover {
+        cursor: pointer;
+    }
+
+    .dz-remove-btn:hover {
+        background-color: #c82333;
+        cursor: pointer;
+    }
+
+
+    .alt-input:hover {
+        cursor: auto;
+    }
+
+    .styled-select {
+        margin-bottom: 5px;
+    }
+
+    #product-category-form input {
+        font-size: 18px;
+    }
+
+    #product-category-form textarea {
+        font-size: 18px;
+    }
+
+    #title-color-picker,
+    #subtitle-color-picker {
+        display: inline-block;
+        margin-left: 8px;
+        vertical-align: middle;
+    }
+
+    /* Style the color picker button */
+    .pcr-button {
+        border-radius: 50% !important; /* make it circular */
+        width: 28px !important;
+        height: 28px !important;
+        border: 2px solid #ddd !important; /* subtle border */
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* soft shadow */
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    /* Hover effect */
+    .pcr-button:hover {
+        transform: scale(1.1);
+        box-shadow: 0 3px 7px rgba(0,0,0,0.3);
+    }
+
+
+    .cpallet {
+        width: 100%;
+        display: flex;
+        align-items: center;
+    }
+
+    .datepickers-row {
+        display: flex;
+        gap: 15px;
+        margin: 10px 0px;
+    }
+
+    .date-field {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .date-field label {
+        font-size: 14px;
+        margin-bottom: 5px;
+        color: #444;
+    }
+
+    /* ---- Form layout (card styles come from .admin-form-card in styles.css) ---- */
+    .containerS.slide-form-card {
+        max-width: 720px;
+    }
+
+    .slide-form .form_input {
+        width: 100% !important;
+        margin: 0;
+        padding: 12px 14px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+    }
+
+    .slide-form .form_input:focus {
+        border-color: #66afe9;
+        outline: none;
+        box-shadow: 0 0 5px rgba(102, 175, 233, 0.6);
+    }
+
+    .slide-form .cpallet {
+        gap: 8px;
+    }
+
+    .slide-form .cpallet .form_input {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .slide-form .styled-select {
+        margin: 0 !important;
+    }
+
+    .slide-form .datepickers-row {
+        flex-wrap: wrap;
+        gap: 12px;
+        margin: 8px 0 0 0;
+    }
+
+    .slide-form .date-field {
+        flex: 1 1 160px;
+        min-width: 0;
+    }
+
+    .slide-form .date-field label {
+        font-weight: bold;
+        font-size: 15px;
+        color: #333;
+    }
+
+    .slide-form .dropzone {
+        margin-top: 10px;
+    }
+
+    .slide-form .pcButtonS.margin10 {
+        width: 100%;
+        margin: 16px 0 0 0;
+        padding: 15px;
+        font-size: 20px;
+        box-sizing: border-box;
+    }
+
+    .slide-form .pcButtonS.margin10:focus-visible {
+        outline: 3px solid #264653;
+        outline-offset: 2px;
+    }
+
+
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="overlay" id="overlay"></div>
+{{ sideBar | safe }}
+<div class="containerS admin-form-card slide-form-card">
+
+    <h1>{{ _('Edit Slide') }}</h1>
+    <div id="mistakes" style="width: 100%" role="alert" aria-live="polite"></div>
+    <form id="product-category-form" class="admin-form slide-form" novalidate>
+        <input type="hidden" id="imageState" value="0">
+        <input type="hidden" id="img_value" value="">
+        
+        <input type="hidden" id="language-id" value="{{ languageID }}">
+        <input type="hidden" id="RefKey" value="{{ result.data[0].HS_Ref_Key }}">
+        <input type="hidden" id="slideID" value="{{ result.data[0].ID }}">
+        
+        <span class="field-label" id="title-label">{{ _('Title') }}</span>
+        <div class="rt-field" data-rt-field="title">
+            <div class="rt-toolbar" data-rt-toolbar role="toolbar" aria-label="{{ _('Title formatting') }}">
+                <button type="button" class="rt-btn" data-rt="undo" title="{{ _('Undo') }} (Ctrl+Z)" aria-label="{{ _('Undo') }}" disabled>&#8630;</button>
+                <button type="button" class="rt-btn" data-rt="redo" title="{{ _('Redo') }} (Ctrl+Y)" aria-label="{{ _('Redo') }}" disabled>&#8631;</button>
+                <span class="rt-sep" aria-hidden="true"></span>
+                <button type="button" class="rt-btn" data-rt="bold" aria-pressed="false" title="{{ _('Bold') }}" aria-label="{{ _('Bold') }}"><b>B</b></button>
+                <button type="button" class="rt-btn" data-rt="italic" aria-pressed="false" title="{{ _('Italic') }}" aria-label="{{ _('Italic') }}"><i>I</i></button>
+                <button type="button" class="rt-btn" data-rt="underline" aria-pressed="false" title="{{ _('Underline') }}" aria-label="{{ _('Underline') }}"><u>U</u></button>
+                <span class="rt-sep" aria-hidden="true"></span>
+                <!-- Text colour (Pickr): selected text, or the whole title when nothing is selected -->
+                <div id="title-color-picker" class="pcr-button"></div>
+                <button type="button" class="rt-btn" data-rt="clear-color" title="{{ _('Remove text colour') }}" aria-label="{{ _('Remove text colour') }}"><s>A</s></button>
+                <button type="button" class="rt-btn" data-rt="clear" title="{{ _('Clear formatting') }}" aria-label="{{ _('Clear formatting') }}">T<sub>x</sub></button>
+                <span class="rt-target" data-rt-target aria-live="polite"
+                    data-whole="{{ _('Formatting applies to the whole title. Select part of the text to format only that part.') }}"
+                    data-selection="{{ _('Formatting applies to the selection:') }}"></span>
+            </div>
+            <div class="cpallet">
+                <div class="form_input rt-editor" id="title" data-rt-editor aria-labelledby="title-label"></div>
+            </div>
+        </div>
+        <span class="field-label" id="subtitle-label">{{ _('Subtitle') }}</span>
+        <div class="rt-field" data-rt-field="subtitle">
+            <div class="rt-toolbar" data-rt-toolbar role="toolbar" aria-label="{{ _('Subtitle formatting') }}">
+                <button type="button" class="rt-btn" data-rt="undo" title="{{ _('Undo') }} (Ctrl+Z)" aria-label="{{ _('Undo') }}" disabled>&#8630;</button>
+                <button type="button" class="rt-btn" data-rt="redo" title="{{ _('Redo') }} (Ctrl+Y)" aria-label="{{ _('Redo') }}" disabled>&#8631;</button>
+                <span class="rt-sep" aria-hidden="true"></span>
+                <button type="button" class="rt-btn" data-rt="bold" aria-pressed="false" title="{{ _('Bold') }}" aria-label="{{ _('Bold') }}"><b>B</b></button>
+                <button type="button" class="rt-btn" data-rt="italic" aria-pressed="false" title="{{ _('Italic') }}" aria-label="{{ _('Italic') }}"><i>I</i></button>
+                <button type="button" class="rt-btn" data-rt="underline" aria-pressed="false" title="{{ _('Underline') }}" aria-label="{{ _('Underline') }}"><u>U</u></button>
+                <span class="rt-sep" aria-hidden="true"></span>
+                <!-- Text colour (Pickr): selected text, or the whole subtitle when nothing is selected -->
+                <div id="subtitle-color-picker" class="pcr-button"></div>
+                <button type="button" class="rt-btn" data-rt="clear-color" title="{{ _('Remove text colour') }}" aria-label="{{ _('Remove text colour') }}"><s>A</s></button>
+                <button type="button" class="rt-btn" data-rt="clear" title="{{ _('Clear formatting') }}" aria-label="{{ _('Clear formatting') }}">T<sub>x</sub></button>
+                <span class="rt-target" data-rt-target aria-live="polite"
+                    data-whole="{{ _('Formatting applies to the whole subtitle. Select part of the text to format only that part.') }}"
+                    data-selection="{{ _('Formatting applies to the selection:') }}"></span>
+            </div>
+            <div class="cpallet">
+                <div class="form_input rt-editor" id="subtitle" data-rt-editor aria-labelledby="subtitle-label"></div>
+            </div>
+        </div>
+
+        <label for="event-link" class="field-label">{{ _('Event Url') }}</label>
+        <input type="url" class="form_input" id="event-link" inputmode="url" value="{{ result.data[0].URL }}"
+            placeholder="{{ _('Event Url') }}  {{ root_url }}{{ _('This-is-Your-Event-Link') }} ">
+        
+        {% set ns = namespace(num=0) %}    
+        {% if result.data[0].Status != 1 %}   
+            {% set ns.num = 1 %}    
+        {% endif %}
+        {% set order = result.data[0].Order + ns.num %}
+
+        <label for="order" class="field-label">{{ _('Ordering') }}</label>
+        <select class="form_input styled-select" id="order" name="order">
+            {% for i in range(1, orderLength + 1 + ns.num) %}
+                {% if i == order %}
+                    <option value="{{ i }}" selected>{{ _('Ordering') }} {{ i }}</option>
+                {% else %}
+                <option value="{{ i }}" >{{ _('Ordering') }} {{ i }}</option>
+                {% endif %}
+            {% endfor %}
+        </select>
+
+        <div class="datepickers-row">
+            <div class="date-field">
+                <label for="startDate">{{ _('Start Date') }}</label>
+                <input type="date" class="form_input" id="startDate" name="startDate">
+            </div>
+            <div class="date-field">
+                <label for="expDate">{{ _('Expiration Date') }}</label>
+                <input type="date" class="form_input" id="expDate" name="expDate">
+            </div>
+        </div>
+        {% if result.data[0].Status == 1 %}
+            {% set checked = 'checked' %}
+        {% else %}
+            {% set checked = '' %}
+        {% endif %}
+        <span class="field-label" id="status-label">{{ _('Status') }}</span>
+        <div class="publish" style="margin-bottom: 10px; position: unset; justify-content: flex-start;">
+            <label class="switch" id="mySwitch" aria-labelledby="status-label">
+                <span class="sliderA round {{ checked }}"></span>
+            </label>
+        </div>
+
+        <div class="dropzone" id="myDropzone">
+            <div class="dz-message dz-button">{{ _('Slide image') }}</div>
+        </div>
+
+
+        {% if resultIMG.length > 0 %}
+        <!-- <h3 style="text-align: center;">{{ _('Images from other language(s)') }}</h3> -->
+
+        <div class="pc_slider" style="margin-top: 15px;">
+                
+
+                <div class="pc_slides">
+
+            {% for row in resultIMG.data %}
+                {% set imgName = "" %}
+                {% set imgAlt = "" %}
+                {% if row[0] %}
+                {% set imgName = row[0] %}
+                {% endif %}   
+                
+                {% if row[1] %}
+                {% set imgAlt = row[1] %}
+                {% endif %}
+
+                <div class="pc_slide active">
+                    <img src="{{ url_for('static', filename='images/uploads/home_slides/' + imgName ) }}" alt="{{ imgAlt }}"  >
+                    <input type="hidden" alt="{{ row['Alt_Text'] }}" class="altText" />
+                </div>
+
+            {% endfor %}
+            
+                    <!-- Add more slides as needed -->
+                </div>
+                {# Arrows only when there are at least two images #}
+                {% if resultIMG.length > 1 %}
+                <a class="prev" data-onclick='["moveSlide", -1]'>&#10094;</a>
+                <a class="next" data-onclick='["moveSlide", 1]'>&#10095;</a>
+                {% endif %}
+            </div>
+
+        {% else %}    
+        <div class="pc_slides"></div>
+        {% endif %}
+
+
+        <div id="saveButton" class="pcButtonS margin10" role="button" tabindex="0">{{ _('Submit') }}</div>
+        <div id="saving" class="pcButtonS margin10 hidden" aria-live="polite">{{ _('Saving...') }}</div>
+    </form>
+
+
+</div>
+<!-- Script for Dropzone (image upload) -->
+<script nonce="{{ csp_nonce() }}" src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.js"></script>
+<script nonce="{{ csp_nonce() }}" src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+<script nonce="{{ csp_nonce() }}" src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+
+<!-- Thumbnail image manipulations -->
+<script nonce="{{ csp_nonce() }}">
+    let csrfToken = "{{ csrf_token() }}"
+    let imgName = '';
+    let imgAlt = '';
+    let slideStatus = {{ result.data[0].Status }};
+    const oldOrder = {{ result.data[0].Order }};
+    const content = {{result.data[0] | tojson}} 
+    if (content.IMG) {
+        imgName = content.IMG;
+        imgAlt = content.Alt_Text;
+    }
+
+    console.log(content);
+
+    let cropperState = 0;
+
+    
+    // Create a FormData object to hold the files
+    let formData = new FormData();
+
+    let currentSlide = 0;
+
+    function showSlide(index) {
+        const slides = document.querySelectorAll('.pc_slide');
+        const slidesToShow = 1;   // one image at a time (see .pc_slide in css/slide-form.css)
+        const totalSlides = slides.length;
+
+        // Calculate the max index we can go to
+        const maxIndex = Math.ceil(totalSlides / slidesToShow) - 1;
+
+        // Wrap around if necessary
+        if (index > maxIndex) {
+            currentSlide = 0;
+        } else if (index < 0) {
+            currentSlide = maxIndex;
+        } else {
+            currentSlide = index;
+        }
+
+        // Calculate offset
+        const offset = -currentSlide * 100;
+
+        // Apply transform
+        document.querySelector('.pc_slides').style.transform = `translateX(${offset}%)`;
+
+        // Update active class
+        slides.forEach((slide, idx) => {
+            slide.classList.toggle('active', Math.floor(idx / slidesToShow) === currentSlide);
+        });
+    }
+
+    function moveSlide(direction) {
+        showSlide(currentSlide + direction);
+    }
+
+    
+document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('mySwitch').addEventListener('click', function() {
+            const slider = this.querySelector('.sliderA');
+            slider.classList.toggle('checked');  
+            if (slider.classList.contains('checked')) {
+                // Action to be performed when switch is on
+                slideStatus = '1'
+            } else {
+                // Action to be performed when switch is off
+                slideStatus = '0'
+            }
+        });
+    showSlide(currentSlide);
+
+    // Add click event listener to each image
+    const slides = document.querySelectorAll('.pc_slide');
+    slides.forEach(slide => {
+        slide.addEventListener('click', () => {
+            // If the slide is already selected, deselect it
+            if (slide.classList.contains('selected')) {
+                slide.classList.remove('selected');
+                // Clear the hidden input's value
+                document.getElementById('img_value').value = '';
+                document.getElementById('imageState').value = '0';
+                document.getElementById("myDropzone").style.display = "flex";
+            } else {
+                // Deselect all slides
+                slides.forEach(s => s.classList.remove('selected'));
+                
+                // Select the clicked slide
+                slide.classList.add('selected');
+                
+                // Extract file name and type from img tag
+                const img = slide.querySelector('img');
+                const imgSrc = img.src.split('\\').pop().split('/').pop(); // Extract file name
+                const imgType = imgSrc.split('.').pop(); // Extract file type
+                const imgValue = `${imgSrc} (${imgType})`;
+
+                let trimmedImageName = imgValue.split(' ')[0].trim();
+                
+                // Update the hidden input's value
+                document.getElementById('img_value').value = trimmedImageName;
+                document.getElementById('imageState').value = '1';
+                document.getElementById("myDropzone").style.display = "none";
+            }
+        });
+    });
+});
+
+    // Cropped slides are uploaded as JPEG, at most 3200 x 1800 (see README: Home page slide images).
+    const SLIDE_MAX_WIDTH = 3200;   // the crop is locked to 16:9, so the height stays <= 1800
+    const SLIDE_JPEG_QUALITY = 0.85;
+    const SLIDE_MAX_SOURCE_SIZE = 20 * 1024 * 1024; // only the cropped JPEG is uploaded
+
+    function slideJpegName(name) {
+        return name.replace(/\.[^.]+$/, '') + '.jpg';
+    }
+
+    function croppedSlideBlob(cropper, callback) {
+        // Explicit size: Cropper 1.5.12's maxWidth/maxHeight options upscale small crops
+        // and shrink large ones too far, so keep the crop's own size, capped at the max width.
+        let crop = cropper.getData(true);
+        let width = Math.min(SLIDE_MAX_WIDTH, crop.width);
+        cropper.getCroppedCanvas({
+            width: width,
+            height: Math.round(width * crop.height / crop.width),
+            fillColor: '#fff',              // JPEG has no transparency
+            imageSmoothingQuality: 'high'
+        }).toBlob(callback, 'image/jpeg', SLIDE_JPEG_QUALITY);
+    }
+
+    let dzCancel = 'display: none;';
+    let outputType = '';
+    // Initialize Dropzone
+    Dropzone.autoDiscover = false;
+    let myDropzone = new Dropzone("#myDropzone", {
+        url: "/upload",
+        autoProcessQueue: false,
+        maxFiles: 1,  // Limit the number of files to 1
+        addRemoveLinks: false,  // Disable default remove link
+        previewsContainer: "#myDropzone",
+        clickable: true,
+        init: function () {
+            let dz = this;
+
+
+            dz.on("addedfile", function (file) {
+                // Check file type
+                const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+                if (!validTypes.includes(file.type)) {
+                    let ms = "{{ _('File should be in PNG or JPG/JPEG format.') }}"
+                    alert(ms)
+                    myDropzone.removeAllFiles(true);
+                    return;
+                }
+
+                // Check file size of the original; the cropped JPEG that is uploaded is much smaller
+                if (file.size > SLIDE_MAX_SOURCE_SIZE) {
+                    let ms = "{{ _('File size should not exceed 20MB.') }}"
+                    alert(ms)
+                    myDropzone.removeAllFiles(true);
+                    return;
+                }
+
+                // Determine output type based on file type
+                outputType = file.type;
+
+                // Create a new FileReader instance
+                let reader = new FileReader();
+
+                // Define the onload function for the FileReader
+                reader.onload = function (event) {
+                    // Get the image data URL from the FileReader
+                    let imageUrl = event.target.result;
+
+                    // Open the image editor modal
+                    openImageEditorModal(imageUrl, function (editedImageBlob) {
+                        // Create a new Dropzone file object from the edited image blob
+                        let editedFile = new File([editedImageBlob], slideJpegName(file.name), { type: 'image/jpeg' });
+                        dz.removeFile(file);
+                        dz.addFile(editedFile);
+                    });
+                };
+
+                // Read the image file as a data URL
+                reader.readAsDataURL(file);
+
+                // Add a custom remove button to the preview element
+                let removeButton = Dropzone.createElement("<button class='dz-remove-btn'>&times;</button>");
+                removeButton.addEventListener("click", function (e) {
+                    cropperState = 1;
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dz.removeFile(file);
+                    dzCancel = 'display: none;';
+                });
+                file.previewElement.appendChild(removeButton);
+
+                let progressBars = file.previewElement.querySelectorAll("[data-dz-uploadprogress], .dz-progress");
+                progressBars.forEach(function (progressBar) {
+                    progressBar.style.display = "none";
+                });
+
+                // Add a text input for the alt attribute
+                let altInput = Dropzone.createElement("<input type='text' class='alt-input' placeholder='Enter alt text'>");
+                altInput.value = imgAlt;
+                file.previewElement.appendChild(altInput);
+            });
+
+            dz.on("complete", function (file) {
+                // Hide progress bar when upload is completed
+                let progressBars = file.previewElement.querySelectorAll("[data-dz-uploadprogress], .dz-progress");
+                progressBars.forEach(function (progressBar) {
+                    progressBar.style.display = "none";
+                });
+            });
+        }
+
+    });
+
+    // Add image from url to dropzone
+    function addImageFromUrl(imgName) {
+        // cropperState = 0;
+        if (imgName.length > 0) {
+            let url = window.location.origin + '/static/images/uploads/home_slides/' + imgName;
+            let fileType = "image/" + imgName.split('.').pop() 
+
+            fetch(url)
+            .then(response => response.blob())
+            .then(blob => {
+                let file = new File([blob], imgName, { type: fileType }); // Set file name to imgName
+                myDropzone.addFile(file);
+            })
+            .catch(error => console.error('Error fetching the image:', error));
+        }
+    }
+
+
+    addImageFromUrl(imgName);
+
+
+    // Image Editor Modal Logic
+    let cropper;
+
+function openImageEditorModal(imageUrl, callback) {
+    if (cropperState === 1) {
+        // Show the overlay
+        document.getElementById('overlay').classList.add('show');
+
+        // Create modal element
+        let imageEditorModal = document.createElement('div');
+        imageEditorModal.id = 'imageEditorModal';
+        imageEditorModal.className = 'modal open';
+        imageEditorModal.innerHTML = `
+            <img id="imageToEdit" src="${escapeHtml(imageUrl)}" alt="Image to edit">
+            <br>
+            <button id="saveEditedImage">{{ _('Crop') }}</button>
+            <button id="cancelEdit">{{ _('Done') }}</button>
+        `;
+        document.body.appendChild(imageEditorModal);
+
+        let imageToEdit = document.getElementById('imageToEdit');
+
+        cropper = new Cropper(imageToEdit, {
+            aspectRatio: 16 / 9,  // Set the aspect ratio to 16:9
+            viewMode: 1,
+            ready: function () {
+                // Get the Cropper instance
+                let cropperInstance = this.cropper;
+
+                // Get the natural size of the image
+                let naturalWidth = cropperInstance.imageData.naturalWidth;
+                let naturalHeight = cropperInstance.imageData.naturalHeight;
+
+                // Calculate the maximum size of the crop box
+                let maxCropBoxWidth = naturalWidth;
+                let maxCropBoxHeight = naturalWidth;
+
+                // Set the crop box data to the maximum size
+                cropperInstance.setCropBoxData({
+                    width: maxCropBoxWidth,
+                    height: maxCropBoxHeight,
+                    left: 0,
+                    top: 0
+                });
+            }
+        });
+
+
+        document.getElementById('saveEditedImage').onclick = function () {
+            croppedSlideBlob(cropper, function (blob) {
+                closeImageEditorModal(imageEditorModal);  // Close the modal first
+                callback(blob);
+            });
+
+            document.getElementById("imageState").value = "2";
+        };
+        
+        document.getElementById('cancelEdit').onclick = function () {
+            closeImageEditorModal(imageEditorModal);           
+            document.getElementById("imageState").value = "2";
+        };
+
+        
+    }
+
+
+        // document.getElementById('saveEditedImage').onclick = function () {
+        //     cropper.getCroppedCanvas().toBlob(function (blob) {
+        //         dzCancel = 'display: true;';
+        //         closeImageEditorModal(imageEditorModal);
+        //         callback(blob);
+        //     }, outputType, 0.8); // Pass output type and quality
+        // };
+
+        // document.getElementById('cancelEdit').onclick = function () {
+        //     closeImageEditorModal(imageEditorModal);
+        // };
+
+        // Event delegation to handle clicks on dynamically added .dz-preview elements
+        document.querySelector('.dz-preview').addEventListener('dblclick', function (event) {
+            cropperState = 1;
+            if (event.target.closest('.dz-preview')) {
+                let file = myDropzone.getAcceptedFiles()[0];  // Get the file object associated with the clicked preview
+                if (file) {
+                    
+                    let reader = new FileReader();
+
+                    reader.onload = function (event) {
+                        // Get the image data URL from the FileReader
+                        let imageUrl = event.target.result;
+                        // Open the image editor modal
+                        openImageEditorModal(imageUrl, function (editedImageBlob) {
+                            // Create a new Dropzone file object from the edited image blob
+                            let editedFile = new File([editedImageBlob], slideJpegName(file.name), { type: 'image/jpeg' });
+                            myDropzone.removeFile(file);
+                            myDropzone.addFile(editedFile);
+                        });
+                    };
+
+                    // Read the image file as a data URL
+                    reader.readAsDataURL(file);
+                }
+            }
+        });
+    }
+
+    function closeImageEditorModal(modal) {
+        cropper.destroy();
+        modal.remove();
+        // Hide the overlay
+        document.getElementById('overlay').classList.remove('show');
+    }
+
+    // When the form is submitted
+    const saveButton = document.getElementById('saveButton');
+    saveButton.addEventListener('click', function (event) {
+        event.preventDefault();
+
+        const saveButton = document.getElementById('saveButton');
+        const saving = document.getElementById('saving');
+
+        saveButton.classList.add('hidden');
+        saving.classList.remove('hidden');
+
+        let formData = new FormData();
+
+
+        let slideID = document.getElementById('slideID').value;
+        let title = titleEditor.getText();
+        let subtitle = subtitleEditor.getText();
+
+        let titleColor = titleEditor.getColor();
+        let subtitleColor = subtitleEditor.getColor();
+
+        let order = document.getElementById('order');
+
+        // Get event link (required)
+        let eventLink = document.getElementById('event-link').value;
+        if (!eventLink) {
+            alert("{{ _('Event URL is required') }}");
+            saveButton.classList.remove('hidden');
+            saving.classList.add('hidden');
+            return;
+        }
+
+        // Validate URL format
+        try {
+            // This will throw if the string is not a valid URL
+            new URL(eventLink);
+        } catch (e) {
+            alert("{{ _('Please enter a valid URL') }}");
+            saveButton.classList.remove('hidden');
+            saving.classList.add('hidden');
+            return;
+        }
+
+        // Get dates (required)
+        let startDate = document.getElementById('startDate').value;
+        let expDate = document.getElementById('expDate').value;
+        if (!startDate || !expDate) {
+            alert("{{ _('Start Date and Expiration Date are required') }}");
+            saveButton.classList.remove('hidden');
+            saving.classList.add('hidden');
+            return;
+        }
+
+        let imageState = document.getElementById("imageState").value;
+        if (imageState === "0") {      
+            arr = JSON.stringify({ status: 0 }); 
+            if (myDropzone.files) {
+                let file = myDropzone.files[0];
+                if (file.previewElement.querySelector(".alt-input")) {
+                    altText = file.previewElement.querySelector(".alt-input").value;
+                    formData.append('altText', altText);
+                }
+            }
+            // alert("{{ _('Please upload an image') }}");
+            // saveButton.classList.remove('hidden');
+            // saving.classList.add('hidden');
+            // return;
+        }
+
+        if (imageState === "1") {      
+            let image_value = document.getElementById("img_value").value;         
+            arr = JSON.stringify({ status: 1, file: image_value }); 
+            // if (myDropzone.files) {
+            //     let file = myDropzone.files[0];
+            //     if (file.previewElement.querySelector(".alt-input")) {
+            //         altText = file.previewElement.querySelector(".alt-input").value;
+            //         formData.append('altText', altText);
+            //     }
+            // }
+        } 
+
+        if (imageState === "2") {
+            arr = JSON.stringify({ status: 2 }); 
+            // Get image (required)
+            let file = myDropzone.files[0];
+            let altText = "";
+            if (file && file.previewElement && file.previewElement.querySelector(".alt-input")) {
+                altText = file.previewElement.querySelector(".alt-input").value;
+            }
+            if (!file) {
+                alert("{{ _('Please upload an image') }}");
+                saveButton.classList.remove('hidden');
+                saving.classList.add('hidden');
+                return;
+            }
+
+            formData.append('file', file);
+            formData.append('altText', altText);
+
+        }
+        // console.log(arr); return;
+
+        // Get other existing fields (optional)
+        let languageID = document.getElementById('language-id').value || "";
+
+        // Append everything to FormData
+        formData.append('title', title);
+        formData.append('titleColor', titleColor);
+        formData.append('subtitle', subtitle);
+        formData.append('subtitleColor', subtitleColor);
+        formData.append('titleFormat', titleEditor.getFormatJSON());
+        formData.append('subtitleFormat', subtitleEditor.getFormatJSON());
+
+        formData.append('order', order.value);
+        formData.append('oldOrder', oldOrder);
+        formData.append('last_order', order.options[order.options.length - 1].value);
+        
+        formData.append('eventLink', eventLink);
+        formData.append('startDate', startDate);
+        formData.append('expDate', expDate);
+
+        formData.append('languageID', languageID);
+        formData.append('status', slideStatus);
+
+        let RefKey = document.getElementById('RefKey').value;
+
+        // Create a new FormData object
+        formData.append('RefKey', RefKey);
+        formData.append('slideID', slideID);
+        formData.append('state', arr);
+        
+
+        // Send request
+        let xhr = new XMLHttpRequest();
+        xhr.open('POST', '/edit-slide/' + RefKey);
+        xhr.setRequestHeader('X-CSRFToken', csrfToken);
+
+        xhr.onload = function () {
+            if (xhr.status === 200) {
+                let response = JSON.parse(xhr.responseText);
+                let mistakesDiv = document.getElementById('mistakes');
+                mistakesDiv.innerHTML = '';
+
+                if (response.status === '1') {
+                    alert(`{{ _('Slide updated successfully!') }}`)
+                    window.location.reload();
+                } else {
+                    mistakesDiv.textContent = response.answer || "{{ _('An error occurred') }}";
+                    mistakesDiv.style.color = 'red';
+                    mistakesDiv.style.display = 'flex';
+                    mistakesDiv.scrollIntoView({ behavior: 'smooth' });
+                    saveButton.classList.remove('hidden');
+                    saving.classList.add('hidden');
+                }
+            } else {
+                saveButton.classList.remove('hidden');
+                saving.classList.add('hidden');
+                console.error('Error adding product:', xhr.responseText);
+            }
+        };
+
+        xhr.send(formData);
+    });
+
+
+</script>
+    
+<script nonce="{{ csp_nonce() }}">
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('myDropzone').addEventListener('click', function() {
+            cropperState = 1;    
+        })
+
+    });
+</script>
+
+<!-- End of thumbnail image manipulations -->
+
+<!-- Include jQuery library -->
+<script nonce="{{ csp_nonce() }}" src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script nonce="{{ csp_nonce() }}">
+
+    // const inputElement = document.getElementById("product-link");
+
+    // inputElement.addEventListener("keyup", (event) => {
+    //     const newValue = event.target.value.replace(/\s/g, "-");
+    //     inputElement.value = newValue;
+    // });
+
+
+
+
+</script>
+
+<!-- Title / subtitle formatting (bold, italic, underline, colours) -->
+<script nonce="{{ csp_nonce() }}" src="{{ url_for('static', filename='JS/1-3-6-quill.js') }}"></script>
+<script nonce="{{ csp_nonce() }}" src="{{ url_for('static', filename='JS/araxi-palette.js') }}"></script>
+<script nonce="{{ csp_nonce() }}" src="{{ url_for('static', filename='JS/slide-text-editor.js') }}"></script>
+<script nonce="{{ csp_nonce() }}">
+    // 255 = size of the Title / Subtitle columns
+    const titleEditor = new SlideTextEditor(document.querySelector('[data-rt-field="title"]'), { maxLength: 255, placeholder: "{{ _('Title') }}" });
+    const subtitleEditor = new SlideTextEditor(document.querySelector('[data-rt-field="subtitle"]'), { maxLength: 255, placeholder: "{{ _('Subtitle') }}" });
+    titleEditor.setContent(content.Title, content.Title_Format, content.Title_Color);
+    subtitleEditor.setContent(content.Subtitle, content.Subtitle_Format, content.Subtitle_Color);
+</script>
+
+<!-- Pickr JS: text colour of the selected text, or of the whole field when nothing is selected -->
+<script nonce="{{ csp_nonce() }}" src="https://cdn.jsdelivr.net/npm/@simonwep/pickr"></script>
+<script nonce="{{ csp_nonce() }}">
+    function initColorPicker(pickerId, editor, defColor) {
+        return Pickr.create({
+            el: pickerId,
+            theme: 'classic', // or 'monolith', 'nano'
+            default: defColor,
+            swatches: SlideTextEditor.PALETTE,   // Araxi Travel colours
+            components: {
+                preview: true,
+                opacity: true,
+                hue: true,
+                interaction: {
+                    input: true,
+                    save: true,
+                    clear: true  // adds the clear button
+                }
+            }
+        })
+        .on('init', (instance) => {
+            instance.getRoot().button.title = "{{ _('Text colour') }}";
+        })
+        .on('show', (instance) => {
+            // the colour goes to what was selected when the picker opened (or the whole field)
+            editor.holdTarget(true);
+            const current = editor.targetColor();
+            if (current) instance.setColor(current, true);
+        })
+        .on('save', (color, instance) => {
+            if (color) {
+                editor.applyColor(color.toHEXA().toString());
+            }
+            instance.hide(); // close picker after save
+        })
+        .on('swatchselect', (color, instance) => {
+            // a palette colour applies at once, no need to press Save
+            editor.applyColor(color.toHEXA().toString());
+            instance.hide();
+        })
+        .on('clear', (instance) => {
+            editor.applyColor(false); // back to the default colour
+            instance.hide(); // close picker after clear
+        })
+        .on('hide', () => {
+            editor.holdTarget(false);
+        });
+    }
+
+    // Initialize for both fields
+    initColorPicker('#title-color-picker', titleEditor, '#3498db');
+    initColorPicker('#subtitle-color-picker', subtitleEditor, '#D90D6C');
+</script>
+
+
+<script nonce="{{ csp_nonce() }}" src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script nonce="{{ csp_nonce() }}">
+    // disableMobile: phones/tablets (and touch laptops) also get this calendar, which opens on a
+    // click anywhere in the field, instead of the browser's own date field, which in desktop
+    // browsers opens only from its small calendar icon
+    flatpickr("#startDate", {
+        dateFormat: "Y-m-d",
+        defaultDate: "{{ result.data[0].Start_Date }}",
+        disableMobile: true
+    });
+
+    flatpickr("#expDate", {
+        dateFormat: "Y-m-d",
+        defaultDate: "{{ result.data[0].Exp_Date }}",
+        disableMobile: true
+    });
+
+    // If flatpickr could not load, the fields stay native date inputs, whose calendar opens
+    // only from the small icon in desktop browsers; open it from anywhere in the field
+    document.querySelectorAll('#startDate, #expDate').forEach(function (input) {
+        input.addEventListener('click', function () {
+            if (input.type === 'date' && typeof input.showPicker === 'function') {
+                try { input.showPicker(); } catch (e) { /* not allowed here: the icon still works */ }
+            }
+        });
+    });
+</script>
+
+<script nonce="{{ csp_nonce() }}">
+    // Submit is a div: let Enter/Space press it too
+    document.getElementById('saveButton').addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            this.click();
+        }
+    });
+</script>
+
+{% endblock %}

@@ -1,0 +1,201 @@
+{% extends 'public.html' %}
+{% block title %}
+{{ prData.Title }}
+{% endblock %}
+
+
+{% block head %}
+
+    {{ metaTags | safe }}
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='quill.snow.css') }}">
+    
+    
+    <style>
+        .header_public {
+            box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-content {
+            font-family: Georgia, 'Times New Roman', Times, serif;
+        }
+
+        /* The 60px public header is fixed up to 800px (styles.css); wider, it sits above the
+           page and the slideshow needs no room for it */
+        @media screen and (max-width: 800px) {
+            #slides {
+                --product-header-h: 60px;
+            }
+        }
+
+    </style>
+
+{% endblock %}
+
+
+{% block content %}
+
+
+<!-- Middle part -->
+<input type="hidden" value="{{ prData.RefKey }}" id="RefKey">
+<input type="hidden" value="{{ ptID }}" id="hiddenPtID">
+<input type="hidden" id="language-id" value="{{ languageID }}">
+<input type="hidden" id="cartMessage" value="{{ cartMessage[0] }}">
+<input type="hidden" id="csrfToket" value="{{ cartMessage[1] }}">
+<input type="hidden" id="inBasketText" value="{{ cartMessage[2] }}">
+
+<div class="overlay" id="overlay"></div>
+
+<div class="containerZ" style="padding-top: 0px; margin-bottom: unset;">
+    
+    {{ slideShow | safe }}
+
+<!-- Reach Text Editor -->
+    {% set editorStatus = 0 %}
+    {% set prStyle = "display: none" %}
+    {% set editorStyle = "display: block" %}
+    {% if prData.Text is none %}
+        {% set prStyle = "display: block" %}
+        {% set editorStyle = "display: none" %}
+        {% set editorStatus = 1 %}
+    {% endif %}
+    
+    
+<div id="editorContentParent">
+    <span id="editorContent" class="ql-editor" style="{{ editorStyle }}"></span>
+</div>
+
+    <input type="hidden" id="editorStatus" value="{{ editorStatus }}" >   
+    
+
+<div class="card-container-user" id="card-container-user"></div>
+    
+<script nonce="{{ csp_nonce() }}" src="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/pickr.min.js"></script>
+    
+
+
+
+<!-- Include Quill.js script -->
+<!-- <script nonce="{{ csp_nonce() }}" src="https://cdn.quilljs.com/1.3.6/quill.js"></script> -->
+<script nonce="{{ csp_nonce() }}" src="{{ url_for('static', filename='JS/1-3-6-quill.js') }}"></script>
+<script nonce="{{ csp_nonce() }}">
+
+document.addEventListener('DOMContentLoaded', function() {
+    let csrfToken = `{{ csrf_token() }}`;
+    prID = "{{ prData.Product_ID }}";
+
+    let formData = new FormData();
+    formData.append('prID', prID);
+
+    let xhr = new XMLHttpRequest();
+    xhr.open('POST', '/other-products');
+    xhr.setRequestHeader('X-CSRFToken', csrfToken);
+
+    xhr.onload = function () {
+        if (xhr.status === 200) {
+            let response = JSON.parse(xhr.responseText);
+            if (response.status === "1") {
+                creat_other_products(response.data.data)
+            } 
+        } else {
+            console.log(new Error('Error: ' + xhr.responseText));
+        }
+    };
+
+    xhr.onerror = function () {
+        console.log(new Error('Network Error'));
+    };
+
+    xhr.send(formData);
+
+    
+    function creat_other_products(products) {
+      
+
+        const container = document.getElementById("card-container-user");
+
+        products.forEach((product) => {
+            // Create card container
+            const card = document.createElement("div");
+            card.className = "card";
+            card.style.borderRadius = '15px';
+            card.style.backgroundColor = '#f3f4f5';
+            card.style.fontFamily = "Georgia, Times New Roman, Times, serif;";
+            // card.style.fontFamily = 'cursive';
+
+            // Create card layout
+            const cardLayout = document.createElement("div");
+            cardLayout.className = "card-layout";
+            card.appendChild(cardLayout);
+
+            // Create and append image element
+            const img = document.createElement("img");
+            const imgUrl = "{{ url_for('static', filename='images/pr_thumbnails/') }}";
+            img.src = imgUrl + product.Thumbnail;
+
+            img.alt = product.AltText;
+            img.className = "card-image";
+            card.appendChild(img);
+
+            // Create card content container
+            const cardContent = document.createElement("div");
+            cardContent.className = "card-content";
+            card.appendChild(cardContent);
+
+            // Create and append title
+            const title = document.createElement("h2");
+            title.className = "card-title";
+            title.textContent = product.Title;
+            cardContent.appendChild(title);
+
+            // Create and append description
+            const description = document.createElement("p");
+            description.className = "card-text";
+            description.textContent = product.LongDescription;
+            cardContent.appendChild(description);
+
+            // Create card buttons container
+            const cardButtons = document.createElement("div");
+            cardButtons.className = "card-buttons";
+            card.appendChild(cardButtons);
+
+            // Create "See Details" link
+            const seeDetails = document.createElement("a");
+            seeDetails.href = "{{ url_for('home') }}" + product.Url;
+            seeDetails.className = "btn_landing";
+            seeDetails.textContent = "{{ _('More') }}";
+
+            cardButtons.appendChild(seeDetails);
+
+            // Create "Apply" button
+            const applyBtn = document.createElement("div");
+            applyBtn.className = "btn_landing";
+            applyBtn.textContent = "{{ _('Apply') }}";
+
+            cardButtons.appendChild(applyBtn);
+
+            // Append the completed card to the container
+            container.appendChild(card);
+        });
+    }        
+    
+
+
+    // Function to convert HTML to Delta
+    function convertHtmlToDelta(html) {
+        const container = document.createElement('div');
+        container.innerHTML = html;
+        return quill.clipboard.convert(container);
+    }
+    
+    // let htmlToInsert = prData.Text
+    const prData = {{ prData | tojson }};
+    let savedHtmlContent = prData.Text 
+    document.getElementById('editorContent').innerHTML = savedHtmlContent;
+
+
+});
+
+</script>
+
+{% endblock %}

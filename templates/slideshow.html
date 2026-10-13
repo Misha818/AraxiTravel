@@ -1,0 +1,322 @@
+{% set Title = Title %}
+{% set ptTitleStyle = '' %}
+
+{% if resultSpss.length > 0 %}
+  {% if resultSpss.data[0].ptCount == 1 %}
+    {% set ptTitleStyle = 'display: none;' %}
+  {% endif %}
+{% endif %}
+
+
+{% if result.length > 0 or resultSubPr.length > 0 %}
+{% set display = '' %}
+{% if result.length + resultSubPr.length < 6 %} {% set display='display:none' %} {% endif %} 
+{% if result.length > 0 %}
+  {% set mainImgUrl = 'images/product_slider/' + result.data[0]['Name'] %}
+  {% set mainImgAlt = result.data[0]['AltText'] %}
+{% else %}
+  {% set mainImgUrl = 'images/sub_product_slider/' + resultSubPr.data[0]['Name'] %}
+  {% set mainImgAlt = resultSubPr.data[0]['AltText'] %}
+{% endif %}
+
+{%set thumbnailsWrapperHeight = '' %}
+{% set imgMarginBottom = '' %}
+{% set totalSlides = result.length + resultSubPr.length %}
+
+{% if totalSlides < 6 %}
+  
+  {%set thumbnailsWrapperHeight = 'height: 560px' %}
+  {% if totalSlides == 5 %}
+    {% set imgMarginBottom = 'img5' %}
+  {% elif totalSlides == 4 %}
+      {% set imgMarginBottom = 'img4' %}
+  {% endif %}
+
+
+{% endif %}
+
+<!-- Bootstrap CSS -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+.product-container {
+  margin-top: 100px;
+}
+</style>
+
+
+<!-- Left Errow &#10094 -->
+<!-- Right Errow &#10095 -->
+<div class="product-container blocks{% if resultSpss.length == 0 %} no-price{% endif %}" id="slides">
+
+  <input type="hidden" id="no-spot-left" value="{{ _('No spot left') }}">
+
+  <div class="thumbnail-container">
+    <button class="thumb-prev" style="{{ display }}" data-onclick='["scrollThumbnails", "left", false]'>&#11165;</button>
+    <div class="thumbnails-wrapper" style="{{ thumbnailsWrapperHeight }}">
+      <div class="thumbnails {{ imgMarginBottom }}">
+
+        {% set ns = namespace(i=0) %}
+        
+        {% for row in result.data %}
+
+        {% set fileDir = 'images/product_slider/' + row['Name'] %}
+
+        {% if ns.i == 0 %}
+        {% set selectedThumbnail = 'selectedThumbnail'%}
+        {% else %}
+        {% set selectedThumbnail = ''%}
+        {% endif %}
+
+        <img src="{{ url_for('static', filename='') + fileDir }}" alt="{{ row['AltText'] }}"
+            data-onclick='{{ ["showImage", ns.i | string] | tojson }}' class="{{ selectedThumbnail }}">
+
+        {% set ns.i = ns.i + 1 %}
+        {% endfor %}
+
+        {% for row in resultSubPr.data %}
+
+        {% set fileDir = 'images/sub_product_slider/' + row['Name'] %}
+
+        {% if ns.i == 0 %}
+        {% set selectedThumbnail = 'selectedThumbnail'%}
+        {% else %}
+        {% set selectedThumbnail = ''%}
+        {% endif %}
+        <img src="{{ url_for('static', filename='') + fileDir}} " alt='{{ row["AltText"] }}'
+          data-onclick='{{ ["showImage", ns.i | string] | tojson }}' class='{{ selectedThumbnail }}'>
+        {% set ns.i = ns.i + 1 %}
+        {% endfor %}
+      </div>
+    </div>
+    <button class="thumb-next" style="{{ display }}" data-onclick='["scrollThumbnails", "right", false]'>&#11167;</button>
+  </div>
+
+  <div class="image-gallery">
+    <div class="slider">
+      <button class="prevM" data-onclick='["prevImage"]'>&#10094;</button>
+      <img id="main-image" src="{{ url_for('static', filename=mainImgUrl ) }}"
+        alt="{{ mainImgAlt }}" class="fade">
+      <button class="nextM" data-onclick='["nextImage"]'>&#10095;</button>
+    </div>
+  </div>
+
+  <div class="product-details">
+    <div 
+      {% if subProducts | length == 1 %}
+      
+        class="prTitle popoverImage"
+        data-bs-toggle="popover"
+        data-bs-placement="right" 
+        data-bs-html="true" 
+        data-bs-content="<a href='{{ url_for('edit_price', ptID=subProducts[0]['ID']) }}  '>{{ _('Edit Price') }}</a> <a href='{{ url_for('add_to_store', ptID=subProducts[0]['ID']) }}' target='_BLANK'>{{ _('Add To Store') }}</a>"
+      {% else %}    
+        class="prTitle"       
+      {% endif %}
+    
+    >
+    {{ Title }}
+  </div>
+    
+    <!-- <div class="rating">
+      ★★★★☆ (67 reviews)
+    </div> -->
+
+    {% if subProducts | length > 1 %}
+      {% set arrows = '' %}
+      {% set containerX = 'width: 450px;' %}
+      {% set wrapperMargin = '' %}
+      {% if subProducts | length < 6 %}
+        {% set arrows = "display: none;" %}
+        {% set containerX = '' %}
+        {% set wrapperMargin = "margin-left: 18px;" %}
+      {% endif %}
+    <div class="thumbnail-containerX" style="{{ containerX }}">
+      <button class="thumb-prevX" style="{{ arrows }}" data-onclick='["scrollThumbnailsPrice", "left", false]'>❮</button>
+      <div class="price-thumbnails-wrapper" style="{{ wrapperMargin }}">
+        <div class="price-thumbnails">
+          {% set ns = namespace(i=0) %}
+          {% for row in subProducts %}
+          {% if ns.i == 0 %}
+          {% set selectedThumbnail = 'selectedThumbnail'%}
+          {% else %}
+          {% set selectedThumbnail = ''%}
+          {% endif %}
+          {% set fileDir = 'images/sub_product_slider/' + row['Name'] %}
+
+          <img  src="{{ url_for('static', filename='') + fileDir}} " 
+                alt='{{ row["AltText"] }}' 
+                class='{{ selectedThumbnail }}'
+                data-ptid="{{ row['ID'] }}"
+                data-value="{{row['i']}}" 
+                data-onclick='{{ [["showImage", row["i"]], ["changeType", ns.i, "$this"], ["scrollThumbnailsFromPrice", row["i"]]] | tojson }}'
+            />
+          {% set ns.i = ns.i + 1 %}
+          {% endfor %}
+        </div>
+      </div>
+      <button class="thumb-nextX" style="{{ arrows }}" data-onclick='["scrollThumbnailsPrice", "right", false]'>❯</button>
+    </div>
+    {% endif %}
+
+    {% if resultSpss.length > 0 %}
+      <span style="display: block;" class="productType" id="type_0">
+        <h2   class="subproduct popoverImage"
+              style="{{ ptTitleStyle }}"
+              data-bs-toggle="popover"
+              data-bs-placement="right" 
+              data-bs-html="true" 
+              data-bs-content="<a href='{{ url_for('edit_price', ptID=subProducts[0]['ID']) }}  '>{{ _('Edit Price') }}</a> <a href='{{ url_for('add_to_store', ptID=subProducts[0]['ID']) }}' target='_BLANK'>{{ _('Add To Store') }}</a>"
+                 
+        >{{ resultSpss.data[0].ptTitle }}</h2>
+        <p class="price">
+          {% if resultSpss.data[0].Price == 0 %}
+            {{ _('Participation is free') }}
+          {% else %}
+            {{ resultSpss.data[0].Price }} {{ mainCurrency }} 
+          {% endif %}
+        
+        </p>
+        <p class="inStock">
+          {% if resultSpss.data[0].Quantity %}
+            {% if resultSpss.data[0].Quantity < 9 %}
+              {{ resultSpss.data[0].Quantity }} {{ _('left in stock') }}
+            {% endif %}
+          {% endif %}
+        </p>
+        <div class="cart-container">
+        <button class="add-to-cart-btn" value="{{ resultSpss.data[0]['ptID'] }}" style="display: none;">
+          <i class="fas fa-shopping-cart cart-icon"></i>
+          {{ _('Add to cart') }}
+        </button>
+          <button class="buy-btn" value="{{ resultSpss.data[0].ptID }}">
+            <!-- <i class="fas fa-credit-card cart-icon"></i> -->
+            {{ _('Apply') }}
+          </button>
+          {% set purchaseQty = resultSpss.data[0].Quantity %}
+          <p>{{ _("For+1") }}</p>
+          <!-- <input type="number" class="quantity" name="quantity" value="1" min="1"> -->
+          <select class="quantity" name="quantity" id="select-quantity-{{ resultSpss.data[0].ptID }}">
+          </select>
+          <p>{{ _("person+1") }}</p>
+        </div>
+        
+        {% set ns = namespace(flag = resultSpss.data[0].ptID) %}
+        {% set spanID = namespace(i=0) %}
+
+        {% for row in resultSpss.data %}
+        
+        {% if ns.flag != row['ptID'] %}
+        {% set ns.flag = row['ptID'] %}
+            {% set spanID.i = spanID.i + 1 %}
+            {% if loop.index == 1 %}
+            {% set loopIndex = 0 %}
+            {% else %}
+            {% set loopIndex = loop.index - 2 %}
+            {% endif %}
+            
+            </span>
+            <span id="type_{{ spanID.i }}" class="productType" style="display: none;">
+              <h2   class="subproduct popoverImage"
+                    style="{{ ptTitleStyle }}"
+                    data-bs-toggle="popover"
+                    data-bs-placement="right" 
+                    data-bs-html="true" 
+                    data-bs-content="<a href='{{ url_for('edit_price', ptID=ns.flag) }}  '>{{ _('Edit Price') }}</a> <a href='{{ url_for('add_to_store', ptID=ns.flag) }}' target='_BLANK'>{{ _('Add To Store') }}</a>"
+              >{{ row['ptTitle'] }}</h2>
+              <p class="price">
+                {% if row.Price == 0 %}
+                  {{ _('Participation is free') }}
+                {% else %}
+                  {{ row['Price'] }} {{ mainCurrency }} 
+                {% endif %}
+              </p>
+              <p class="inStock">
+                {% if row['Quantity'] %}
+                  {% if row['Quantity'] < 9 %}
+                    {{ row['Quantity'] }} {{ _('left in stock') }}
+                  {% endif %}
+                {% endif %}
+              </p>
+              <div class="cart-container">
+                <button class="add-to-cart-btn" value="{{ row['ptID'] }}" style="display: none;">
+                  <i class="fas fa-shopping-cart cart-icon"></i>
+                  {{ _('Add to cart') }}
+                </button>
+                <button class="buy-btn" value="{{ row['ptID'] }}">
+                  <!-- <i class="fas fa-credit-card cart-icon"></i> -->
+                  {{ _('Apply') }}
+                </button>
+                {% set purchaseQty = row['Quantity'] %}
+                <p>{{ _("For+1") }}</p>
+                <!-- <input type="number" class="quantity" name="quantity" value="1" min="1"> -->
+                <select class="quantity" name="quantity" id="select-quantity-{{ row['ptID'] }}">
+                </select>
+                <p>{{ _("person+1") }}</p>
+              </div>
+              {% if row['Text'] is not none %}
+                <p class="spss spss-view">
+                  <strong> {{ row['Title'] }}</strong> 
+                  <span>{{ row['Text'] }}</span> 
+                </p>
+              {% endif %}
+            
+          
+            {% else %}
+              {% if row['Text'] is not none %}
+                <p class="spss spss-view">
+                  <strong> {{ row['Title'] }}</strong> 
+                  <span>{{ row['Text'] }}</span>
+                </p>
+              {% endif %}
+          
+          {% endif %}
+          
+        
+        {% endfor %}
+      {% set lastIndex = resultSpss.data | length - 1 %}
+
+
+      <!-- <p class="inStock">Quantity {{ resultSpss.data[lastIndex].Quantity }}</p>   -->
+    </span>  
+    <div class="spss-button"><i class="fa-regular fa-circle-down"></i></div>
+    <!-- <div class="spss-button hidden">⮝</div> -->
+        
+    {% endif %}
+
+  </div>
+  </div>
+  <!-- Bootstrap JS bundle -->
+  <script nonce="{{ csp_nonce() }}" src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- <script nonce="{{ csp_nonce() }}" type="text/javascript" src="{{ url_for('static', filename='JS/header.js') }}"></script> -->
+  <script nonce="{{ csp_nonce() }}" type="text/javascript" src="{{ url_for('static', filename='JS/slideshow.js') }}"></script>
+
+  <script nonce="{{ csp_nonce() }}">
+    // Centre the price thumbnails when they all fit (no scrolling): on screens up to 1365px, where the
+    // title and prices sit under the image. The widths match the CSS breakpoints (matchMedia, so a
+    // fractional window width can't fall between them); under 475px the strip shows 3 thumbnails, else 5
+    const container = document.querySelector('.price-thumbnails');
+
+    function centerPriceThumbnails() {
+        if (!container) {
+            return;
+        }
+        const count = container.querySelectorAll('img').length;
+        let centered = false;
+        if (window.matchMedia('(max-width: 1365.98px)').matches) {
+            centered = window.matchMedia('(max-width: 474.98px)').matches ? count < 4 : count < 6;
+        }
+        container.classList.toggle('centered', centered);
+    }
+
+    centerPriceThumbnails();
+    window.addEventListener('resize', centerPriceThumbnails);
+  </script>
+
+<style>
+  #editorContentParent {
+      margin-top: unset; 
+  }
+
+</style>
+  {% endif %}

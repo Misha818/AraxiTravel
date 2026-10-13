@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}
+    {{ _('Something is wrong') }}
+{% endblock %}
+
+{% block head %}
+<style>
+    a {
+        border: 1px solid brown;
+        color: brown;
+        border-radius: 10px;
+        width: 50%;
+        text-align: center;
+        padding: 15px;
+        text-decoration: none;
+        margin: 10px auto;
+        font-size: 18pt;
+    }
+</style>
+{% endblock %}
+{% block content %}
+    {% set forwardMessage = _('Continue') %}
+    {% set backMessage = _('Return') %}
+    {% if content.forwardMessage %}
+        {% set forwardMessage = content.forwardMessage %}
+    {% endif %}
+
+    {% if content.backMessage %}
+        {% set backMessage = content.backMessage %}
+    {% endif %}
+
+    <div class="container" style="display: contents;">
+        <img src="{{ url_for('static', filename='images/error.png' ) }}" style="margin-top: 110px;">
+        <h1 style="color:brown; font-size: 40pt;"> {{ content.message }} </H1>
+        <a href="{{ content.forwardUrl }}">{{ forwardMessage }}</a>    
+        <a href="{{ content.backUrl }}">{{ backMessage }}</a>    
+    </div>
+{% endblock %}

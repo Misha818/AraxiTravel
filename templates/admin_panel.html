@@ -1,0 +1,1225 @@
+{% extends 'base.html' %}
+
+{% block head %}
+{% if resultActions.data[0]['rolID'] == 4 %}
+  <script nonce="{{ csp_nonce() }}" src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script nonce="{{ csp_nonce() }}" src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    /* ---- Sales & Marketing charts ---- */
+    .sales-dashboard {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+      gap: 20px;
+      width: 92%;
+      max-width: 1200px;
+      margin: 24px auto 8px auto;
+      box-sizing: border-box;
+    }
+
+    .chart-card {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      min-width: 0;
+      padding: 18px 20px 16px 20px;
+      background-color: #fff;
+      border: 1px solid #efece6;
+      border-radius: 14px;
+      box-shadow: 0 6px 18px rgba(38, 70, 83, 0.06);
+    }
+
+    .chart-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .chart-card-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #264653;
+    }
+
+    .chart-card-title i {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background-color: #fbe9e4;
+      color: #E76F51;
+      font-size: 16px;
+    }
+
+    /* The canvas sizes itself to this box (Chart.js responsive mode) */
+    .chart-canvas {
+      position: relative;
+      height: 340px;
+    }
+
+    .chart-card.pie .chart-canvas {
+      height: 300px;
+    }
+
+    .chart-canvas canvas {
+      max-width: 100%;
+    }
+
+    /* Shown over an empty chart instead of bare axes */
+    .chart-empty {
+      position: absolute;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      color: #8a8a8a;
+      font-weight: 600;
+      pointer-events: none;
+    }
+
+    .chart-canvas.is-empty .chart-empty {
+      display: flex;
+    }
+
+    .chart-canvas.is-empty canvas {
+      opacity: 0.55;
+    }
+
+    .chart-canvas:fullscreen {
+      height: 100vh;
+      padding: 32px;
+      box-sizing: border-box;
+      background-color: #fcfcfa;
+    }
+
+    .chart-canvas:-webkit-full-screen {
+      background-color: #fcfcfa;
+    }
+
+    /* ---- Filters ---- */
+    .chart-filters {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      padding-top: 14px;
+      border-top: 1px solid #f0ede7;
+    }
+
+    .chart-filters select {
+      flex: 1 1 120px;
+      min-width: 0;
+      height: 40px;
+      padding: 0 10px;
+      font: inherit;
+      font-size: 14px;
+      color: #333;
+      background-color: #fafaf8;
+      border: 1px solid #d9d5cd;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .chart-filters select:hover {
+      border-color: #b9b3a8;
+    }
+
+    .chart-filters select:focus {
+      outline: none;
+      border-color: #2A9D8F;
+      box-shadow: 0 0 0 3px rgba(42, 157, 143, 0.18);
+    }
+
+    /* ---- Checkbox dropdown (several months / affiliates / services at once) ---- */
+    .ms {
+      position: relative;
+      flex: 1 1 140px;
+      min-width: 0;
+    }
+
+    .ms-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      width: 100%;
+      height: 40px;
+      padding: 0 10px;
+      font: inherit;
+      font-size: 14px;
+      color: #333;
+      text-align: left;
+      background-color: #fafaf8;
+      border: 1px solid #d9d5cd;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .ms-toggle:hover {
+      border-color: #b9b3a8;
+    }
+
+    .ms-toggle:focus-visible,
+    .ms.is-open .ms-toggle {
+      outline: none;
+      border-color: #2A9D8F;
+      box-shadow: 0 0 0 3px rgba(42, 157, 143, 0.18);
+    }
+
+    .ms-text {
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .ms.has-value .ms-text {
+      color: #264653;
+      font-weight: 600;
+    }
+
+    .ms-toggle i {
+      flex-shrink: 0;
+      font-size: 11px;
+      color: #8a8a8a;
+      transition: transform 0.2s;
+    }
+
+    .ms.is-open .ms-toggle i {
+      transform: rotate(180deg);
+    }
+
+    .ms-panel {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      width: max-content;
+      min-width: 100%;
+      max-width: min(320px, calc(100vw - 32px));
+      padding: 8px;
+      background-color: #fff;
+      border: 1px solid #e3dfd7;
+      border-radius: 10px;
+      box-shadow: 0 10px 28px rgba(38, 70, 83, 0.16);
+      box-sizing: border-box;
+    }
+
+    .ms-panel[hidden] {
+      display: none;
+    }
+
+    /* opened near the right edge of the screen: grow leftwards instead */
+    .ms-panel.align-right {
+      left: auto;
+      right: 0;
+    }
+
+    .ms-search {
+      width: 100%;
+      height: 36px;
+      padding: 0 10px;
+      font: inherit;
+      font-size: 14px;
+      border: 1px solid #d9d5cd;
+      border-radius: 8px;
+      box-sizing: border-box;
+    }
+
+    .ms-search:focus {
+      outline: none;
+      border-color: #2A9D8F;
+      box-shadow: 0 0 0 3px rgba(42, 157, 143, 0.18);
+    }
+
+    .ms-options {
+      max-height: 240px;
+      margin: 0;
+      padding: 0;
+      overflow-y: auto;
+      list-style: none;
+    }
+
+    .ms-options li[hidden] {
+      display: none;
+    }
+
+    .ms-options label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px;
+      font-size: 14px;
+      color: #333;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .ms-options label:hover {
+      background-color: #f4f2ee;
+    }
+
+    .ms-options input {
+      flex-shrink: 0;
+      width: 16px;
+      height: 16px;
+      margin: 0;
+      accent-color: #2A9D8F;
+      cursor: pointer;
+    }
+
+    .ms-options span {
+      overflow-wrap: anywhere;
+    }
+
+    .ms-empty {
+      padding: 8px;
+      font-size: 14px;
+      color: #8a8a8a;
+    }
+
+    .ms-empty[hidden] {
+      display: none;
+    }
+
+    .ms-clear {
+      align-self: flex-end;
+      padding: 4px 8px;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      color: #E76F51;
+      background: none;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .ms-clear:hover {
+      background-color: #fbe9e4;
+    }
+
+    .ms-clear:disabled {
+      color: #b9b3a8;
+      background: none;
+      cursor: default;
+    }
+
+    .ms-clear:focus-visible,
+    .ms-options input:focus-visible {
+      outline: 2px solid #264653;
+      outline-offset: 2px;
+    }
+
+    .chart-filters .primary {
+      flex: 0 0 auto;
+      height: 40px;
+      padding: 0 20px;
+      font: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      background-color: #E76F51;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .chart-filters .primary:hover {
+      background-color: #d65f42;
+    }
+
+    .chart-card .secondary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      font-size: 18px;
+      color: #E76F51;
+      background-color: #fff;
+      border: 1px solid #f1d8cf;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .chart-card .secondary:hover {
+      background-color: #fbe9e4;
+    }
+
+    .chart-filters .primary:focus-visible,
+    .chart-card .secondary:focus-visible,
+    .chart-fullscreen:focus-visible {
+      outline: 3px solid #264653;
+      outline-offset: 2px;
+    }
+
+    /* line the action tiles up with the chart cards above them */
+    .sales-dashboard + .card-container.stuff-dashboard {
+      max-width: 1200px;
+    }
+
+    @media (max-width: 1100px) {
+      .sales-dashboard {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    @media (max-width: 600px) {
+      .chart-card {
+        padding: 14px;
+      }
+
+      .chart-canvas,
+      .chart-card.pie .chart-canvas {
+        height: 260px;
+      }
+
+      .chart-filters .primary {
+        flex: 1 1 100%;
+      }
+    }
+  </style>
+{% endif %}
+
+<style>
+  /* Dashboard tiles: a grid that fills the width on every screen size */
+  .card-container.stuff-dashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+    width: 92%;
+    max-width: 1100px;
+    height: auto;
+    box-sizing: border-box;
+  }
+
+  .stuff-dashboard > a:last-child:nth-child(odd) {
+    grid-column: auto;
+    justify-self: stretch;
+  }
+
+  .stuff-dashboard > a {
+    display: block;
+    border-radius: 14px;
+  }
+
+  .stuff-dashboard > a:focus-visible {
+    outline: 2px solid #E76F51;
+    outline-offset: 3px;
+  }
+
+  .stuff-dashboard .card {
+    height: 100%;
+    border: 1px solid #efece6;
+    border-radius: 14px;
+    box-shadow: 0 6px 18px rgba(38, 70, 83, 0.06);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .stuff-dashboard > a:hover .card,
+  .stuff-dashboard > a:focus-visible .card {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(38, 70, 83, 0.12);
+  }
+
+  .stuff-dashboard .card-content-stuff {
+    flex-wrap: nowrap;
+    min-height: 72px;
+  }
+
+  .stuff-dashboard .card-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background-color: #fbe9e4;
+  }
+
+  .stuff-dashboard .card-title {
+    font-size: 1.15rem;
+    text-align: left;
+    margin: 0;
+    color: #264653;
+    overflow-wrap: anywhere;
+  }
+
+  @media (max-width: 600px) {
+    .card-container.stuff-dashboard {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .stuff-dashboard .card-content-stuff {
+      flex-direction: column;
+      justify-content: center;
+      text-align: center;
+      gap: 8px;
+      padding: 16px 10px;
+      min-height: 96px;
+    }
+
+    .stuff-dashboard .card-title {
+      font-size: 1rem;
+      text-align: center;
+    }
+  }
+
+  @media (max-width: 340px) {
+    .card-container.stuff-dashboard {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+{% endblock %}
+
+
+{% block title %}
+    {{ _('Admin Panel') }}
+{% endblock %}
+{% block content %}
+
+{% set margins = "margin: 5% 0% 3% 0%;" %}
+{% if resultActions.data[0]['rolID'] == 4 %}
+{% set margins = "margin: 8px 0% 3% 0%;" %}
+<div class="sales-dashboard">
+  <section class="chart-card persons" aria-labelledby="chart-affiliates-title">
+      <div class="chart-card-header">
+        <h2 class="chart-card-title" id="chart-affiliates-title"><i class="fa-solid fa-chart-column" aria-hidden="true"></i>{{ _('Affiliates') }}</h2>
+        <button id="downloadPdf" class="secondary" title="{{ _('Download PDF') }}" aria-label="{{ _('Download PDF') }}"><i class="fa-solid fa-file-arrow-down" aria-hidden="true"></i></button>
+      </div>
+
+      <div class="chart-canvas">
+        <canvas id="myChart" width="700" height="400" role="img" aria-labelledby="chart-affiliates-title"></canvas>
+        <div class="chart-empty">{{ _('No data to show!') }}</div>
+      </div>
+
+      <div class="chart-filters">
+        <select id="yearSelect" aria-label="{{ _('Year') }}">
+          {% for y in chartYears %}
+          <option>{{ y }}</option>
+          {% endfor %}
+        </select>
+
+        <div class="ms" id="monthSelect" data-placeholder="{{ _('All Months') }}"></div>
+
+        <div class="ms" id="person" data-placeholder="{{ _('All Affiliates') }}" data-search="1"></div>
+
+        <button id="filter" class="primary">{{ _('Submit') }}</button>
+      </div>
+  </section>
+
+  <section class="chart-card pie sales" aria-labelledby="chart-products-title">
+      <div class="chart-card-header">
+        <h2 class="chart-card-title" id="chart-products-title"><i class="fa-solid fa-chart-pie" aria-hidden="true"></i>{{ _('Products') }}</h2>
+        <button id="downloadPdfPie" class="secondary" title="{{ _('Download PDF') }}" aria-label="{{ _('Download PDF') }}"><i class="fa-solid fa-file-arrow-down" aria-hidden="true"></i></button>
+      </div>
+
+      <div class="chart-canvas">
+        <canvas id="myChartPie" role="img" aria-labelledby="chart-products-title"></canvas>
+        <div class="chart-empty">{{ _('No data to show!') }}</div>
+      </div>
+
+      <div class="chart-filters">
+        <select id="yearSelectPie" aria-label="{{ _('Year') }}">
+          {% for y in chartYears %}
+          <option>{{ y }}</option>
+          {% endfor %}
+        </select>
+
+        <div class="ms" id="monthSelectPie" data-placeholder="{{ _('All Months') }}"></div>
+
+        <select id="top" title="{{ _('Chose the number of top products') }}" aria-label="{{ _('Chose the number of top products') }}">
+          <option value="">{{ _('Top') }}</option>
+        </select>
+
+        <div class="ms" id="products" data-placeholder="{{ _('All Products') }}" data-search="1"></div>
+
+        <button id="filterPie" class="primary">{{ _('Submit') }}</button>
+      </div>
+  </section>
+
+</div>
+
+{% endif %}
+
+<div class="card-container stuff-dashboard" style="{{ margins }}">
+{% if resultActions.length > 0 %}
+  {% for row in resultActions.data %}
+  <a href="{{ url_for('home', _external=True) + row['ActionDir'] }}" style="text-decoration: none;">
+    <div class="card" style="background-color: #FFFFFF">
+      <div class="card-content-stuff">
+        <span class="card-icon"><i class="{{ row['img']}}" style="font-size: 20px; color: #E76F51;" aria-hidden="true"></i></span>
+        <h2 class="card-title">
+          {{ _(row['ActionName']) }}
+        </h2>
+
+      </div>
+    </div>
+  </a>
+  {% endfor %}
+{% else %}
+  <h3>{{ _('No data to show!') }}</h3>
+{% endif %}
+</div>
+
+{% if resultActions.data[0]['rolID'] == 4 %}
+<script nonce="{{ csp_nonce() }}">
+    let csrfToken = "{{ csrf_token() }}";
+
+    const MONTHS = [
+      { value: '01', label: {{ _('January') | tojson }} },
+      { value: '02', label: {{ _('February') | tojson }} },
+      { value: '03', label: {{ _('March') | tojson }} },
+      { value: '04', label: {{ _('April') | tojson }} },
+      { value: '05', label: {{ _('May') | tojson }} },
+      { value: '06', label: {{ _('June') | tojson }} },
+      { value: '07', label: {{ _('July') | tojson }} },
+      { value: '08', label: {{ _('August') | tojson }} },
+      { value: '09', label: {{ _('September') | tojson }} },
+      { value: '10', label: {{ _('October') | tojson }} },
+      { value: '11', label: {{ _('November') | tojson }} },
+      { value: '12', label: {{ _('December') | tojson }} }
+    ];
+    const ARAXI_TRAVEL_LABEL = {{ _('Araxi Travel') | tojson }};
+
+    // Checkbox dropdown: a button that opens a list of checkboxes, with an optional search box.
+    // Nothing ticked means "all" (the placeholder is shown). Names and titles are set with
+    // textContent, never as HTML
+    const MS_TEXT = {
+      selected: {{ _('selected') | tojson }},
+      search: {{ _('Search...') | tojson }},
+      clear: {{ _('Clear') | tojson }},
+      noMatches: {{ _('No matches') | tojson }}
+    };
+    const multiSelects = [];
+
+    function createMultiSelect(root, options = []) {
+      const placeholder = root.dataset.placeholder || '';
+      let items = [];
+      const selected = new Set();
+
+      const toggle = document.createElement('button');
+      toggle.type = 'button';
+      toggle.className = 'ms-toggle';
+      toggle.setAttribute('aria-haspopup', 'listbox');
+      toggle.setAttribute('aria-expanded', 'false');
+      const text = document.createElement('span');
+      text.className = 'ms-text';
+      const chevron = document.createElement('i');
+      chevron.className = 'fa-solid fa-chevron-down';
+      chevron.setAttribute('aria-hidden', 'true');
+      toggle.append(text, chevron);
+
+      const panel = document.createElement('div');
+      panel.className = 'ms-panel';
+      panel.hidden = true;
+
+      let search = null;
+      if (root.dataset.search === '1') {
+        search = document.createElement('input');
+        search.type = 'search';
+        search.className = 'ms-search';
+        search.placeholder = MS_TEXT.search;
+        search.setAttribute('aria-label', MS_TEXT.search);
+        search.addEventListener('input', filterList);
+        panel.appendChild(search);
+      }
+
+      const list = document.createElement('ul');
+      list.className = 'ms-options';
+      list.setAttribute('role', 'listbox');
+      list.setAttribute('aria-multiselectable', 'true');
+      list.setAttribute('aria-label', placeholder);
+
+      const empty = document.createElement('div');
+      empty.className = 'ms-empty';
+      empty.textContent = MS_TEXT.noMatches;
+      empty.hidden = true;
+
+      const clear = document.createElement('button');
+      clear.type = 'button';
+      clear.className = 'ms-clear';
+      clear.textContent = MS_TEXT.clear;
+      clear.addEventListener('click', () => {
+        selected.clear();
+        list.querySelectorAll('input').forEach(input => { input.checked = false; });
+        update();
+      });
+
+      panel.append(list, empty, clear);
+      root.replaceChildren(toggle, panel);
+
+      function labelOf(value) {
+        const item = items.find(o => String(o.value) === String(value));
+        return item ? item.label : '';
+      }
+
+      function update() {
+        const count = selected.size;
+        if (count === 0) {
+          text.textContent = placeholder;
+        } else if (count === 1) {
+          text.textContent = labelOf([...selected][0]);
+        } else {
+          text.textContent = count + ' ' + MS_TEXT.selected;
+        }
+        toggle.title = count > 1 ? items.filter(o => selected.has(String(o.value))).map(o => o.label).join(', ') : '';
+        root.classList.toggle('has-value', count > 0);
+        clear.disabled = count === 0;
+      }
+
+      function render() {
+        list.replaceChildren();
+        items.forEach(o => {
+          const li = document.createElement('li');
+          li.setAttribute('role', 'option');
+          const label = document.createElement('label');
+          const input = document.createElement('input');
+          input.type = 'checkbox';
+          input.value = String(o.value);
+          input.checked = selected.has(String(o.value));
+          li.setAttribute('aria-selected', String(input.checked));
+          input.addEventListener('change', () => {
+            if (input.checked) {
+              selected.add(input.value);
+            } else {
+              selected.delete(input.value);
+            }
+            li.setAttribute('aria-selected', String(input.checked));
+            update();
+          });
+          const span = document.createElement('span');
+          span.textContent = o.label;
+          label.append(input, span);
+          li.appendChild(label);
+          li.dataset.search = String(o.label).toLowerCase();
+          list.appendChild(li);
+        });
+        filterList();
+        update();
+      }
+
+      function filterList() {
+        const query = search ? search.value.trim().toLowerCase() : '';
+        let shown = 0;
+        list.querySelectorAll('li').forEach(li => {
+          li.hidden = query !== '' && !li.dataset.search.includes(query);
+          if (!li.hidden) {
+            shown++;
+          }
+        });
+        empty.hidden = shown > 0;
+      }
+
+      function open() {
+        multiSelects.forEach(ms => { if (ms !== api) ms.close(); });
+        panel.hidden = false;
+        panel.classList.remove('align-right');
+        if (panel.getBoundingClientRect().right > document.documentElement.clientWidth - 8) {
+          panel.classList.add('align-right');
+        }
+        root.classList.add('is-open');
+        toggle.setAttribute('aria-expanded', 'true');
+        if (search) {
+          search.focus();
+        }
+      }
+
+      function close() {
+        if (panel.hidden) {
+          return;
+        }
+        panel.hidden = true;
+        root.classList.remove('is-open');
+        toggle.setAttribute('aria-expanded', 'false');
+        if (search && search.value) {
+          search.value = '';
+          filterList();
+        }
+      }
+
+      toggle.addEventListener('click', () => (panel.hidden ? open() : close()));
+      root.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && !panel.hidden) {
+          close();
+          toggle.focus();
+        }
+      });
+
+      const api = {
+        // ticked values, in list order
+        values: () => items.map(o => String(o.value)).filter(v => selected.has(v)),
+        labelOf,
+        placeholder,
+        close,
+        contains: node => root.contains(node),
+        // replace the list, keeping ticks on options that are still there
+        setOptions(newItems) {
+          items = newItems;
+          const valid = new Set(items.map(o => String(o.value)));
+          [...selected].forEach(v => { if (!valid.has(v)) selected.delete(v); });
+          render();
+        }
+      };
+      api.setOptions(options);
+      multiSelects.push(api);
+      return api;
+    }
+
+    // a click anywhere else closes an open dropdown
+    document.addEventListener('click', e => {
+      multiSelects.forEach(ms => { if (!ms.contains(e.target)) ms.close(); });
+    });
+
+    const monthFilter = createMultiSelect(document.getElementById('monthSelect'), MONTHS);
+    const personFilter = createMultiSelect(document.getElementById('person'), [{ value: '0', label: ARAXI_TRAVEL_LABEL }]);
+    const monthFilterPie = createMultiSelect(document.getElementById('monthSelectPie'), MONTHS);
+    const productFilter = createMultiSelect(document.getElementById('products'));
+
+    // ---- PDF: the chart with the filters it was drawn with ----
+    const PDF_TEXT = {
+      year: {{ _('Year') | tojson }},
+      months: {{ _('Months') | tojson }},
+      affiliates: {{ _('Affiliates') | tojson }},
+      services: {{ _('Products') | tojson }},
+      top: {{ _('Top') | tojson }},
+      all: {{ _('All') | tojson }}
+    };
+
+    // ticked labels, or the dropdown's "All ..." text when nothing is ticked
+    function filterText(ms) {
+      const values = ms.values();
+      return values.length ? values.map(ms.labelOf).join(', ') : ms.placeholder;
+    }
+
+    // Filters of the last request for each chart (set when it's sent), so the PDF describes the
+    // chart on screen even if the dropdowns were changed afterwards without pressing Submit
+    let appliedFilters = [];
+    let appliedFiltersPie = [];
+
+    // jsPDF's built-in fonts have no Armenian or Cyrillic letters, so the title and filters are
+    // drawn on a canvas with the page's own font, the chart is drawn under them, and that
+    // picture becomes the PDF page
+    function downloadChartPdf(chartObj, title, rows, fileName) {
+      // draw the final frame now, so a chart that is still animating isn't saved half-drawn
+      chartObj.update('none');
+      const source = chartObj.canvas;
+      const scale = source.width / source.clientWidth || 1;   // canvas pixels per CSS pixel
+      const fontFamily = getComputedStyle(document.body).fontFamily || 'sans-serif';
+      const pad = 24 * scale;
+      const titleSize = 18 * scale;
+      const rowSize = 14 * scale;
+      const lineHeight = rowSize * 1.5;
+      const width = Math.max(source.width + 2 * pad, 480 * scale);
+      const textWidth = width - 2 * pad;
+
+      const page = document.createElement('canvas');
+      const ctx = page.getContext('2d');
+      const bold = `700 ${rowSize}px ${fontFamily}`;
+      const normal = `400 ${rowSize}px ${fontFamily}`;
+
+      // "Label: value" rows; long values wrap under the value, not under the label
+      const lines = [];
+      rows.forEach(([label, value]) => {
+        ctx.font = bold;
+        const labelText = label + ': ';
+        const labelWidth = ctx.measureText(labelText).width;
+        ctx.font = normal;
+        let line = '';
+        String(value).split(' ').forEach(word => {
+          const next = line ? line + ' ' + word : word;
+          if (line && ctx.measureText(next).width > textWidth - labelWidth) {
+            lines.push({ label: lines.length && lines[lines.length - 1].row === label ? '' : labelText, labelWidth, text: line, row: label });
+            line = word;
+          } else {
+            line = next;
+          }
+        });
+        lines.push({ label: lines.length && lines[lines.length - 1].row === label ? '' : labelText, labelWidth, text: line, row: label });
+      });
+
+      const headerHeight = pad + titleSize * 1.4 + 6 * scale + lines.length * lineHeight + 14 * scale;
+      page.width = width;
+      page.height = Math.ceil(headerHeight + source.height + pad);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, page.width, page.height);
+      ctx.textBaseline = 'top';
+
+      ctx.font = `700 ${titleSize}px ${fontFamily}`;
+      ctx.fillStyle = '#264653';
+      ctx.fillText(title, pad, pad);
+
+      let y = pad + titleSize * 1.4 + 6 * scale;
+      lines.forEach(l => {
+        if (l.label) {
+          ctx.font = bold;
+          ctx.fillStyle = '#264653';
+          ctx.fillText(l.label, pad, y);
+        }
+        ctx.font = normal;
+        ctx.fillStyle = '#333333';
+        ctx.fillText(l.text, pad + l.labelWidth, y);
+        y += lineHeight;
+      });
+
+      // a thin line between the filters and the chart
+      ctx.fillStyle = '#e3dfd7';
+      ctx.fillRect(pad, headerHeight - 8 * scale, textWidth, Math.max(1, scale));
+      ctx.drawImage(source, (width - source.width) / 2, headerHeight);
+
+      const pageWidth = page.width / scale;
+      const pageHeight = page.height / scale;
+      const pdf = new jsPDF(pageWidth > pageHeight ? 'landscape' : 'portrait', 'pt', [pageWidth, pageHeight]);
+      pdf.addImage(page.toDataURL('image/png', 1.0), 'PNG', 0, 0, pageWidth, pageHeight);
+      pdf.save(fileName);
+    }
+
+    // Shows "No data" over a chart that has nothing to draw
+    function toggleEmpty(canvasId, isEmpty) {
+      document.getElementById(canvasId).parentNode.classList.toggle('is-empty', isEmpty);
+    }
+
+    // Full-screen toggle drawn in the corner of each chart
+    function makeFullscreenPlugin(id) {
+      return {
+        id: id,
+        afterInit(chart, args, opts) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'chart-fullscreen';
+            btn.textContent = opts.buttonText || '⛶';
+            btn.title = "{{ _('Full screen') }}";
+            btn.setAttribute('aria-label', "{{ _('Full screen') }}");
+            Object.assign(btn.style, {
+            position: 'absolute',
+            top: '0',
+            right: '0',
+            width: '32px',
+            height: '32px',
+            backgroundColor: 'white',
+            borderRadius: '8px',
+            border: '1px solid #ebe7e0',
+            color: '#264653',
+            cursor: 'pointer',
+            zIndex: 10
+            });
+            btn.onclick = () => {
+            const container = chart.canvas.parentNode;
+            if (!document.fullscreenElement) {
+                container.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+            };
+            // position needs the parent to be relative
+            chart.canvas.parentNode.style.position = 'relative';
+            chart.canvas.parentNode.appendChild(btn);
+
+            document.addEventListener('fullscreenchange', () => {
+            chart.resize();
+            });
+        }
+      };
+    }
+
+    //  BAR CHART
+    const fullscreenPlugin = makeFullscreenPlugin('fullscreen');
+
+    // Initialize chart
+    const ctx = document.getElementById('myChart').getContext('2d');
+    let chart = new Chart(ctx, {
+      type: 'bar',
+      data: { labels: [], datasets: [{ label: '', data: [], backgroundColor: '#2A9D8F', borderRadius: 6, maxBarThickness: 56 }] },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {display:false},
+            title: {display:true, text:''},
+            fullscreen: { buttonText: '⛶' },
+        },
+        scales: {
+          x: {
+            title: {display:true, text:''},
+            grid: { display: false },
+            border: { color: '#9a958c', width: 1 },
+            ticks: { color: '#3a3a3a', font: { size: 12 } }
+          },
+          y: {
+            beginAtZero: true,
+            grid: { color: '#d4cfc6', lineWidth: 1 },
+            border: { color: '#9a958c', width: 1 },
+            ticks: { precision: 0, color: '#3a3a3a', font: { size: 12 } }
+          }
+        }
+      },
+      plugins: [ fullscreenPlugin ]
+    });
+
+    // 3) A helper to redraw based on current filters:
+    function applyFilters(load=false) {
+      const languageID = `{{ languageID }}`;
+
+      // Create a new FormData object
+      let formData = new FormData();
+      formData.append('languageID', languageID);
+      formData.append('persons', '1');
+      // formData.append('rol', resultActions.data[0]['rolID']);
+      if (load === true) {
+        formData.append('affiliates', '1');
+      } else {
+        formData.append('year', document.getElementById('yearSelect').value);
+        // one field per ticked month / affiliate; none means all
+        monthFilter.values().forEach(month => formData.append('month', month));
+        personFilter.values().forEach(person => formData.append('person', person));
+      }
+
+      // for the PDF (on the first load nothing is ticked and the year is the current one,
+      // the first in the list)
+      appliedFilters = [
+        [PDF_TEXT.year, document.getElementById('yearSelect').value],
+        [PDF_TEXT.months, filterText(monthFilter)],
+        [PDF_TEXT.affiliates, filterText(personFilter)]
+      ];
+
+      // Create a new XMLHttpRequest object
+      let xhr = new XMLHttpRequest();
+
+      // Configure the request
+      xhr.open('POST', '/get-chart-data');
+      xhr.setRequestHeader('X-CSRFToken', csrfToken);
+
+      // Define what happens on successful data submission
+      xhr.onload = function() {
+          if (xhr.status === 200) {
+              let response = JSON.parse(xhr.responseText);
+
+              if (response.status === '1') {
+                  if (load === true) {
+                    personFilter.setOptions([{ value: '0', label: ARAXI_TRAVEL_LABEL }].concat(
+                      (response.chartData.affiliates || []).map(affiliate => ({
+                        value: String(affiliate.ID),
+                        label: affiliate.Initials + ' - ' + affiliate.Position
+                      }))
+                    ));
+                  }
+
+                  let fullData = response.chartData.data || [];
+
+                  // One affiliate picked: a bar per month. Otherwise: a bar per affiliate
+                  // (no affiliate = Araxi Travel's own sales)
+                  if (response.chartData.groupBy === 'month') {
+                    chart.data.labels = fullData.map(d => (MONTHS.find(m => m.value === d.month) || { label: d.month }).label + ' (' + d.value + ')');
+                  } else {
+                    chart.data.labels = fullData.map(d => (d.label == null ? ARAXI_TRAVEL_LABEL : d.label) + ' (' + d.value + ')');
+                  }
+                  const colors = pickColors(fullData.length);
+                  chart.data.datasets[0].backgroundColor = colors;
+                  chart.data.datasets[0].data = fullData.map(d => d.value);
+                  chart.update();
+                  toggleEmpty('myChart', fullData.length === 0);
+
+              }
+
+              if (response.status === '0') {
+                  alert(response.answer);
+              }
+          } else {
+              // Handle error response
+              console.error('Error adding category:', xhr.responseText);
+          }
+      };
+
+      // Send the request with the FormData object
+      xhr.send(formData);
+
+    }
+
+    // 4) Hook all three dropdowns to re-filter on change:
+    // ['yearSelect','monthSelect','person']
+    //   .forEach(id =>
+    //     document.getElementById(id).addEventListener('change', applyFilters)
+    //   );
+    document.getElementById('filter').addEventListener('click', applyFilters)
+
+    // 5) Initial draw:
+    applyFilters(true);
+
+    // Download PDF
+    const { jsPDF } = window.jspdf;
+
+    document
+      .getElementById('downloadPdf')
+      .addEventListener('click', () => {
+        const title = document.getElementById('chart-affiliates-title').textContent.trim();
+        downloadChartPdf(chart, title, appliedFilters, 'affiliates.pdf');
+      });
+
+// End of BAR CHART
+
+// Pie CHART
+    const fullscreenPluginPie = makeFullscreenPlugin('fullscreenPie');
+
+    // Initialize chart
+    const ctxPie = document.getElementById('myChartPie').getContext('2d');
+    let chartPie = new Chart(ctxPie, {
+      type: 'pie',
+      data: { labels: [], datasets: [{ label: '', data: [], backgroundColor: '#2a9d8f', borderColor: '#fff', borderWidth: 2 }] },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {display:false},
+            title: {display:false,},
+            fullscreenPie: { buttonText: '⛶' },
+        },
+        scales: { x:{display:false}, y:{display:false} }
+      },
+      plugins: [ fullscreenPluginPie  ]
+    });
+
+    // 3) A helper to redraw based on current filters:
+    let loadPie = true;
+    function applyFiltersPie() {
+
+      const languageID = `{{ languageID }}`;
+
+      // Create a new FormData object
+      let formData = new FormData();
+      formData.append('languageID', languageID);
+      formData.append('sales', '1');
+      if (loadPie === false) {
+        formData.append('year', document.getElementById('yearSelectPie').value);
+        formData.append('top', document.getElementById('top').value);
+        // one field per ticked month / service; none means all
+        monthFilterPie.values().forEach(month => formData.append('month', month));
+        productFilter.values().forEach(product => formData.append('product', product));
+      }
+
+      // for the PDF; on the first load nothing is chosen yet (current year, everything)
+      const topValue = loadPie ? '' : document.getElementById('top').value;
+      appliedFiltersPie = [
+        [PDF_TEXT.year, document.getElementById('yearSelectPie').value],
+        [PDF_TEXT.months, filterText(monthFilterPie)],
+        [PDF_TEXT.top, topValue || PDF_TEXT.all],
+        [PDF_TEXT.services, filterText(productFilter)]
+      ];
+
+      // Create a new XMLHttpRequest object
+      let xhr = new XMLHttpRequest();
+
+      // Configure the request
+      xhr.open('POST', '/get-chart-data');
+      xhr.setRequestHeader('X-CSRFToken', csrfToken);
+
+      // Define what happens on successful data submission
+      xhr.onload = function() {
+          if (xhr.status === 200) {
+              let response = JSON.parse(xhr.responseText);
+
+              if (response.status === '1') {
+                  if (loadPie === true) {
+                    let dataLen = response.chartData.data.length;
+                    let limit = response.chartData.limit;
+                    num = limit;
+                    const topSelect = document.getElementById('top');
+                    while (true) {
+                      const option = document.createElement('option');
+                      option.value = num;
+                      option.textContent = num;
+                      topSelect.appendChild(option);
+                      num = num + limit;
+                      if (num > dataLen) {
+                        option.value = dataLen;
+                        option.textContent = dataLen;
+                        topSelect.appendChild(option);
+                        break;
+                      }
+                    }
+                  }
+
+                  // Rebuild the service list; ticked services stay ticked
+                  productFilter.setOptions((response.chartData.products || []).map(pr => ({
+                    value: String(pr.ID),
+                    label: pr.Title
+                  })));
+
+                  let fullData = response.chartData.data || [];
+
+                  // Slices are labelled by service, or by price when one service is picked
+                  chartPie.data.labels = fullData.map(d => d.label);
+                  const colors = pickColors(fullData.length);
+
+                  chartPie.data.datasets[0].data = fullData.map(d => d.value);
+                  chartPie.data.datasets[0].backgroundColor = colors;
+                  chartPie.update();
+                  toggleEmpty('myChartPie', fullData.length === 0);
+
+              }
+
+              if (response.status === '0') {
+                  alert(response.answer);
+              }
+
+              loadPie = false;
+          } else {
+              // Handle error response
+              console.error('Error adding category:', xhr.responseText);
+          }
+      };
+
+      // Send the request with the FormData object
+      xhr.send(formData);
+
+    }
+
+    document.getElementById('filterPie').addEventListener('click', applyFiltersPie);
+
+    // 5) Initial draw:
+    applyFiltersPie();
+
+    document
+      .getElementById('downloadPdfPie')
+      .addEventListener('click', () => {
+        const title = document.getElementById('chart-products-title').textContent.trim();
+        downloadChartPdf(chartPie, title, appliedFiltersPie, 'products.pdf');
+      });
+
+// End of Pie CHART
+
+const preset = [
+  '#2a9d8f', '#e76f51', '#db7056', '#db8a56', '#dba356', '#dbbd56',
+  '#dbd756', '#c5db56', '#acdb56', '#92db56', '#78db56',
+  '#5fdb56', '#56db67', '#56db81', '#56db9b', '#56dbb4',
+  '#56dbce', '#56cedb', '#56b4db', '#569bdb', '#5681db',
+  '#5667db', '#5f56db', '#7856db', '#9256db', '#ac56db',
+  '#c556db', '#db56d7', '#db56bd', '#db56a3', '#db568a',
+  '#db5670', '#db5656', '#db7a56', '#db8f56', '#dba356'
+];
+
+function pickColors(n) {
+  return Array.from({length: n}, (_, i) => preset[i % preset.length]);
+}
+
+</script>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,247 @@
+{% extends 'base.html' %}
+{% block title %}
+{{ _('Team') }}
+{% endblock %}
+
+
+{% block head %}
+<style>
+  .team-member {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .team-member .avatar {
+    flex-shrink: 0;
+    width: 56px;
+    height: 56px;
+    margin: 0;
+    object-fit: cover;
+  }
+
+  .team-member .member-initials {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #e3e6f0;
+    color: #333;
+    font-weight: bold;
+    font-size: 16pt;
+  }
+
+  .team-member .member-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .team-member .member-name {
+    font-weight: 600;
+    font-size: 15px;
+  }
+
+  .team-member .member-email {
+    color: #666;
+    overflow-wrap: anywhere;
+  }
+
+  #myTable td.row-actions {
+    width: 1%;
+    white-space: nowrap;
+    text-align: center;
+  }
+
+  #myTable td.row-actions a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    min-height: 40px;
+    border-radius: 6px;
+    text-decoration: none;
+  }
+
+  #myTable td.row-actions a:hover,
+  #myTable td.row-actions a:focus-visible {
+    background-color: #fbe9e4;
+  }
+
+  .sort-icons i {
+    padding: 2px 4px;
+  }
+
+  .team-page .pagination {
+    flex-wrap: wrap;
+    gap: 6px 0;
+  }
+
+  .team-empty {
+    padding: 24px;
+    text-align: center;
+    font-size: 18px;
+    color: #666;
+  }
+
+  @media (max-width: 768px) {
+    /* beats the inline width: 80% */
+    .container.team-page {
+      width: 92% !important;
+    }
+
+    .team-page #tableDaddy {
+      margin-left: 0 !important;
+    }
+
+    #myTable tr {
+      padding: 12px 16px;
+    }
+
+    #myTable td {
+      align-items: center;
+      gap: 12px;
+      font-size: 15px;
+    }
+
+    /* The avatar block is the card's heading: no "Name" caption needed */
+    #myTable td.member-cell::before {
+      display: none;
+    }
+
+    #myTable td.row-actions {
+      width: auto;
+      border-top: 1px dashed #e5e5e5;
+      margin-top: 4px;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{{ sideBar | safe }}
+<div class="container team-page" style="width: 80%; padding-top: 0px;">
+{% if result.length > 0 %}
+<div class="table-container toRight" id="tableDaddy" style="max-width: unset;">
+  <table id="myTable">
+    <thead>
+      <tr>
+
+      <th>
+        <div style="display: flex; align-items: center;">
+         {{ _('Name') }} 
+
+          <div class="sort-icons" style="margin-left: 5px;">
+            <i class="fas fa-sort-up myup" data-onclick='["sortTable", "$this", 0, "up"]'></i>
+            <i class="fas fa-sort-down mydown" data-onclick='["sortTable", "$this", 0, "down"]'></i>
+          </div>
+        </div>
+      </th>
+
+        <th>
+          <div style="display: flex; align-items: center;">
+            {{ _('Position') }} 
+            <div class="sort-icons" style="margin-left: 5px;">
+              <i class="fas fa-sort-up myup" data-onclick='["sortTable", "$this", 1, "up"]'></i>
+              <i class="fas fa-sort-down mydown" data-onclick='["sortTable", "$this", 1, "down"]'></i>
+            </div>
+          </div>
+        </th>
+
+        <th> 
+          <div style="display: flex; align-items: center;">
+            {{ _('Status') }}
+
+            <div class="sort-icons" style="margin-left: 5px;">
+              <i class="fas fa-sort-up myup" data-onclick='["sortTable", "$this", 2, "up"]'></i>
+              <i class="fas fa-sort-down mydown" data-onclick='["sortTable", "$this", 2, "down"]'></i>
+            </div>
+          </div>
+
+      </th>
+      <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in result.data %}
+      {% set status = _('Active') %}
+      {% set statusStyle = 'status-open' %}
+      {% if row['Status'] == 0 %}
+        {% set status = _('Disabled') %}
+        {% set statusStyle = 'status-on-hold' %}
+      {% endif %}
+      {% set editUrl = 'edit-teammate/' + row['ID']|string %}
+      {% set fullName = row['Firstname'] ~ ' ' ~ row['Lastname'] %}
+      <tr>
+        <td data-label="{{ _('Name') }}" class="member-cell" data-sort="{{ fullName }}">
+          <div class="team-member">
+            {% if row['Avatar'] %}
+            <img src="{{ url_for('static', filename='images/stuff/') + row['Avatar'] }}" class="avatar" alt="{{ row['AltText'] }}">
+            {% else %}
+            <div class="avatar member-initials" aria-hidden="true">{{ row['Firstname'][:1] ~ row['Lastname'][:1] }}</div>
+            {% endif %}
+            <div class="member-info">
+              <span class="member-name">{{ fullName }}</span>
+              <small class="member-email">{{ row['Email'] }}</small>
+            </div>
+          </div>
+        </td>
+        <td data-label="{{ _('Position') }}">
+          {{ _(row['Rol']) }}
+        </td>
+        <td data-label="{{ _('Status') }}"><span class="status-label {{ statusStyle }}">{{ status }}</span></td>
+
+        <td class="edit-user row-actions" data-label="{{ _('Edit') }}">
+          <a href="{{ url_for('home', _external=True) + editUrl }}" title="{{ _('Edit') }}" aria-label="{{ _('Edit') }}: {{ fullName }}">
+            <i class="fas fa-pencil" aria-hidden="true"></i>
+          </a>
+        </td>
+      </tr>
+      {% endfor %}
+      
+      
+    </tbody>
+  </table>
+  {% from '_pagination.html' import pagination as pagination_bar %}
+  {{ pagination_bar(page, numRows, pagination, pbc, 'teampage') }}
+
+
+
+
+  </div>
+  {% else %}
+  <div class="table-container">
+    <p class="team-empty">{{ _('Nothing found.') }}</p>
+  </div>
+  {% endif %}
+</div>
+
+<script nonce="{{ csp_nonce() }}">
+// Sorts the table rows by the clicked column: "up" = A to Z / smallest first, "down" = the reverse.
+// A cell's data-sort attribute, when present, is used instead of its visible text.
+function sortTable(arrowElement, column, direction) {
+  const tbody = document.getElementById('myTable').tBodies[0];
+  const rows = Array.from(tbody.rows);
+
+  const cellValue = row => {
+    const cell = row.cells[column];
+    if (!cell) {
+      return '';
+    }
+    return (cell.dataset.sort !== undefined ? cell.dataset.sort : cell.textContent).trim();
+  };
+
+  rows.sort((a, b) => {
+    const result = cellValue(a).localeCompare(cellValue(b), undefined, { numeric: true, sensitivity: 'base' });
+    return direction === 'down' ? -result : result;
+  });
+  rows.forEach(row => tbody.appendChild(row));
+
+  document.querySelectorAll('.sort-icons i').forEach(icon => icon.style.color = '#fff');
+  arrowElement.style.color = '#ff0000';
+}
+</script>
+
+
+{% endblock %}

@@ -1,0 +1,787 @@
+{% extends 'public.html' %}
+{% block title %}
+  {{ _('Shopping Cart') }}
+{% endblock %}
+
+
+{% block head %}
+
+<meta name="robots" content="noindex, nofollow" />
+
+<style>
+  body {
+    background-color: #fdf6ec;
+  }  
+
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="containerCart" >
+<input type="hidden" id="csrfToket" value="{{ cartMessage[1] }}">
+<input type="hidden" id="inBasketText" value="{{ cartMessage[2] }}">
+
+  
+{% if result.length == 0 %}
+  
+<div class="shopping-cart" style="box-shadow: none;">
+  <div class="cart-header-conteiner">
+    <div class="cart-header" style="margin: 0px auto;">{{ _('Shopping Cart') }}</div>
+    <div class="price-header" style="display: none;">{{ _('Price') }}</div>
+  </div>
+
+  <div class="empty-cart">{{ _('You don’t have any items in your cart.') }}</div>
+    <a class="start-shopping" href="{{ url_for('products_client') }}">{{ _('Start shopping') }}</a>
+</div>
+</div>
+{% else %}
+
+<div class="shopping-cart">
+  <div class="cart-header-conteiner">
+    <div class="cart-header">{{ _('Shopping Cart') }}</div>
+    <div class="price-header">{{ _('Price') }}</div>
+  </div>
+  <div class="shopping-cart-container">
+
+{% set ns = namespace(index=0, subtotal=0, itemLen=0) %}
+  
+{% for row in result.data %}
+  {% if row['quantity'] == None or row['quantity'] == 0 %}
+      {% set ns.itemLen = ns.itemLen - 1 %}
+  {% else %}
+      
+      {% set qs = namespace(quantity=0) %}
+
+      {% if row['maxAllowdQuantity'] != None %}
+          {% for item in ptIdQuantity %}
+              {% if row['ptID'] == item[0] %}
+                  
+                  {% if row['maxAllowdQuantity'] > item[1] %}
+                      {% set qs.quantity = item[1] %}
+                  {% else %}
+                      {% set qs.quantity = row['maxAllowdQuantity'] %}
+                  {% endif %}
+                  {% set ns.itemLen = ns.itemLen + qs.quantity %}
+              {% endif %}
+          {% endfor %}
+      {% else %}
+
+        {% for item in ptIdQuantity %}
+                {% if row['ptID'] == item[0] %}
+                  
+                  {% if row['quantity'] > item[1] %}
+                      {% set qs.quantity = item[1] %}
+                  {% else %}
+                      {% set qs.quantity = row['quantity'] %}
+                  {% endif %}
+                  {% set ns.itemLen = ns.itemLen + qs.quantity %}
+              {% endif %}
+        {% endfor %}
+
+      {% endif %}
+
+      {% set prUrl = url_for('index', myLinks=row['url']) %}
+        <div class="cart-item">
+            <div class="item-details">
+                <div class="item-image">
+                    <a href="{{ prUrl }}&{{ row['ptTitle'] | replace(' ', '-') }}">
+                        <img src="{{ url_for('static', filename='images/sub_product_slider/' + row['imgName']) }}" alt="{{ row['AltText'] }}">
+                    </a>
+                </div>
+                <div class="item-info">
+                    <div class="item-title-cart">
+                        <a href="{{ prUrl }}&{{ row['ptTitle'] | replace(' ', '-') }}">
+                            {{ row['prTitle'] }} : {{ row['ptTitle'] }}
+                        </a>
+                    </div>
+                    <div class="item-controls" data-value="{{ row['ptID'] }}">
+                        <button class="delete-button"><i class="fa-solid fa-trash-can"></i></button>
+                        <div class="quantity-controls">
+                            <button class="minus-btn">-</button>
+                            <input type="number" class="quantity" name="quantity" value="{{ qs.quantity }}" min="1" 
+                                style=" margin-right: 0px;
+                                        width: 40px;
+                                        height: 40px;"
+                                disabled        
+                            >
+                            <button class="plus-btn">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% set ns.subtotal = ns.subtotal + row['Price'] * qs.quantity %}
+            <div class="item-price">{{ MAIN_CURRENCY }} <span style="font-weight: 600">{{ row['Price'] * qs.quantity }}</span></div>
+        </div>
+      {% endif %}
+      {% set ns.index = ns.index + 1 %}
+
+{% endfor %}
+
+  </div>      
+  <div class="subtotal subtotal-cart">{{ _('Subtotal') }} ({{ ns.itemLen }} {{ _('items') }}): {{ MAIN_CURRENCY }} {{ ns.subtotal }}</div>
+  <div class="farther-actions-cart">
+    <a href="{{ url_for('checkout') }}" class="checkout-button-cart">{{ _('Proceed to Checkout') }}</a>
+  </div>
+
+
+</div>
+
+</div>
+
+
+
+{% endif %}
+
+
+<script nonce="{{ csp_nonce() }}">
+    // let csrfToken = "{{ csrf_token() }}";
+    window.addEventListener('load', () => {
+      document.querySelector('body').classList.add('loaded');
+    });
+
+    
+
+
+    let trace;
+
+    function sortTable(arrowElement, n, direction) {
+      
+      if (trace === String(n) + direction) {
+        return;
+      }
+
+      trace = String(n) + direction;
+      
+      document.querySelectorAll('.sort-icons i').forEach(icon => icon.style.color = '#fff');
+      arrowElement.style.color = '#ff0000';
+
+      let table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+      table = document.getElementById("myTable");
+      switching = true;
+      //Set the sorting direction to ascending:
+      dir = "asc"; 
+      /*Make a loop that will continue until
+      no switching has been done:*/
+      while (switching) {
+        //start by saying: no switching is done:
+        switching = false;
+        rows = table.rows;
+        /*Loop through all table rows (except the
+        first, which contains table headers):*/
+        for (i = 1; i < (rows.length - 1); i++) {
+          //start by saying there should be no switching:
+          shouldSwitch = false;
+          /*Get the two elements you want to compare,
+          one from current row and one from the next:*/
+          x = rows[i].getElementsByTagName("TD")[n];
+          y = rows[i + 1].getElementsByTagName("TD")[n];
+          /*check if the two rows should switch place,
+          based on the direction, asc or desc:*/
+          if (dir == "asc") {
+            if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+              //if so, mark as a switch and break the loop:
+              shouldSwitch= true;
+              break;
+            }
+          } else if (dir == "desc") {
+            if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+              //if so, mark as a switch and break the loop:
+              shouldSwitch = true;
+              break;
+            }
+          }
+        }
+        if (shouldSwitch) {
+          /*If a switch has been marked, make the switch
+          and mark that a switch has been done:*/
+          rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+          switching = true;
+          //Each time a switch is done, increase this count by 1:
+          switchcount ++;      
+        } else {
+          /*If no switching has been done AND the direction is "asc",
+          set the direction to "desc" and run the while loop again.*/
+          if (switchcount == 0 && dir == "asc") {
+            dir = "desc";
+            switching = true;
+          }
+        }
+      }
+    }
+
+
+    function get_cart_content(newCookies) {
+        return new Promise((resolve, reject) => {
+            let formData = new FormData();
+            formData.append('cart-data', newCookies);
+    
+            let xhr = new XMLHttpRequest();
+            xhr.open('POST', '/cart');
+            xhr.setRequestHeader('X-CSRFToken', csrfToken);
+    
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    try {
+                        let response = JSON.parse(xhr.responseText);
+                        resolve(response);
+                    } catch (error) {
+                        reject(error);
+                    }
+                } else {
+                    reject(new Error('Error: ' + xhr.responseText));
+                }
+            };
+    
+            xhr.onerror = function () {
+                reject(new Error('Network Error'));
+            };
+    
+            xhr.send(formData);
+        });
+    }
+
+    
+    // let newCookies = cookie.get('Cart', false)
+    // if (newCookies) {
+    //   get_cart_content(newCookies)
+    // }
+
+
+
+    function rotate(gearElement) {
+      let angle = 0;
+        setInterval(() => {
+          angle = (angle + 5) % 360; 
+          gearElement.style.transform = `rotate(${angle}deg)`;
+        }, 50); 
+
+    }
+
+    function myLoader(color) {
+      if (color === undefined) {
+        color = 'crimson'
+      }
+      let loader = document.createElement('div'); // Create a div element for the loader
+        loader.id = 'gear';
+        loader.style.color = color;
+        loader.style.fontSize = '20px';
+        loader.style.display = 'inline-block';
+        loader.textContent = '⚙';
+        return loader;
+    }
+
+document.addEventListener("DOMContentLoaded", function() {
+   
+    const deleteButtons = document.querySelectorAll('.delete-button');
+
+    deleteButtons.forEach(deleteBtn => {
+      deleteBtn.addEventListener('click', () => {
+        delete_cart(deleteBtn);
+      });
+    }); 
+
+
+    function delete_cart(deleteBtn) {
+      const parent = deleteBtn.parentNode; 
+        ptID = parent.dataset.value;
+        
+        // ************* IMPORTANT **************
+        // Also make sure to delete from cookies
+        let quantityToRemove = parseInt(deleteBtn.closest('.cart-item').querySelector('.quantity').value);
+        let price = deleteBtn.closest('.cart-item').querySelector('.item-price span').textContent;
+        
+
+        deleteBtn.closest('.cart-item').remove();
+
+
+        quantities = document.querySelectorAll('.quantity');
+        let num = 0;
+        let subtotal = 0;
+        quantities.forEach(quantity => {
+          num = num + parseInt(quantity.value);
+        });
+
+
+        if (num == 0) {
+          remove_from_cart(ptID)
+          if (document.querySelector('.subtotal')) {
+            document.querySelector('.subtotal').remove();
+          }
+
+          if (document.querySelector('.farther-actions-cart')) {
+            document.querySelector('.farther-actions-cart').remove();
+          }  
+
+          document.querySelector('.price-header').style.display = 'none';
+          
+          const emptyCart = document.createElement('div');
+          emptyCart.textContent = "{{ _('You don’t have any items in your cart.') }}";
+          emptyCart.className = "empty-cart";
+          
+          const startShopping = document.createElement('a');
+          startShopping.textContent = "{{ _('Start shopping') }}";
+          startShopping.className = "start-shopping";
+          startShopping.href = window.location.origin;
+          
+          const target = document.querySelector('.cart-header-conteiner');
+          
+          target.parentNode.appendChild(emptyCart);
+          target.parentNode.appendChild(startShopping);
+          document.querySelector('.cart-header').style.margin = "0 auto";
+          document.querySelector('.shopping-cart').style.boxShadow = "none";
+
+        } else {
+
+          change_price(deleteBtn, 0, '-', quantityToRemove);
+          remove_from_cart(ptID);
+          
+        }
+    }
+      
+  
+      
+    // Prevent numbers less then 1 in .quantity input
+    const inputs = document.querySelectorAll(".quantity");
+    inputs.forEach(input => {
+        input.addEventListener("input", () => {
+        if (input.value !== "" && input.value < 1) {
+            input.value = 1;
+        }
+        });
+    });
+
+
+    function modal_message(textContent) {
+        // Create modal elements
+        const modal = document.createElement("div");
+        modal.classList.add("modal", "quantity-alert");
+
+        const modalContent = document.createElement("div");
+        modalContent.classList.add("modal-content", "quantity-alert");
+
+        const closeButton = document.createElement("span");
+        closeButton.classList.add("close", "quantity-alert");
+        closeButton.innerHTML = "&times;"; // "X" symbol
+
+        const message = document.createElement("p");
+        message.classList.add("quantity-alert");
+        message.textContent = textContent;
+
+        // Append elements to the modal
+        modalContent.appendChild(closeButton);
+        modalContent.appendChild(message);
+        modal.appendChild(modalContent);
+
+        // Append the modal to the body
+        document.body.appendChild(modal);
+
+        // Add styles dynamically
+        const style = document.createElement("style");
+        style.textContent = `
+            .modal.quantity-alert {
+                display: none;
+                position: fixed;
+                z-index: 1000;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                overflow: auto;
+                background-color: rgba(0, 0, 0, 0.5);
+            }
+
+            .modal-content.quantity-alert {
+                background-color: #fff;
+                margin: 15% auto;
+                padding: 20px;
+                border: 1px solid #888;
+                border-radius: 10px;
+                width: 80%;
+                max-width: 400px;
+                text-align: center;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+                animation: fadeIn 0.3s ease-in-out;
+            }
+
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(-20px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            .close.quantity-alert {
+                color: #aaa;
+                float: right;
+                font-size: 28px;
+                font-weight: bold;
+                cursor: pointer;
+                // text-align: right;
+            }
+
+            .close.quantity-alert:hover,
+            .close.quantity-alert:focus {
+                color: #000;
+                text-decoration: none;
+            }
+        `;
+
+        // Append styles to the document head
+        document.head.appendChild(style);
+
+        // Function to open the modal
+        function openModal() {
+            modal.style.display = "block";
+        }
+
+        // Function to close the modal
+        function closeModal() {
+            modal.style.display = "none";
+        }
+
+        openModal();
+
+        closeButton.addEventListener("click", closeModal);
+
+        window.addEventListener("click", (event) => {
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+
+        // Example: Add a button to trigger the modal
+        // const openModalButton = document.createElement("button");
+        // openModalButton.classList.add("open-modal-btn", "quantity-alert");
+        // openModalButton.textContent = "Add Product";
+        // document.body.appendChild(openModalButton);
+    }
+
+
+    function edit_cart(ptID, quantity) {
+        let cart = cookie.get('Cart');
+        
+        if (cart.length > 0) {
+          if (cart.includes('&')) {
+            let newCart = ''
+            let array = cart.split('&');
+            array.forEach(item => {
+              let arr = item.split('-');
+              let cartPtID = arr[0];
+              let oldQuantity = parseInt(arr[1]);
+  
+              if (cartPtID === ptID) {
+                newCart = newCart + '&' + ptID + '-' + quantity.toString();
+              } else {
+                newCart = newCart + '&' + item;
+              }
+  
+            });  
+
+              newCart = newCart.slice(1)
+
+              cookie.set('Cart', newCart, { expires: 7, path: '/' })
+              
+              basket();
+              
+              let newUrl = '/' + newCart;
+              change_url(newUrl);
+          } else if (cart.includes('-')) {
+            let arr = cart.split('-');
+            let newCart = arr[0] + '-' + quantity.toString();
+            cookie.set('Cart', newCart, { expires: 7, path: '/' })
+            basket();
+  
+            let newUrl = '/' + newCart;
+            change_url(newUrl);
+  
+          } else {
+            return;
+          }
+        } 
+      }
+
+
+    function remove_from_cart(ptID) {
+        let cart = cookie.get('Cart');
+        if (cart.length > 0) {
+          if (cart.includes('&')) {
+            let newCart = ''
+            let array = cart.split('&');
+            array.forEach(item => {
+              let arr = item.split('-');
+              let cartPtID = arr[0];
+              let oldQuantity = parseInt(arr[1]);
+  
+              if (cartPtID !== ptID) {
+                newCart = newCart + '&' + item;
+                //   newCart = newCart + '&' + ptID + '-' + quantity.toString();
+                // } else {
+              }
+  
+            });  
+
+              newCart = newCart.slice(1)
+
+              cookie.set('Cart', newCart, { expires: 7, path: '/' })
+              
+              basket();
+              
+              let newUrl = '/' + newCart;
+              change_url(newUrl);
+          } else if (cart.includes('-')) {
+            
+            cookie.set('Cart', '', { path: '/', expires: new Date(0) });
+
+            basket();
+  
+            let newUrl = '';
+            change_url(newUrl);
+  
+          } else {
+            return;
+          }
+        } 
+      }
+  
+  
+      function change_url(path) {
+        let currentUrl = window.location.pathname; // Get the current path
+        let updatedUrl = currentUrl.replace(/\/cart\/[^/]+/, "/cart" + path);
+        history.replaceState(null, "", updatedUrl);
+      }
+
+      let loader = myLoader('#FCC628');
+      let flag = false;
+      
+      if (document.querySelectorAll('.minus-btn')) {
+        const minusButtons = document.querySelectorAll('.minus-btn');
+        minusButtons.forEach(minusBtn => {
+            minusBtn.addEventListener('click', () => {
+            const parentDiv = minusBtn.parentNode;
+            let quantity = parentDiv.querySelector('.quantity').value;
+            if (quantity == 'undefinied' || parseInt(quantity) === 0) {
+                return;
+            }
+
+            
+            if (flag === true) {
+              return;
+            }
+            flag = true;
+
+            minusBtn.textContent = '';
+            minusBtn.style.padding = '6px 10px';
+            minusBtn.appendChild(loader);
+        
+            let gearElement = document.getElementById('gear');
+            if (!gearElement) {
+              return;
+            } 
+        
+            rotate(gearElement);
+            
+            quantity = parseInt(quantity);
+            const grandPa = parentDiv.parentNode; 
+            let ptID = grandPa.dataset.value;
+            let newQuantity = quantity - 1;
+            if (newQuantity == 0) {
+              const deleteBtn = minusBtn.parentNode.parentNode.querySelector('.delete-button');
+              delete_cart(deleteBtn);
+              flag = false;
+            } else {
+            get_pt_quantity(ptID, newQuantity)
+                .then(response => {
+                if (response.status === 1) {
+                    parentDiv.querySelector('.quantity').value = newQuantity;
+                    change_price(minusBtn, response.data.price, '-')
+                    edit_cart(ptID, newQuantity)
+                } else {
+                    modal_message(response.message)
+                }
+                gearElement.remove();
+                minusBtn.textContent = '-';
+                minusBtn.style.padding = '10px 15px';
+                flag = false;
+                }) 
+                .catch(error => console.error(error));
+            }
+          });
+        }); 
+    
+    }    
+      
+    if (document.querySelectorAll('.plus-btn')) {
+
+        const plusButtons = document.querySelectorAll('.plus-btn');
+        plusButtons.forEach(plusBtn => {
+            plusBtn.addEventListener('click', () => {
+              const parentDiv = plusBtn.parentNode;
+              let quantity = parentDiv.querySelector('.quantity').value;
+              if (quantity == 0 || quantity == 'undefinied') {
+                  return;
+              }
+
+              if (flag === true) {
+                return;
+              }
+              flag = true;
+
+              plusBtn.textContent = '';
+              plusBtn.style.padding = '6px 10px';
+              plusBtn.appendChild(loader);
+          
+              let gearElement = document.getElementById('gear');
+              if (!gearElement) {
+                return;
+              } 
+          
+              rotate(gearElement);
+      
+              quantity = parseInt(quantity);
+              const grandPa = parentDiv.parentNode; 
+              ptID = grandPa.dataset.value;
+              let newQuantity = quantity + 1;
+                      
+              get_pt_quantity(ptID, newQuantity)
+                  .then(response => {
+                  if (response.status === 1) {
+                      parentDiv.querySelector('.quantity').value = newQuantity;
+                      change_price(plusBtn, response.data.price, '+')
+                      edit_cart(ptID, newQuantity)
+                  } else {
+                      modal_message(response.message)
+                  }
+                  gearElement.remove();
+                  plusBtn.textContent = '+';
+                  plusBtn.style.padding = '10px 15px';
+                  flag = false;
+                  }) 
+                  .catch(error => console.error(error));
+            });
+        }); 
+    }
+        
+    async function get_pt_quantity(ptID, quantity) {
+        let formData = new FormData();
+            formData.append('ptID', ptID);
+            formData.append('quantity', quantity);
+    
+            try {
+                let response = await fetch('/get-pt-quantity', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                    },
+                    body: formData,
+                });
+        
+                if (response.ok) {
+                    let data = await response.json();
+                    return data;
+                } else {
+                    throw new Error('Request failed');
+                }
+            } catch (error) {
+                console.error(error);
+                return false; 
+            }
+        
+       }
+
+
+      function change_price(clickedElement, newPrice, more_or_less, num=1) {
+
+          const cartItem = clickedElement.closest('.cart-item');
+          const oldPriceContainer = cartItem.querySelector('.item-price span');
+          const oldPrice = parseFloat(oldPriceContainer.textContent);
+          const arr = document.querySelector('.subtotal').textContent.split(' ');
+          const subtotalPrice = parseFloat(arr[arr.length - 1])
+      
+          const newSubtotalPrice = subtotalPrice - oldPrice + parseFloat(newPrice);
+          arr[arr.length - 1] = newSubtotalPrice.toString();
+          let priceText = '';
+          arr.forEach(item => {
+            let newItem = item;
+
+            if (newItem.includes('(')) {
+              let itemList = newItem.split(' ');
+              let oldSubPrice = parseFloat(itemList[0].slice(1));
+
+              if (more_or_less === '-') {
+                oldSubPrice = oldSubPrice - num;
+              } else {
+                oldSubPrice = oldSubPrice + num;
+              }
+              itemLen = item.length;
+              newItem = '(' + oldSubPrice + ' ' + item.slice(itemLen)
+
+            }
+            priceText = priceText + newItem + ' ';  
+          });
+          priceText = priceText.trim()
+          // priceText.substring(-1);
+          oldPriceContainer.textContent = newPrice;
+          document.querySelector('.subtotal').textContent = priceText;
+      }
+
+   
+      function basket() {
+        let Cart = cookie.get('Cart', false);
+        let notification = document.querySelector('.notification');
+        const aTag = notification.parentNode.parentNode;
+        if (Cart === false) {
+            document.querySelector('.basket').src = document.getElementById('empty-basket').value;
+            notification.innerHtml = '';
+            notification.style.display = 'none';
+            aTag.href = window.location.origin + '/cart';
+        } else {
+            get_cart_content(Cart).then(response => {
+                let prData = response.content.result.data;
+
+                let arr = Cart.split('&');
+                let cartCount = 0;
+
+                arr.forEach(item => {
+                    let itemArr = item.split('-');
+
+                    let ptIDCookie = parseInt(itemArr[0]);
+                    let countCookie = parseInt(itemArr[1]);
+
+                    prData.forEach(row => {
+                        if (parseInt(row['ptID']) === ptIDCookie) {
+                            let amount = countCookie;
+                            if (countCookie > parseInt(row['quantity'])) {
+                                amount = parseInt(row['quantity'])
+                            }
+                            cartCount = cartCount + amount;
+                        }
+                    });
+
+                });
+
+                document.querySelector('.basket').src = document.getElementById('full-basket').value;
+
+
+                notification.textContent = cartCount.toString();
+                notification.style.display = 'block';
+    
+                aTag.href = window.location.origin + '/cart/' + Cart;
+
+            }).catch(error => {
+                console.error(error);
+            });
+        
+        }
+
+    }
+});
+
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,964 @@
+{% extends 'base.html' %}
+{% block title %}
+    {{ _('Edit Price') }}
+{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='dropzon.css') }}">  
+<link rel="stylesheet" href="{{ url_for('static', filename='dropzone.min.css') }}">  
+<link rel="stylesheet" href="{{ url_for('static', filename='cropper.min.css') }}">  
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
+
+
+<style>
+    .dz-details:hover {
+        cursor: pointer;
+    }
+
+    .dz-remove-btn:hover {
+        background-color: #c82333;
+        cursor: pointer;
+    }
+
+
+    .alt-input:hover {
+        cursor: auto;
+    }
+
+    /* ---- Form layout (card styles come from .admin-form-card in styles.css) ---- */
+    .containerS.price-form-card {
+        max-width: 640px;
+    }
+
+    /* The id carries a global 20px margin meant for other forms */
+    #add-product-form.price-form {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        width: 100%;
+        margin: 0;
+    }
+
+    .price-form .field-label {
+        margin: 8px 0 2px 0;
+        font-weight: bold;
+        color: #333;
+    }
+
+    .price-form .imageInput {
+        width: 100%;
+        margin: 0;
+        padding: 12px 14px;
+        font-size: 16px;
+        box-sizing: border-box;
+    }
+
+    .price-form .price-group {
+        gap: 10px;
+        flex-wrap: nowrap;
+    }
+
+    .price-form .price-group input {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .price-form .dropzone {
+        margin-top: 10px;
+    }
+
+    .price-form .payment_methods {
+        display: block;
+    }
+
+    .price-form .pm-toggle {
+        min-width: 0;
+        padding: 12px 34px 12px 14px;
+    }
+
+    .price-form .pm-toggle:focus-visible,
+    .price-form .pcButtonS:focus-visible {
+        outline: 3px solid #264653;
+        outline-offset: 2px;
+    }
+
+    .price-form .styled-select {
+        margin-bottom: 0;
+    }
+
+    .price-form .specifications {
+        margin-top: 10px;
+    }
+
+    .price-form .specifications input {
+        width: 100%;
+        min-width: 0;
+        padding: 10px 12px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+    }
+
+    .price-form #saveButton,
+    .price-form #saving {
+        margin-top: 16px;
+        padding: 15px;
+        font-size: 20px;
+        box-sizing: border-box;
+    }
+
+    .price-form-card .price-back {
+        align-self: flex-start;
+        margin-top: 12px;
+        color: #E76F51;
+    }
+
+    @media (max-width: 480px) {
+        /* Specification name above its value instead of side by side */
+        .price-form .specifications {
+            grid-template-columns: 1fr;
+            gap: 4px;
+        }
+
+        .price-form .specifications label {
+            margin-top: 6px;
+            font-weight: bold;
+        }
+    }
+
+    /* ---- Crop window ---- */
+    #imageEditorModal.modal {
+        width: min(640px, calc(100vw - 24px)) !important;
+        max-height: calc(100vh - 24px) !important;
+        padding: 16px !important;
+        overflow-y: auto !important;
+        border-radius: 14px !important;
+        box-sizing: border-box;
+    }
+
+    #imageEditorModal img {
+        display: block;
+        max-width: 100%;
+        max-height: 60vh;
+    }
+
+    #imageEditorModal .crop-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 14px;
+    }
+
+    #imageEditorModal .crop-actions button {
+        flex: 1;
+        margin: 0;
+        padding: 12px 16px;
+        font-size: 16px;
+        font-weight: 600;
+        border-radius: 8px;
+    }
+
+    #imageEditorModal #saveEditedImage {
+        background-color: #E76F51;
+    }
+
+    #imageEditorModal #saveEditedImage:hover {
+        background-color: #d65f42;
+    }
+
+    #imageEditorModal #cancelEdit {
+        color: #264653;
+        background-color: #eef2f3;
+    }
+
+    #imageEditorModal #cancelEdit:hover {
+        background-color: #dfe6e8;
+    }
+
+    #imageEditorModal .crop-actions button:focus-visible {
+        outline: 3px solid #264653;
+        outline-offset: 2px;
+    }
+
+</style>
+
+{% endblock %}
+
+{% block content %}
+
+{{ sideBar | safe }}
+
+    <div class="containerS admin-form-card price-form-card">
+
+        <h1>{{ _('Edit Price') }}</h1>
+        <div id="mistakes" style="width: 100%;" role="alert" aria-live="polite"></div>
+        <div class="overlay" id="overlay"></div>
+
+<form id="add-product-form" class="price-form" novalidate>
+
+    <input type="hidden" id="language-id" value="{{ languageID }}" >
+    <input type="hidden" id="ptID" value="{{ mainResult.data[0].ID }}" >
+    <!-- <input type="hidden" id="RefKey" value="{{ RefKey }}" > -->
+
+    <label for="title" class="field-label">{{ _('Title') }}</label>
+    <input type="text" name="title" id="title" placeholder="{{ _('Edit Product Type Title') + ' | ' + _('Max allowed number of chars is 20') }}" class="imageInput" value="{{ mainResult['data'][0]['Title'] }}" autocomplete="off">
+
+    <label for="price" class="field-label">{{ _('Price') }}</label>
+    <div class="input-group price-group">
+        <input type="number" name="price" id="price" placeholder="{{ _('Edit Product Type Price') }}" class="imageInput" value="{{ mainResult['data'][0]['Price']|int }}" inputmode="decimal" min="0">
+        <span aria-hidden="true">{{ mainCurrency }}</span>
+    </div>
+
+    <div class="dropzone" id="myDropzone">
+        <div class="dz-message dz-button">{{ _('Click here to upload files') }}</div>
+    </div>
+    
+{% set active = activeMethods | map('int') | list %}
+{% set ns = namespace(payments='') %}
+{% set ns = namespace(allActives='') %}
+
+{% for row in paymentMethods.data %}
+  {% if row.ID in active %}
+    {% set ns.allActives = ns.allActives ~ row.method + ', ' %}
+  {% endif %}
+{% endfor %}
+
+
+
+
+
+    <div class="payment_methods" id="pm1">
+    <div class="pm-toggle" role="combobox" aria-expanded="false" tabindex="0">
+    {% if ns.allActives == '' %}    
+        {{ _('Select payment methods') }}
+    {% else %}
+        {{ ns.allActives[:-2] }}    
+    {% endif %}    
+    
+    </div>
+
+    <ul class="pm-menu" aria-label="Payment methods">
+        {% for row in paymentMethods.data %}
+        <li><label><input type="checkbox" value="{{ row.ID }}"{{ ' checked' if row.ID in active }}>{{ row.method }}</label></li>
+        {% endfor %}
+    </ul>
+    </div>
+
+    <p id="result"></p>
+
+    {% if sps.length > 0 %}
+    <select name="sps" id="spsID" class="styled-select" style="margin-top: 10px;">
+        <option value="">{{ _('Choose product type specification') }}</option>
+        {% for val in sps.data %}
+            {% set optVal = val['Name'] %}
+            {% if optVal is not none %}
+                {% set selected = '' %}
+
+                {% if resultSPSS.length > 0 %}
+                    {% if resultSPSS.data[0].spsID == val['ID'] %}
+                        {% set selected = 'selected' %}
+                    {% endif %}
+                {% endif %}
+                <option value="{{ val['ID'] }}" {{ selected }}>
+                    {{ optVal }}
+                </option>
+            {% endif %}
+        {% endfor %}
+    </select>
+    <div class="specifications">
+    {% if resultSPSS.length > 0 %}
+        {% for val in resultSPSS.data %}
+            {% set Value = val['Value'] %}
+            {% if Value is none %}
+                {% set Value = ' ' %}
+            {% endif %}
+            <label for="{{ val['spssID'] }}">{{ val['Key'] }}</label>
+            <input type="text" id="{{ val['spssID'] }}" name="{{ val['spssID'] }}" value="{{ Value }}">
+        {% endfor %}
+
+    {% endif %}
+    
+    </div>
+            
+
+    
+    <!-- Provide a link to translate categories -->
+    {% for val in sps.data %}
+        {% set optVal = val['Name'] %}
+        {% if optVal is none %}
+            <p>
+                <a target="_blank" href="{{ url_for('home') }}/edit-sps/{{ val['P_Ref_Key'] }}">
+                    {{ _('Translate Product Type Specification Name') }}
+                </a>
+            </p>
+        {% endif %}
+    {% endfor %}
+    
+ 
+    {% else %}
+        {{ _('You have not entered any product type specification yet.') }}
+        {{ _('Click on the link below to add a product category!') }}
+        <a href="{{ url_for('home') }}add-sps">{{ _('Add Product Type Specifications') }}</a>
+
+    {% endif %}     
+    <!-- Sarqum em spasificationneri fielder@ -->
+    <div id="saveButton" class="pcButtonS" style="width:100%;" role="button" tabindex="0">{{ _('Submit') }}</div>
+    <div id="saving" class="pcButtonS" style="width:100%; display: none;" aria-live="polite">{{ _('Saving...') }}</div>
+    
+</form>
+
+
+<a href="{{ url_for('pd', RefKey=mainResult.data[0].P_Ref_Key) }}" class="self-left price-back">&larr; {{ _('Back') }}</a>
+
+</div>
+
+<!-- Script for Dropzone (image upload) -->
+<script nonce="{{ csp_nonce() }}" src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.js"></script>
+<script nonce="{{ csp_nonce() }}" src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+<script nonce="{{ csp_nonce() }}" src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+<script nonce="{{ csp_nonce() }}">
+    // Submit is a div: let Enter/Space press it too
+    document.getElementById('saveButton').addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            this.click();
+        }
+    });
+</script>
+<script nonce="{{ csp_nonce() }}">
+    let csrfToken = "{{ csrf_token() }}";
+    let cropperState = 0;
+    let fileCount = parseInt("{{ mainResult.length }}");
+    let imgAlt = '';
+    let slider_id = '';
+    let imageURL = '';
+    let targetedInput;
+    
+
+    
+    // Initialize Dropzone
+    Dropzone.autoDiscover = false;
+    let myDropzone = new Dropzone("#myDropzone", {
+        url: "/upload",
+        autoProcessQueue: false,
+        addRemoveLinks: false,
+        previewsContainer: "#myDropzone",
+        clickable: true,
+        init: function () {
+            let dz = this;
+    
+    dz.on("addedfile", function (file) {
+        let reader = new FileReader();
+        reader.onload = function (event) {
+            let imageUrl = event.target.result;
+    
+            openImageEditorModal(imageUrl, true, function (editedImageBlob) {
+                // Find the index of the newly added file in myDropzone.files
+                let fileIndex = myDropzone.files.indexOf(file);
+    
+                if (fileIndex === -1) return; // File not found in Dropzone
+    
+                // Create a completely new File object with the edited image data
+                let editedFile = new File([editedImageBlob], file.name, { type: file.type });
+    
+                // Replace the file in Dropzone's file list
+                myDropzone.files[fileIndex] = editedFile;
+    
+                // Preserve Dropzone's references and update the preview
+                editedFile.previewElement = file.previewElement;
+    
+                // Update the preview with the cropped image
+                let updatePreviewReader = new FileReader();
+                updatePreviewReader.onload = function (e) {
+                    editedFile.previewElement.querySelector('img').src = e.target.result;
+                    editedFile.previewElement.querySelector('img').style.width = '100%';
+                    editedFile.previewElement.querySelector('.dz-image').style.width = '120px';
+                    editedFile.previewElement.querySelector('.dz-image').style.height = '120px';
+                };
+                updatePreviewReader.readAsDataURL(editedImageBlob);
+                fileCount = fileCount + 1;
+            });
+        };
+        reader.readAsDataURL(file);
+    
+        // Custom elements for alt text and upload status
+        let removeButton = Dropzone.createElement("<button class='dz-remove-btn'>&times;</button>");
+        removeButton.addEventListener("click", function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            dz.removeFile(file);
+            fileCount = fileCount - 1;
+        });
+        file.previewElement.appendChild(removeButton);
+    
+        let altInput = Dropzone.createElement("<input type='text' class='alt-input' placeholder='Enter alt text'>");
+        altInput.value = imgAlt || '';
+        file.previewElement.appendChild(altInput);
+    
+        let uploadItem = Dropzone.createElement("<input type='hidden' class='uploadStatus' value='1'>");
+        file.previewElement.appendChild(uploadItem);
+    
+        let slideID = Dropzone.createElement("<input type='hidden' class='slideID' value='1'>");
+        slideID.value = slider_id || '';
+        file.previewElement.appendChild(slideID);
+    
+        // Hide progress bars
+        file.previewElement.querySelectorAll("[data-dz-uploadprogress], .dz-progress").forEach(function (progressBar) {
+            progressBar.style.display = "none";
+        });
+    
+        targetedInput = file.previewElement;
+    });
+    
+    
+    // Edit existing files on double-click
+    dz.on("addedfile", function (file) {
+        let previewElement = file.previewElement;
+    
+        previewElement.addEventListener('dblclick', function (event) {
+            cropperState = 1;
+    
+            let previewElement = event.target.closest('.dz-preview');
+            targetedInput = previewElement;
+    
+            if (previewElement) {
+                let fileName = previewElement.querySelector('[data-dz-name]').textContent;
+                let fileIndex = myDropzone.files.findIndex(f => f.name === fileName);
+                let existingFile = myDropzone.files[fileIndex];
+    
+                if (existingFile) {
+                    let reader = new FileReader();
+                    reader.onload = function (event) {
+                        let imageUrl = event.target.result;
+    
+                        openImageEditorModal(imageUrl, false, function (editedImageBlob) {
+                            // Create a completely new file object
+                            let editedFile = new File([editedImageBlob], existingFile.name, { type: existingFile.type });
+    
+                            // Replace the file in myDropzone.files to ensure it’s the new cropped version
+                            myDropzone.files[fileIndex] = editedFile;
+    
+                            // Manually set the preview element to the new file, preserving Dropzone's reference
+                            editedFile.previewElement = previewElement;
+    
+                            // Update the preview with the cropped image
+                            let updatePreviewReader = new FileReader();
+                            updatePreviewReader.onload = function (e) {
+                                previewElement.querySelector('img').src = e.target.result;
+                                previewElement.querySelector('img').style.width = '100%';
+                                previewElement.querySelector('.dz-image').style.width = '120px';
+                                previewElement.querySelector('.dz-image').style.height = '120px';
+                            };
+                            updatePreviewReader.readAsDataURL(editedImageBlob);
+                        });
+                    };
+                    reader.readAsDataURL(existingFile);
+                }
+            }
+        });
+    });
+    
+    
+        }
+    });
+    
+    
+    let sortable = new Sortable(document.querySelector("#myDropzone"), {
+        onEnd: function (evt) {
+            let reorderedFiles = [];
+            
+            document.querySelectorAll("#myDropzone .dz-preview").forEach(function (element) {
+                // Find file in Dropzone based on previewElement
+                let file = myDropzone.files.find(function (file) {
+                    return file && file.previewElement === element;
+                });
+    
+                if (file) { // Only push if the file is valid
+                    reorderedFiles.push(file);
+                }
+            });
+    
+            // Update Dropzone's files array with the new order
+            myDropzone.files = reorderedFiles;
+            // console.log(myDropzone.files); // Now the files array matches the preview order
+        }
+    });
+                
+                // Initialize Sortable.js
+                Sortable.create(myDropzone.previewsContainer, {
+                    draggable: ".dz-preview",
+                    onEnd: function (evt) {
+                        // Handle reorder logic if necessary
+                        console.log("Files reordered:", evt);
+                    }
+                });
+    
+    
+    // Image Editor Modal Logic
+    let cropper;
+    
+    function openImageEditorModal(imageUrl, closeBtn, callback) {
+        let btn = `<button type="button" id="cancelEdit">{{ _('Close') }}</button>`
+        if (cropperState === 1) {
+            if (closeBtn === true) {
+                btn = ''
+            }
+            document.getElementById('overlay').classList.add('show');
+            let imageEditorModal = document.createElement('div');
+            imageEditorModal.id = 'imageEditorModal';
+            imageEditorModal.className = 'modal open';
+            imageEditorModal.innerHTML = `
+                <img id="imageToEdit" src="${escapeHtml(imageUrl)}" alt="Image to edit">
+                <div class="crop-actions">
+                    <button type="button" id="saveEditedImage">{{ _('Crop') }}</button>
+                    ${btn}
+                </div>
+            `;
+            imageEditorModal.setAttribute('role', 'dialog');
+            imageEditorModal.setAttribute('aria-modal', 'true');
+            document.body.appendChild(imageEditorModal);
+    
+            let imageToEdit = document.getElementById('imageToEdit');
+            cropper = new Cropper(imageToEdit, {
+                aspectRatio: 2 / 1.5,
+                viewMode: 1,
+                ready: function () {
+                    let cropperInstance = this.cropper;
+                    let naturalWidth = cropperInstance.imageData.naturalWidth;
+                    let naturalHeight = cropperInstance.imageData.naturalHeight;
+                    cropperInstance.setCropBoxData({
+                        width: naturalWidth,
+                        height: naturalHeight / (2 / 1.5),
+                        left: (naturalWidth - naturalWidth) / 2,
+                        top: (naturalHeight - naturalHeight / (2 / 1.5)) / 2
+                    });
+                }
+            });
+    
+            document.getElementById('saveEditedImage').onclick = function () {
+                cropper.getCroppedCanvas().toBlob(function (blob) {
+                    closeImageEditorModal(imageEditorModal);
+                    callback(blob);
+                });
+                
+                    // Find a child element with the 'uploadStatus' class
+                let childWithUploadStatus = targetedInput.querySelector('.uploadStatus');
+    
+                if (childWithUploadStatus) {
+                    targetedInput.querySelector('.uploadStatus').value = 0;
+                    stVal = targetedInput.querySelector('.uploadStatus').value;
+                    console.log(`A child element has the "uploadStatus" class with val ${stVal}`);
+                } else {
+                    console.log('No child element has the "uploadStatus" class');
+                }
+    
+                targetedInput = '';
+    
+                // console.log(targetedInput);
+                // let myTarget = document.getElementsByClassName(`${targetedInput} .uploadStatus`);
+                // console.log(myTarget);
+            };
+            
+            
+            if (document.getElementById('cancelEdit')) {
+                document.getElementById('cancelEdit').onclick = function () {
+                    closeImageEditorModal(imageEditorModal);
+                };
+            }
+        }
+    }
+    
+    
+    function closeImageEditorModal(modal) {
+        cropper.destroy();
+        modal.remove();
+        document.getElementById('overlay').classList.remove('show');
+    }
+    
+</script>
+<!-- End of script for Dropzone (image upload) -->
+    
+
+<script nonce="{{ csp_nonce() }}">
+    let spsChecker = 0;
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('myDropzone').addEventListener('click', function() {
+            cropperState = 1;    
+        })
+
+        // Add image from url to dropzone
+        // Helper function to fetch images and maintain order
+        function fetchImage(imgName, AltText, src, sliderID) {
+            return new Promise((resolve, reject) => {
+                if (imgName !== null) {   
+                    if (imgName.length > 0) {
+                        let url = window.location.origin + '/static/images/' + src + '/' + imgName;
+                        let fileType = "image/" + imgName.split('.').pop();
+
+                        fetch(url)
+                            .then(response => response.blob())
+                            .then(blob => {
+                                let file = new File([blob], imgName, { type: fileType });
+                                resolve({ file: file, altText: AltText, sliderId: sliderID });
+                            })
+                            .catch(error => {
+                                console.error('Error fetching the image:', error);
+                                reject(error);
+                            });
+                    }
+                }
+
+            });
+        }
+
+        
+        // Function to decode HTML entities
+        function decodeHTMLEntities(text) {
+            const textArea = document.createElement('textarea');
+            textArea.innerHTML = text;
+            return textArea.value;
+        }
+        
+
+        // Decode HTML entities
+        const decodedJSON = decodeHTMLEntities("{{ mainResult.data }}")
+        .replace(/'/g, '"') // Replace single quotes with double quotes
+        .replace(/\bNone\b/g, 'null'); // Replace `None` with `null`
+        
+
+        // Array to keep the images and alt texts in the desired order
+        const imagesToAdd = JSON.parse(decodedJSON);
+
+        let src = 'sub_product_slider';
+        
+        // Clear all images from Dropzone before fetching and adding new images
+        myDropzone.removeAllFiles(true); // 'true' will ensure even files marked as 'uploaded' are removed
+        
+
+        // imagesToAdd = [{'ID': 6, 'Title': 'Buxanka puchur', 'Price': 450, 'SubPrOrder': 1, 'sliderID': 13, 'Name': 'New-Project-79-7.jpg', 'AltText': 'յսդհսյդհսյ', 'SliderOrder': 0}]
+        // Fetch all images and add them to Dropzone in the correct order
+        Promise.all(imagesToAdd.map(img => fetchImage(img.Name, img.AltText, src, img.sliderID)))
+            .then(fetchedImages => {
+                fetchedImages.forEach(({ file, altText, sliderId }) => {
+                    imgAlt = altText;
+                    slider_id = sliderId;
+                    myDropzone.addFile(file);
+                    imgAlt = '';
+                    slider_id = '';
+                });
+            })
+            .catch(error => console.error('Error adding images:', error));
+        
+        // End of Add image from url to dropzone
+
+        document.getElementById('spsID').addEventListener('change', function() {
+            console.log('Dropdown changed to: ' + this.value);
+            spsChecker = 1;  // Assuming spsChecker is a global variable you use to check changes
+        });
+
+        const specificationsDiv = document.querySelector('.specifications');
+        specificationsDiv.addEventListener('input', function(event) {
+            // console.log('Input changed in specifications: ' + event.target.name + ' new value: ' + event.target.value);
+            spsChecker = 1;  // Update the checker on any input change
+        });
+
+                
+        const selectPMs = document.querySelector('.pm-toggle').textContent;
+        const pm = document.getElementById('pm1');
+        const toggle = pm.querySelector('.pm-toggle');
+        const menu = pm.querySelector('.pm-menu');
+
+        function updateLabel() {
+            const checked = pm.querySelectorAll('input[type="checkbox"]:checked');
+            const names = Array.from(checked).map(cb => {
+                const label = cb.closest('label');
+                return label ? label.textContent.trim().replace(/\s+/g, ' ') : cb.value;
+            });
+            toggle.textContent = names.length ? names.join(', ') : 'Select payment methods';
+        }
+
+        // open/close
+        toggle.addEventListener('click', () => {
+        pm.classList.toggle('open');
+        toggle.setAttribute('aria-expanded', pm.classList.contains('open'));
+        });
+        toggle.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle.click(); }
+        if (e.key === 'Escape') { pm.classList.remove('open'); toggle.setAttribute('aria-expanded','false'); }
+        });
+
+        // close when clicking outside
+        document.addEventListener('click', (e) => {
+        if (!pm.contains(e.target)) {
+            pm.classList.remove('open');
+            toggle.setAttribute('aria-expanded','false');
+        }
+        });
+
+        // update label live
+        menu.addEventListener('change', updateLabel);
+
+    });
+
+
+        function getSelectedIdsStr() {
+            const pm = document.getElementById('pm1');
+            return Array.from(pm.querySelectorAll('input[type="checkbox"]:checked'))
+                        .map(cb => cb.value)
+                        .filter(Boolean)      // skip items without an value
+                        .join(',');
+        }
+
+        // Handle the file upload when the button is clicked
+        let uploadButton = document.getElementById("saveButton");
+        let saving = document.getElementById("saving");
+        
+        uploadButton.addEventListener("click", function () {
+            uploadButton.style.display = 'none';
+            saving.style.display = 'inline-block';
+            const mistakes = document.getElementById('mistakes');
+
+            let title = document.getElementById('title').value;
+            if (title.length === 0) {
+                mistakes.innerHTML = "{{ _('Please specify Title') }}"
+                mistakes.style.display = 'flex';
+                uploadButton.style.display = 'inline-block';
+                saving.style.display = 'none'
+                return;
+            }
+            let price = document.getElementById('price').value;
+            if (price.length === 0) {
+                mistakes.innerHTML = "{{ _('Please specify Price') }}"
+                mistakes.style.display = 'flex';
+                uploadButton.style.display = 'inline-block';
+                saving.style.display = 'none'
+                return;
+            }
+
+            // Create a FormData object to hold the files
+            let formData = new FormData();
+            formData.append('title', title);
+            formData.append('price', price);
+
+            // console.log(myDropzone.files)
+
+            let i = 0
+            myDropzone.files.forEach(function (file) {
+                let fileName = "file_" + i;
+                formData.append(fileName, file);
+
+                // Add the alt text as a separate field if available
+                let altInput = file.previewElement.querySelector(".alt-input");
+                let altText = altInput ? altInput.value : ''; // Use empty string if altInput is missing
+                let altTextName = "alt_text_" + i;
+                formData.append(altTextName, altText);
+
+                // Add the id of slider as a separate field if available
+                let slideIDInput = file.previewElement.querySelector(".slideID");
+                let slideID = slideIDInput ? slideIDInput.value : ''; // Use empty string if altInput is missing
+                let slideIDName = "slideID_" + i;
+                formData.append(slideIDName, slideID);
+
+                // Add upload status as a separate field if available
+                // If upload status is 0 server will upload new image
+                // if upload status is 1 server will get image from repositiry
+                // Then will check and change the order of image if needed
+                let uploadStatusInput = file.previewElement.querySelector(".uploadStatus");
+                let uploadStatusValue = uploadStatusInput ? uploadStatusInput.value : '0'; // Default to '0' if missing
+                let uploadStatus = "upload_status_" + i;
+                formData.append(uploadStatus, uploadStatusValue);
+                i++;
+
+        
+            });
+
+            let fileStatus = 1;
+            if (fileCount === 0) {
+                fileStatus = 0;
+            } 
+            formData.append('fileStatus', fileStatus); 
+
+
+            let PtID = document.getElementById('ptID').value;
+            let spsName = document.getElementById('spsID').value;
+            let languageID = document.getElementById('language-id').value;
+
+            paymentMethods = getSelectedIdsStr();
+            if (paymentMethods.length > 0) {
+                formData.append('payment_methods', paymentMethods);
+            }
+
+            // formData.append("languageID", languageID);
+            // formData.append("ProductID", ProductID);
+            formData.append("PtID", PtID);
+            formData.append("Type", '2');
+            formData.append("spsID", spsName);
+            formData.append("spsChecker", spsChecker);
+            
+            // Get all input elements inside the .specifications div
+            const inputs = document.querySelectorAll(".specifications input");
+            let numspss = 0;
+            inputs.forEach(input => {
+                formData.append('spss_' + numspss.toString(), [input.id, input.value]);
+                numspss++;
+            });
+
+            // Create a new XMLHttpRequest object
+            let xhr = new XMLHttpRequest();
+            
+            // Configure the request
+            xhr.open('POST', '/editprice');                   
+            xhr.setRequestHeader('X-CSRFToken', csrfToken);
+
+            // Define what happens on successful data submission
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    let response = JSON.parse(xhr.responseText);
+
+                    let mistakesDiv = document.getElementById('mistakes');
+                    mistakesDiv.innerHTML = ''; // Clear previous messages
+                    
+                    if (response.status === '0') {
+                        // Handle Unknown Error
+                        mistakesDiv.innerHTML = safeMessage(response.answer);
+                        // mistakesDiv.style.color = 'red';
+                        mistakesDiv.style.display = 'flex';
+
+                        saving.style.display = 'none';
+                        uploadButton.style.display = 'inline-block';
+                        
+                        // Scroll the window to the mistakesDiv with smooth behavior
+                        mistakesDiv.scrollIntoView({ behavior: 'smooth' });                              
+                        
+                        
+                    } else if (response.status === '1') {
+                        mistakesDiv.style.display = 'none';
+                        saving.style.display = 'none';
+                        uploadButton.style.display = 'inline-block';
+
+                        console.log(response.answer)
+                        // Handle success
+                        alert(response.answer);
+                        let currentUrl = window.location.href;
+                        location.href = currentUrl;
+                    }
+                } else {
+                    // Handle error response
+                    uploadButton.classList.remove('hidden');
+                    saving.classList.add('hidden');
+
+                    console.error('Error adding category:', xhr.responseText);
+                }
+            };
+
+            // Send the request with the FormData object
+            xhr.send(formData);
+    
+
+    });
+
+    const dropdown = document.getElementById("spsID");
+    if (dropdown) {
+
+        let previousValue = dropdown.value; // Keep track of the previously selected value
+        let LanguageID = document.getElementById('language-id').value;
+
+        // console.log(`LanguageID from DD ${LanguageID}`)
+        dropdown.addEventListener("change", function () {
+            const confirmChange = confirm("{{ _('All changes in specifications fields will be lost, would you like to continue?') }}");
+            if (!confirmChange) {
+                dropdown.value = previousValue; // Revert to the previously selected value
+            } else {
+                previousValue = dropdown.value; // Update the previous value
+                let parentDiv = document.querySelector('.specifications');
+
+                if (previousValue.length === 0) {
+                    parentDiv.innerHTML = '';
+                    return;
+                }
+                
+                let formData = new FormData();
+                formData.append('spsID', previousValue)
+                formData.append('LanguageID', LanguageID)
+                
+                // Create a new XMLHttpRequest object
+                let xhr = new XMLHttpRequest();
+                
+                // Configure the request
+                xhr.open('POST', '/get-spacifications');                   
+                xhr.setRequestHeader('X-CSRFToken', csrfToken);
+
+                // Define what happens on successful data submission
+                xhr.onload = function () {
+                    if (xhr.status === 200) {
+                        let response = JSON.parse(xhr.responseText);
+
+                        let mistakesDiv = document.getElementById('mistakes');
+                        mistakesDiv.innerHTML = ''; // Clear previous messages
+                        
+                        if (response.status === '0') {
+                            // Handle Unknown Error
+                            mistakesDiv.textContent = response.answer;
+                            // mistakesDiv.style.color = 'red';
+                            mistakesDiv.style.display = 'flex';
+
+                            saving.style.display = 'none';
+                            uploadButton.style.display = 'inline-block';
+                            
+                            // Scroll the window to the mistakesDiv with smooth behavior
+                            mistakesDiv.scrollIntoView({ behavior: 'smooth' });                              
+                            
+                            
+                        } 
+                        
+                        if (response.status === '1') {
+                            mistakesDiv.style.display = 'none';
+                            saving.style.display = 'none';
+                            uploadButton.style.display = 'inline-block';
+
+                            let dataArray = Object.entries(response.data);
+                            
+                            parentDiv.innerHTML = '';
+                            
+
+                            dataArray.forEach(function(list) {
+
+                                // Create the label element
+                                const label = document.createElement('label');
+                                label.setAttribute('for', list[1]['ID']);
+                                label.textContent = list[1]['Text'];
+
+                                // Create the input element
+                                const input = document.createElement('input');
+                                input.setAttribute('type', 'text');
+                                input.setAttribute('id', list[1]['ID']);
+                                input.setAttribute('name', list[1]['ID']);
+
+                                // Append the label and input to the document body or any other container
+                                parentDiv.appendChild(label);
+                                parentDiv.appendChild(input);
+
+                            });
+                        }
+                    } else {
+                        // Handle error response
+                        uploadButton.classList.remove('hidden');
+                        saving.classList.add('hidden');
+
+                        console.error('Error adding category:', xhr.responseText);
+                    }
+                };
+
+                // Send the request with the FormData object
+                xhr.send(formData);
+    
+            }
+        });
+    
+    }
+
+
+
+</script>
+
+{% endblock %}

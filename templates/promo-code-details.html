@@ -1,0 +1,247 @@
+{% extends 'base.html' %}
+{% block title %}
+{{ _('Promo Code Details') }}
+{% endblock %}
+{% block head %}
+
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+
+  <style>
+     body {
+        background-color: #fdf6ec;
+    }
+    /* Optional: style anchors */
+    a {
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .collapsed-accordion {
+        transform: unset!important;
+        width: inherit!important;
+        padding: unset!important;
+    }
+
+    .promo-details a {
+      color: #E76F51;
+    }
+
+    .promo-card {
+      margin-bottom: 12px;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .promo-card .card-header {
+      padding: 0;
+      margin: 0;
+      font-size: 1rem;
+    }
+
+    .promo-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      width: 100%;
+      padding: 14px 20px;
+      border: 0;
+      background: none;
+      color: #333;
+      font-size: 1rem;
+      font-weight: 600;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .promo-toggle i {
+      color: #E76F51;
+      transition: transform 0.2s ease;
+    }
+
+    .promo-toggle[aria-expanded="true"] i {
+      transform: rotate(180deg);
+    }
+
+    .promo-toggle:focus-visible {
+      outline: 3px solid #264653;
+      outline-offset: -3px;
+    }
+
+    .promo-grid {
+      padding: 4px 20px 12px;
+    }
+
+    /* Header and value rows share one grid so the columns line up */
+    .promo-row {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
+      gap: 12px;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .promo-row:last-child {
+      border-bottom: 0;
+    }
+
+    .promo-row > :not(:first-child) {
+      text-align: right;
+    }
+
+    .promo-row-head {
+      font-size: 14px;
+      font-weight: 700;
+      color: #555;
+    }
+
+    @media (max-width: 768px) {
+      .container.promo-details {
+        width: 92%;
+        margin-top: 16px !important;
+      }
+
+      .promo-details .tableDaddy {
+        margin-left: 0 !important;
+      }
+
+      .promo-details h2 {
+        font-size: 1.5rem;
+      }
+
+      .promo-details h4 {
+        font-size: 1.15rem;
+      }
+
+      .promo-toggle {
+        padding: 12px 14px;
+      }
+
+      .promo-grid {
+        padding: 2px 14px 8px;
+      }
+
+      .promo-row {
+        gap: 8px;
+      }
+    }
+  </style>
+
+{% endblock %}
+
+{% block content %}
+
+{{ sideBar | safe }}
+<div class="container my-5 promo-details">
+{% if headings[2] %}
+  {% if headings[0] is not none %}
+    <h2 class="toRight tableDaddy">{{ _('Affiliate') + ': ' }}  <a href="{{ url_for('affiliate', affID=headings[2]) }}" >{{ headings[0] }}</a></h2>
+  {% endif %}
+  <h4 class="toRight tableDaddy">{{ _('Promo Code') + ': ' }}  <a href="{{ url_for('home') + 'stuff-affiliate-orders/page=1&status=all&promoCode=' + headings[1] + '&affiliate=' + headings[2] }}" >{{ headings[1] }}</a></h4>
+{% else %}
+<h2 class="toRight tableDaddy">{{ _('Affiliate') + ': ' }}  <a href="{{ url_for('stuff') }}" >{{ headings[0] }}</a></h2>
+<h4 class="toRight tableDaddy">{{ _('Promo Code') + ': ' }}  <a href="{{ url_for('home') + 'affiliate-orders/page=1&status=all&promoCode=' + headings[1]}}" >{{ headings[1] }}</a></h4>
+{% endif %}
+<br>
+    <div id="accordion" class="toRight tableDaddy"></div>
+</div>
+
+<script nonce="{{ csp_nonce() }}">
+
+    function hyphen(str) {
+        return str.replace(/\s+/g, '-');
+    }
+
+
+    const data = JSON.parse({{ discounts | tojson }});
+
+    // Group data by parent title (prTitle)
+    const groupedData = {};
+    data.forEach(item => {
+      if (!groupedData[item.prTitle]) {
+        groupedData[item.prTitle] = [];
+      }
+      groupedData[item.prTitle].push(item);
+    });
+
+    // Build the accordion HTML
+    const accordion = document.getElementById('accordion');
+
+    // Column headings, repeated inside each card so they line up with its rows
+    const headerRow = `
+      <div class="promo-row promo-row-head">
+        <span>{{ _('Product') }}</span>
+        <span>{{ _('Discount') }} (%)</span>
+        <span>{{ _('Revard') }}</span>
+      </div>
+    `;
+    let accordionHTML = '';
+    let index = 0;
+    for (const prTitle in groupedData) {
+      const collapseId = 'collapse' + index;
+      const headingId = 'heading' + index;
+
+      // Build child rows for each item in the group
+      let childRows = '';
+      groupedData[prTitle].forEach(item => {
+        // Compute revard text: append italicized "%" if revard_type is 0, or italicized "fx" if revard_type is 1
+        let revardText = '';
+        if(item.revard_type === 0) {
+          revardText = escapeHtml(item.revard_value) + ' <i>%</i>';
+        } else if(item.revard_type === 1) {
+          revardText = escapeHtml(item.revard_value) + ' <i>fx</i>';
+        }
+
+        if (item.ptTitle) {
+            let ptUrl = "{{ url_for('home') }}" + hyphen(prTitle) + '&' + hyphen(item.ptTitle)
+
+            childRows += `
+            <div class="promo-row">
+                <span><a href="${escapeHtml(ptUrl)}" target="_blank">${escapeHtml(item.ptTitle)}</a></span>
+                <span>${escapeHtml(item.discount)}</span>
+                <span>${revardText}</span>
+            </div>
+            `;
+        }
+      });
+
+      // Assemble each accordion card (the first one starts open)
+      accordionHTML += `
+        <div class="card promo-card">
+          <h3 class="card-header" id="${headingId}">
+            <button type="button" class="promo-toggle" aria-expanded="${index === 0 ? 'true' : 'false'}" aria-controls="${collapseId}">
+              <span>${escapeHtml(prTitle)}</span>
+              <i class="fas fa-chevron-down" aria-hidden="true"></i>
+            </button>
+          </h3>
+          <div id="${collapseId}" class="promo-panel" role="region" aria-labelledby="${headingId}" ${index === 0 ? '' : 'hidden'}>
+            <div class="promo-grid">
+              ${headerRow}
+              ${childRows}
+            </div>
+          </div>
+        </div>
+      `;
+      index++;
+    }
+
+    accordion.innerHTML = accordionHTML;
+
+    // One product open at a time: opening a card closes the one that was open
+    function setPanel(toggle, open) {
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      document.getElementById(toggle.getAttribute('aria-controls')).hidden = !open;
+    }
+
+    document.querySelectorAll('.promo-toggle').forEach(toggle => {
+      toggle.addEventListener('click', function() {
+        const wasOpen = toggle.getAttribute('aria-expanded') === 'true';
+        document.querySelectorAll('.promo-toggle').forEach(other => setPanel(other, false));
+        setPanel(toggle, !wasOpen);
+      });
+    });
+  </script>
+{% endblock %}

@@ -1,0 +1,50 @@
+{#
+  Shared pagination bar: ❮ 1 … 5 6 [7] 8 … 120 ❯
+
+  page     - current page
+  numRows  - total number of rows
+  perPage  - rows per page (PAGINATION)
+  window   - page numbers shown around the current page (PAGINATION_BUTTONS_COUNT)
+  endpoint - when given, pages are links: url_for(endpoint, page=N)
+             otherwise they are <div data-value="N" role="button"> clicked by the page's own JS,
+             which keeps the active filters in the URL
+
+  Two bars are rendered: the wide one uses `window`, the narrow one (phones) shows only
+  the current page between the first and the last. CSS shows one of them.
+#}
+
+{% macro _bar(page, totalPages, window, endpoint, variant) %}
+<nav class="pagination pagination--{{ variant }}" aria-label="{{ _('Pages') }}">
+  {% if page > 1 %}
+    {{ _item(page - 1, '❮', false, endpoint, _('Previous page')) }}
+  {% endif %}
+
+  {% for p in pagination_items(page, totalPages, window) %}
+    {% if p is none %}
+      <span class="pagination-gap" aria-hidden="true">…</span>
+    {% else %}
+      {{ _item(p, p, p == page, endpoint) }}
+    {% endif %}
+  {% endfor %}
+
+  {% if page < totalPages %}
+    {{ _item(page + 1, '❯', false, endpoint, _('Next page')) }}
+  {% endif %}
+</nav>
+{% endmacro %}
+
+{% macro _item(p, label, active, endpoint, ariaLabel=none) %}
+  {% if endpoint %}
+    <a href="{{ url_for(endpoint, page=p) }}"{% if active %} class="active" aria-current="page"{% endif %}{% if ariaLabel %} aria-label="{{ ariaLabel }}"{% endif %}>{{ label }}</a>
+  {% else %}
+    <div data-value="{{ p }}" role="button" tabindex="0"{% if active %} class="active" aria-current="page"{% endif %}{% if ariaLabel %} aria-label="{{ ariaLabel }}"{% endif %}>{{ label }}</div>
+  {% endif %}
+{% endmacro %}
+
+{% macro pagination(page, numRows, perPage, window, endpoint=none) %}
+  {% set totalPages = (numRows + perPage - 1) // perPage %}
+  {% if totalPages > 1 %}
+    {{ _bar(page, totalPages, window, endpoint, 'wide') }}
+    {{ _bar(page, totalPages, 1, endpoint, 'narrow') }}
+  {% endif %}
+{% endmacro %}

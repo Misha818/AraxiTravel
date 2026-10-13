@@ -1,0 +1,2093 @@
+<!doctype html>
+<html lang="{{ current_locale }}">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="UTF-8">
+    <script nonce="{{ csp_nonce() }}" src="{{ url_for('static', filename='JS/security.js') }}"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ prData.Title }}</title>  
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <script nonce="{{ csp_nonce() }}" type="text/javascript" src="{{ url_for('static', filename='JS/cookie.umd.min.js') }}"></script>
+    <script nonce="{{ csp_nonce() }}">
+
+        window.addEventListener('load', () => {
+        document.querySelector('body').classList.add('loaded');
+        });
+        
+      
+    </script>
+    </head>
+    <body>
+  
+
+<!-- Include Quill.js stylesheet -->
+<!-- <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet"> -->
+<link rel="stylesheet" href="{{ url_for('static', filename='quill.snow.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='dropzon.css') }}">
+
+<!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.css"> -->
+<!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css"> -->
+<link rel="stylesheet" href="{{ url_for('static', filename='dropzone.min.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='cropper.min.css') }}"> 
+
+<!-- Pickr themes (Color picker for reach text editor) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/classic.min.css"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/monolith.min.css"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/nano.min.css"/>
+
+<link href="https://fonts.googleapis.com/css?family=Montserrat|Roboto|Lato|Oswald|Playfair+Display|Raleway" rel="stylesheet">
+
+<style>
+
+
+    .dz-details:hover {
+        cursor: all-scroll;
+    }
+
+    .dz-remove-btn:hover {
+        background-color: #c82333;
+        cursor: pointer;
+    }
+
+
+    .alt-input:hover {
+        cursor: auto;
+    }
+
+    .ql-editor .ql-align-center {
+        text-align: center;
+    }
+
+    .modal-header {
+        padding: 0rem 1rem 1rem 1rem!important;
+    }
+
+    #mistakes_modal {
+        color: red;
+        text-align: center;
+        border: 1px solid red;
+        /* justify-content: center; */
+        align-items: center;
+        padding: 10px;
+        border-radius: 5px;
+        display: none;
+    }
+
+    #add-product-form input, textarea, select {
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        padding: 10px;
+        font-size: 14px;
+        width: 350px;
+        box-sizing: border-box;
+    }
+
+    #headerEditorModal {
+        overflow-y: scroll !important;
+    }
+
+    /* ---- "Edit Header" window ---- */
+    #headerEditorModal.modal {
+        width: min(560px, calc(100vw - 24px)) !important;
+        max-height: calc(100vh - 32px) !important;
+        padding: 0 !important;
+        overflow-y: auto !important;
+        border-radius: 14px !important;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25) !important;
+        box-sizing: border-box;
+    }
+
+    #headerEditorModal .he-head {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 16px 20px;
+        background-color: #fff;
+        border-bottom: 1px solid #efece6;
+    }
+
+    #headerEditorModal .modal-title {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #264653;
+    }
+
+    #headerEditorModal .he-close {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 36px;
+        height: 36px;
+        position: static !important;
+        margin: 0 !important;
+        padding: 0;
+        font-size: 24px;
+        line-height: 1;
+        color: #555;
+        background-color: #f4f2ee;
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        transition: background-color 0.2s, color 0.2s;
+    }
+
+    #headerEditorModal .he-close:hover {
+        color: #fff;
+        background-color: #E76F51;
+    }
+
+    #headerEditorModal .he-body {
+        padding: 18px 20px 20px 20px;
+    }
+
+    #headerEditorModal .he-form {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        width: 100%;
+        margin: 0;
+    }
+
+    #headerEditorModal .he-field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    #headerEditorModal .he-field label {
+        font-size: 14px;
+        font-weight: 600;
+        color: #333;
+    }
+
+    /* The page gives form fields a fixed 350px width; fill the window instead */
+    #headerEditorModal .form-control {
+        width: 100% !important;
+        margin: 0;
+        padding: 10px 12px !important;
+        font: inherit;
+        font-size: 15px !important;
+        color: #333;
+        background-color: #fff;
+        border: 1px solid #d9d5cd !important;
+        border-radius: 8px !important;
+        box-sizing: border-box;
+    }
+
+    #headerEditorModal textarea.form-control {
+        min-height: 110px;
+        resize: vertical;
+        font-family: inherit !important;
+    }
+
+    #headerEditorModal .form-control:focus {
+        outline: none;
+        border-color: #2A9D8F !important;
+        box-shadow: 0 0 0 3px rgba(42, 157, 143, 0.18);
+    }
+
+    #headerEditorModal #mistakes_modal {
+        width: auto !important;
+        margin: 0;
+    }
+
+    #headerEditorModal .he-actions {
+        margin-top: 4px;
+    }
+
+    #headerEditorModal .middleButtun {
+        width: 100%;
+        margin: 0;
+        padding: 13px 20px;
+        font-size: 16px;
+        font-weight: 600;
+        background-color: #E76F51;
+        border-radius: 8px;
+        box-sizing: border-box;
+        transition: background-color 0.2s;
+    }
+
+    #headerEditorModal #saveEditedHeader:hover {
+        background-color: #d65f42;
+    }
+
+    #headerEditorModal .he-close:focus-visible,
+    #headerEditorModal #saveEditedHeader:focus-visible {
+        outline: 3px solid #264653;
+        outline-offset: 2px;
+    }
+
+    @media (max-width: 600px) {
+        #headerEditorModal.modal {
+            max-height: calc(100vh - 24px) !important;
+        }
+
+        #headerEditorModal .he-head {
+            padding: 14px 16px;
+        }
+
+        #headerEditorModal .he-body {
+            padding: 14px 16px 16px 16px;
+        }
+    }
+
+
+    /* #editorContent {
+        margin-top: 100px;
+    } */
+
+    /* The toolbar stays in view, just below the fixed 75px header, while the page scrolls */
+    .ql-toolbar.ql-snow {
+        position: sticky;
+        top: 75px;
+        z-index: 10;
+        background-color: #ffffff;
+        padding: 5pt !important;
+    }
+
+    /* "hidden" made this a scroll box of its own, so the sticky toolbar scrolled away with the page;
+       "clip" cuts off sideways overflow the same way without that side effect */
+    .containerZ {
+        overflow-x: clip;
+    }
+
+    /* ---- Editor layout: fills the screen width up to 800px, below the fixed header ---- */
+    #myReachTextEditor {
+        width: min(800px, calc(100% - 24px));
+        margin: 110px auto 90px auto;
+        box-sizing: border-box;
+    }
+
+    /* Pickr's own trigger buttons: the toolbar's colour buttons open the pickers instead */
+    #myReachTextEditor .pickr {
+        display: none !important;
+    }
+
+    /* Same build as the Send Email editor: toolbar and text area are one bordered block of
+       the same width; the block grows with its text and the page scrolls (no inner card) */
+    #myReachTextEditor #editor-wrapper {
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    #myReachTextEditor #editor-container {
+        width: 100%;
+        height: auto;
+        margin: 0;
+    }
+
+    /* the whole text area is clickable, not just the first line */
+    #myReachTextEditor .ql-container.ql-snow .ql-editor {
+        min-height: min(460px, calc(100vh - 260px));
+    }
+
+    @media (max-width: 600px) {
+        #myReachTextEditor {
+            width: calc(100% - 16px);
+            margin-top: 96px;
+        }
+
+        /* full-width Submit, without the 5px offset pushing it past the screen edge */
+        #myReachTextEditor #submit-btn,
+        #myReachTextEditor #saving-btn {
+            left: 8px;
+            right: 8px;
+            width: auto;
+            box-sizing: border-box;
+        }
+    }
+
+
+/* When collapsed, this shows the current font name above the picker */
+.ql-snow .ql-picker.ql-font .ql-picker-label::before {
+  content: attr(data-value);
+  /* font-family: attr(data-value);; */
+  text-transform: capitalize;
+  /* font-variant: small-caps; */
+  letter-spacing: 0.03em;
+  color: #4a4a4a;
+}
+
+.ql-snow .ql-picker.ql-font 
+  .ql-picker-item[data-value="playfair-display"]::before,
+.ql-snow .ql-picker.ql-font 
+  .ql-picker-label[data-value="playfair-display"]::before {
+  content: "Playfair Display";     /* no hyphen */
+  font-family: "Playfair Display", serif;
+  width:120px;
+  /* you can still apply text-transform or letter-spacing here if you like */
+}
+
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="montserrat"]::before {
+  content: 'Montserrat';
+  font-family: 'Montserrat', sans-serif;
+}
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="lato"]::before {
+  content: 'Lato';
+  font-family: 'Lato', sans-serif;
+}
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="roboto"]::before {
+  content: 'Roboto';
+  font-family: 'Roboto', sans-serif;
+}
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="playfair-display"]::before {
+  content: 'Playfair Display';
+  font-family: 'Playfair Display', serif;
+}
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="raleway"]::before {
+  content: 'Raleway';
+  font-family: 'Raleway', sans-serif;
+}
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="cursive"]::before {
+  content: 'Cursive';
+  font-family: cursive;
+}
+
+
+
+
+/* Each item in the open menu: */
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="montserrat"]::before {
+  content: 'Montserrat';
+  font-family: 'Montserrat', sans-serif;
+}
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="lato"]::before {
+  content: 'Lato';
+  font-family: 'Lato', sans-serif;
+}
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="roboto"]::before {
+  content: 'Roboto';
+  font-family: 'Roboto', sans-serif;
+}
+
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="raleway"]::before {
+  content: 'Raleway';
+  font-family: 'Raleway', sans-serif;
+}
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="cursive"]::before {
+  content: 'Cursive';
+  font-family: cursive;
+}
+
+
+.scroll-container {
+        overflow: auto;
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none;  /* IE 10+ */
+      }
+      
+      .scroll-container::-webkit-scrollbar {
+        display: none; /* Chrome, Safari, Opera */
+      }
+
+      /* kill Quill’s defaults */
+.ql-snow .ql-picker.ql-size .ql-picker-item::before,
+.ql-snow .ql-picker.ql-size .ql-picker-label::before {
+  content: none !important;
+}
+
+
+/* Dropdown items */
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="8px"]::before { content: "8"  !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="9px"]::before { content: "9"  !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="10px"]::before { content: "10" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="11px"]::before { content: "11" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="12px"]::before { content: "12" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="14px"]::before { content: "14" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="16px"]::before { content: "16" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="18px"]::before { content: "18" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="20px"]::before { content: "20" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="24px"]::before { content: "24" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="28px"]::before { content: "28" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="32px"]::before { content: "32" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="36px"]::before { content: "36" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="48px"]::before { content: "48" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value="72px"]::before { content: "72" !important; } 
+
+/* 3) Toolbar label (current selection) */
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="8px"]::before { content: "8"  !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="9px"]::before { content: "9"  !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="10px"]::before { content: "10" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="11px"]::before { content: "11" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="12px"]::before { content: "12" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="14px"]::before { content: "14" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="16px"]::before { content: "16" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="18px"]::before { content: "18" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="20px"]::before { content: "20" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="24px"]::before { content: "24" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="28px"]::before { content: "28" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="32px"]::before { content: "32" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="36px"]::before { content: "36" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="48px"]::before { content: "48" !important; }
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value="72px"]::before { content: "72" !important; } 
+
+
+#editorContentParent {
+    margin-top: 75px;
+}
+
+/* the fixed admin header is 75px tall at every width */
+#slides {
+    --product-header-h: 75px;
+}
+
+</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='rte.css') }}">
+
+<script nonce="{{ csp_nonce() }}" type="text/javascript">
+document.addEventListener('DOMContentLoaded', function(){
+        
+    let closedNav = true;
+    const openWith = "11%";
+    const closeWith = "0";
+    
+    document.getElementById('toggle-btn').onclick = function() {
+        let sidebar = document.getElementById("topLeftNav");
+        sidebar.classList.toggle('collapsed');
+    
+    };
+
+
+    let popoverTriggers = document.querySelectorAll('.popoverImage');
+    
+    popoverTriggers.forEach(function(popoverTrigger) {
+        let timeoutId;
+        let hideTimeoutId;  // Variable to hold the hide timeout
+    
+        popoverTrigger.addEventListener('mouseenter', function() {
+        clearTimeout(hideTimeoutId); // Clear any existing hide timeout
+        timeoutId = setTimeout(function() {
+            let popover = new bootstrap.Popover(popoverTrigger, {
+            container: 'body',
+            html: true,
+            placement: 'top',
+            trigger: 'manual',
+            content: function() {
+                return popoverTrigger.getAttribute("data-bs-content");
+            }
+            });
+            popover.show();
+        }, 2000); // Delay time in milliseconds for showing the popover
+        });
+    
+        popoverTrigger.addEventListener('mouseleave', function() {
+        clearTimeout(timeoutId); // Clear the show timeout if the mouse leaves before the popover is shown
+        var popoverInstance = bootstrap.Popover.getInstance(popoverTrigger);
+        if (popoverInstance) {
+            hideTimeoutId = setTimeout(function() {  // Delay the hide action
+            popoverInstance.hide();
+            }, 3000);  // 3000 milliseconds delay before hiding the popover
+        }
+        });
+    });
+    
+
+});    
+
+</script>
+
+<header class="stuff-header">
+    <div style="display: flex; align-items: center;">
+        <button class="toggle-btn" id="toggle-btn" >
+            <i class="fa-solid fa-screwdriver-wrench" style="font-size: 30px;"></i>
+          </button>
+    </div>
+    <div style="position: relative; display: inline-block;">
+        <nav>
+            <a href="{{ url_for('home', _external=True) }}stuff" style="margin: 0 15px; color: #4a4a4a; text-decoration: none;">{{ _('Dashboard') }}</a>
+        </nav>
+    </div>
+</header>
+
+
+<!-- Top Left Navigation Bar -->
+<nav class="top-left-nav collapsed" id="topLeftNav">
+    <a class="top-left-nav-a" 
+        href="{{ url_for('home', _external=True) }}stuff" 
+        style="text-decoration: none;"
+        >
+        {{ _('Dashboard') }}
+        
+    </a>
+    <button class="chooseBlock" id="sliderButton">{{ _('Slider') }}</button>
+    <button class="chooseBlock" id="headerButton">{{ _('Header') }}</button>
+    <button class="chooseBlock" id="textEditorButton">{{ _('Editor') }}</button>
+    <button class="chooseBlock" id="thumbnailButton">{{ _('Thumbnail') }}</button>
+    <a class="top-left-nav-a" 
+    href="{{ url_for('add_price', prID_RefKey=prData['Product_ID'], _external=True) }}"  
+        target="_blank"
+        style="text-decoration: none;"
+        >
+        
+            <!-- {{ _('Add Product Type') }} -->
+            {{ _('Add Price') }}
+    </a>
+
+
+    {% if prData.Status == 2 %}
+        <a class="top-left-nav-a" 
+            href="{{ url_for('home', _external=True) + prData['Url'] }}" 
+            target="_blank"
+            style="text-decoration: none;"
+            >
+            
+                {{ _('View') }}
+        </a>
+    {% endif %}
+
+      <select class="styled-select changePrOrder" style="margin-bottom: 10px;">
+        {% for row in ordering.data %}
+          <option value="{{ row['Order'] }}" {{ 'selected' if row['Order'] ==  prData.Order  else '' }}>{{ row['Order'] }}</option>
+        {% endfor %}
+      </select>
+    
+
+    {% if supportedLangsData | length > 1 %}     
+      <select data-onchange='["navigate", "/setlang?lang=", "$value"]' class="styled-select">
+        {% for lang in supportedLangsData %}
+          <option value="{{ lang['Prefix'] }}" {{ 'selected' if get_locale() ==  lang['Prefix']  else '' }}>{{ lang['Language'] }}</option>
+        {% endfor %}
+      </select>
+    {% endif %}
+    
+    {% set checked='' %}
+    {% if prData.Status == 2 %}
+        {% set checked='checked' %}
+    {% endif %}
+
+    <div class="publish">
+        <label class="switch" id="mySwitch">
+            <span class="sliderA round {{ checked }}"></span>
+        </label>
+    </div>
+</nav>
+
+
+<!-- Top Right Navigation Bar -->
+
+<!-- Middle part -->
+<input type="hidden" value="{{ prData.RefKey }}" id="RefKey">
+<input type="hidden" id="language-id" value="{{ languageID }}">
+
+<div class="overlay" id="overlay"></div>
+
+<!-- Client -->
+<div class="containerZ"> 
+    
+    <div id="mistakes" style="width: 80%; color: red; display: flex; margin-bottom: -100px; margin-top: 130px; display: none;"></div>
+    <!-- Slide Show and image uploader -->
+    <span class="blocks hidden" id="mySlideShow">
+
+
+        <form action="/upload" class="dropzone" id="myDropzone">
+            <div class="dz-message dz-button">{{ _('Click here to upload files') }}</div>
+        </form>
+
+        <!-- <button id="uploadButton">{{ _('Submit') }}</button> -->
+        <div id="uploadButton" class="" >{{ _('Submit') }}</div>
+        <div id="saveUploads" class="pcButtonS hidden" >{{ _('Saving...') }}</div>
+        <div id="cencelUpload" class="pcButtonS" >{{ _('Cencel') }}</div>
+        <!-- <button id="saving-btn" class=" ">Saving...</button> -->
+
+    
+
+ 
+
+    <!-- Script for Dropzone (image upload) -->
+    <script nonce="{{ csp_nonce() }}" src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.js"></script>
+    <script nonce="{{ csp_nonce() }}" src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+    <script nonce="{{ csp_nonce() }}" src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <script nonce="{{ csp_nonce() }}">
+        document.getElementById('cencelUpload').addEventListener('click', function(){
+            document.getElementById('mySlideShow').style.display = 'none';
+            document.getElementById('mySlideShow').classList = 'blocks hidden';
+            if (document.getElementById('slides') !== 'undefined') {
+                document.getElementById('slides').style.display = 'flex';
+                document.getElementById('editorContent').style.display = 'block';
+            }
+        });
+    </script>
+    <script nonce="{{ csp_nonce() }}">
+let csrfToken = "{{ csrf_token() }}";
+let cropperState = 0;
+let imgAlt = '', slider_id = '', imageURL = '';
+let targetedInput;
+
+const prData = {{ prData | tojson }};
+const prSaving = prData.prSaving;
+const prUpdate = prData.prUpdate;
+
+// Initialize Dropzone
+Dropzone.autoDiscover = false;
+let myDropzone = new Dropzone("#myDropzone", {
+    url: "/upload",
+    autoProcessQueue: false,
+    addRemoveLinks: false,
+    previewsContainer: "#myDropzone",
+    clickable: true,
+    init: function () {
+        let dz = this;
+        
+
+
+        
+
+dz.on("addedfile", function (file) {
+    let reader = new FileReader();
+    reader.onload = function (event) {
+        let imageUrl = event.target.result;
+
+        openImageEditorModal(imageUrl, true, function (editedImageBlob) {
+            // Find the index of the newly added file in myDropzone.files
+            let fileIndex = myDropzone.files.indexOf(file);
+
+            if (fileIndex === -1) return; // File not found in Dropzone
+
+            // Create a completely new File object with the edited image data
+            let editedFile = new File([editedImageBlob], file.name, { type: file.type });
+
+            // Replace the file in Dropzone's file list
+            myDropzone.files[fileIndex] = editedFile;
+
+            // Preserve Dropzone's references and update the preview
+            editedFile.previewElement = file.previewElement;
+
+            // Update the preview with the cropped image
+            let updatePreviewReader = new FileReader();
+            updatePreviewReader.onload = function (e) {
+                editedFile.previewElement.querySelector('img').src = e.target.result;
+                editedFile.previewElement.querySelector('img').style.width = '100%';
+                editedFile.previewElement.querySelector('.dz-image').style.width = '120px';
+                editedFile.previewElement.querySelector('.dz-image').style.height = '120px';
+            };
+            updatePreviewReader.readAsDataURL(editedImageBlob);
+        });
+    };
+    reader.readAsDataURL(file);
+
+    // Custom elements for alt text and upload status
+    let removeButton = Dropzone.createElement("<button class='dz-remove-btn'>&times;</button>");
+    removeButton.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        dz.removeFile(file);
+    });
+    file.previewElement.appendChild(removeButton);
+
+    let altInput = Dropzone.createElement("<input type='text' class='alt-input' placeholder='Enter alt text'>");
+    altInput.value = imgAlt || '';
+    file.previewElement.appendChild(altInput);
+    
+    let slideID = Dropzone.createElement("<input type='hidden' class='slideID' value='1'>");
+    slideID.value = slider_id || '';
+    file.previewElement.appendChild(slideID);
+    
+    let uploadItem = Dropzone.createElement("<input type='hidden' class='uploadStatus' value='1'>");
+    file.previewElement.appendChild(uploadItem);
+
+    // Hide progress bars
+    file.previewElement.querySelectorAll("[data-dz-uploadprogress], .dz-progress").forEach(function (progressBar) {
+        progressBar.style.display = "none";
+    });
+
+    targetedInput = file.previewElement;
+});
+
+// Edit existing files on double-click
+dz.on("addedfile", function (file) {
+    let previewElement = file.previewElement;
+
+    previewElement.addEventListener('dblclick', function (event) {
+        cropperState = 1;
+
+        let previewElement = event.target.closest('.dz-preview');
+        targetedInput = previewElement;
+
+        if (previewElement) {
+            let fileName = previewElement.querySelector('[data-dz-name]').textContent;
+            let fileIndex = myDropzone.files.findIndex(f => f.name === fileName);
+            let existingFile = myDropzone.files[fileIndex];
+
+            if (existingFile) {
+                let reader = new FileReader();
+                reader.onload = function (event) {
+                    let imageUrl = event.target.result;
+
+                    openImageEditorModal(imageUrl, false, function (editedImageBlob) {
+                        // Create a completely new file object
+                        let editedFile = new File([editedImageBlob], existingFile.name, { type: existingFile.type });
+
+                        // Replace the file in myDropzone.files to ensure it’s the new cropped version
+                        myDropzone.files[fileIndex] = editedFile;
+
+                        // Manually set the preview element to the new file, preserving Dropzone's reference
+                        editedFile.previewElement = previewElement;
+
+                        // Update the preview with the cropped image
+                        let updatePreviewReader = new FileReader();
+                        updatePreviewReader.onload = function (e) {
+                            previewElement.querySelector('img').src = e.target.result;
+                            previewElement.querySelector('img').style.width = '100%';
+                            previewElement.querySelector('.dz-image').style.width = '120px';
+                            previewElement.querySelector('.dz-image').style.height = '120px';
+                        };
+                        updatePreviewReader.readAsDataURL(editedImageBlob);
+                    });
+                };
+                reader.readAsDataURL(existingFile);
+            }
+        }
+    });
+});
+
+
+    }
+});
+
+
+let sortable = new Sortable(document.querySelector("#myDropzone"), {
+    onEnd: function (evt) {
+        let reorderedFiles = [];
+        
+        document.querySelectorAll("#myDropzone .dz-preview").forEach(function (element) {
+            // Find file in Dropzone based on previewElement
+            let file = myDropzone.files.find(function (file) {
+                return file && file.previewElement === element;
+            });
+
+            if (file) { // Only push if the file is valid
+                reorderedFiles.push(file);
+            }
+        });
+
+        // Update Dropzone's files array with the new order
+        myDropzone.files = reorderedFiles;
+        // console.log(myDropzone.files); // Now the files array matches the preview order
+    }
+});
+            
+            // Initialize Sortable.js
+            Sortable.create(myDropzone.previewsContainer, {
+                draggable: ".dz-preview",
+                onEnd: function (evt) {
+                    // Handle reorder logic if necessary
+                    console.log("Files reordered:", evt);
+                }
+            });
+
+
+// Image Editor Modal Logic
+let cropper;
+
+function openImageEditorModal(imageUrl, closeBtn, callback) {
+    let btn = `<button id="cancelEdit">{{ _('Close') }}</button>`
+    if (cropperState === 1) {
+        if (closeBtn === true) {
+            btn = ''
+        }
+        document.getElementById('overlay').classList.add('show');
+        let imageEditorModal = document.createElement('div');
+        imageEditorModal.id = 'imageEditorModal';
+        imageEditorModal.className = 'modal open';
+        imageEditorModal.innerHTML = `
+            <img id="imageToEdit" src="${escapeHtml(imageUrl)}" alt="Image to edit">
+            <br>
+            <button id="saveEditedImage">{{ _('Crop') }}</button>
+            ${btn}
+        `;
+        document.body.appendChild(imageEditorModal);
+
+        let imageToEdit = document.getElementById('imageToEdit');
+        cropper = new Cropper(imageToEdit, {
+            aspectRatio: 2 / 1.5,
+            viewMode: 1,
+            ready: function () {
+                let cropperInstance = this.cropper;
+                let naturalWidth = cropperInstance.imageData.naturalWidth;
+                let naturalHeight = cropperInstance.imageData.naturalHeight;
+                cropperInstance.setCropBoxData({
+                    width: naturalWidth,
+                    height: naturalHeight / (2 / 1.5),
+                    left: (naturalWidth - naturalWidth) / 2,
+                    top: (naturalHeight - naturalHeight / (2 / 1.5)) / 2
+                });
+            }
+        });
+
+        document.getElementById('saveEditedImage').onclick = function () {
+            cropper.getCroppedCanvas().toBlob(function (blob) {
+                closeImageEditorModal(imageEditorModal);
+                callback(blob);
+            });
+            
+                // Find a child element with the 'uploadStatus' class
+            let childWithUploadStatus = targetedInput.querySelector('.uploadStatus');
+
+            if (childWithUploadStatus) {
+                targetedInput.querySelector('.uploadStatus').value = 0;
+                stVal = targetedInput.querySelector('.uploadStatus').value;
+                console.log(`A child element has the "uploadStatus" class with val ${stVal}`);
+            } else {
+                console.log('No child element has the "uploadStatus" class');
+            }
+
+            targetedInput = '';
+
+        };        
+        
+        document.getElementById('cancelEdit').onclick = function () {
+            closeImageEditorModal(imageEditorModal);
+        };
+    }
+}
+
+
+function closeImageEditorModal(modal) {
+    cropper.destroy();
+    modal.remove();
+    document.getElementById('overlay').classList.remove('show');
+}
+
+    </script>
+
+        <!-- End of script for Dropzone (image upload) -->
+       
+        <script nonce="{{ csp_nonce() }}">
+            function productCategoryDropDown() {
+
+                const productCategory = {{ productCategory | tojson }}
+
+            const dropdownContainer = document.getElementById('pcDropDown');
+            if (productCategory.product_category.length > 0) {
+                const select = document.createElement('select');
+                select.name = 'product-category';
+                select.id = 'category-id';
+                select.classList.add('form-control');
+
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = '{{ _("Choose product category") }}';
+                select.appendChild(defaultOption);
+
+                productCategory.product_category.data.forEach(val => {
+                    const optVal = val['Product_Category_Name'];
+                    if (optVal !== null) {
+                        const option = document.createElement('option');
+                        option.value = val['Product_Category_ID'];
+                        if (prData.Product_Category_ID === val['Product_Category_ID']) {
+                            option.selected = true;
+                        }
+                        option.textContent = optVal;
+                        select.appendChild(option);
+                    }
+                });
+
+                dropdownContainer.appendChild(select); // Append the select element to the body or any other specific location
+            }
+        };
+
+
+            function openHeaderEditorModal(prData) {
+                // Show the overlay
+                document.getElementById('overlay').classList.add('show');
+
+                // Create modal element
+                let ProductName = prData.Title;
+                ProductLink = prData.Url;
+                ProductLink = prData.Url;
+                languageID = prData.LanguageID;
+                ShortDescription = prData.ShortDescription;
+                LongDescription = prData.LongDescription;
+
+                headerEditorModal = document.createElement('div');
+                headerEditorModal.id = 'headerEditorModal';
+                headerEditorModal.className = 'modal open';
+                headerEditorModal.innerHTML = `
+    <div class="he-head">
+        <h5 class="modal-title" id="header-editor-title">{{ _('Edit Header') }}</h5>
+        <button type="button" class="he-close" id="cancelHeaderEdit" aria-label="{{ _('Close') }}" title="{{ _('Close') }}">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="he-body">
+        <form id="add-product-form" class="form he-form" novalidate>
+            <p id="mistakes_modal" role="alert" aria-live="polite"></p>
+
+            <div class="he-field">
+                <label for="product-name">{{ _('Product name') }}</label>
+                <input type="text" class="form-control" value="${escapeHtml(ProductName)}" id="product-name" placeholder="{{ _('Max allowed number of chars is 20') }}" autocomplete="off">
+            </div>
+
+            <div class="he-field">
+                <label for="product-link">{{ _('Product link') }}</label>
+                <input type="text" class="form-control" value="${escapeHtml(ProductLink)}" id="product-link" autocomplete="off">
+            </div>
+
+            <div class="he-field">
+                <label for="short-description">{{ _('Short Description') }}</label>
+                <input type="text" id="short-description" class="form-control" value="${escapeHtml(ShortDescription)}" autocomplete="off">
+            </div>
+
+            <div class="he-field">
+                <label for="long-description">{{ _('Long Description') }}</label>
+                <textarea id="long-description" class="form-control" rows="4" placeholder="{{ _('Suggested max number of chars is 125') }}">${escapeHtml(LongDescription)}</textarea>
+            </div>
+
+            <div class="he-field" id="pcField">
+                <label for="category-id">{{ _('Product Category') }}</label>
+                <div id="pcDropDown"></div>
+            </div>
+
+            <div class="he-actions">
+                <div class="middleButtun" id="saveEditedHeader" role="button" tabindex="0">${escapeHtml(prUpdate)}</div>
+                <div id="saving" class="hidden middleButtun" aria-live="polite">${escapeHtml(prSaving)}</div>
+            </div>
+        </form>
+    </div>
+`;
+                headerEditorModal.setAttribute('role', 'dialog');
+                headerEditorModal.setAttribute('aria-modal', 'true');
+                headerEditorModal.setAttribute('aria-labelledby', 'header-editor-title');
+                document.body.appendChild(headerEditorModal);
+                productCategoryDropDown();
+                if (!document.getElementById('category-id')) {
+                    document.getElementById('pcField').classList.add('hidden');
+                }
+                document.getElementById('product-name').focus();
+
+                document.getElementById('saveEditedHeader').addEventListener('keydown', function (event) {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        this.click();
+                    }
+                });
+
+                const inputElement = document.getElementById("product-link");
+
+                inputElement.addEventListener("keyup", (event) => {
+                const newValue = event.target.value.replace(/\s/g, "-");
+                inputElement.value = newValue;
+                });
+
+                // When the form is submitted
+                const saveButton = document.getElementById('saveEditedHeader');
+                
+                saveButton.addEventListener("click", function (event) {
+                    // Prevent the default form submission
+                    event.preventDefault();
+
+    const saveButton = document.getElementById('saveEditedHeader');
+    const saving = document.getElementById('saving');
+
+    saveButton.classList.add('hidden');
+    saving.classList.remove('hidden');
+
+    // Get the category name from the input field
+    let productName = document.getElementById('product-name').value;
+    let productLink = document.getElementById('product-link').value;
+    let languageID = document.getElementById('language-id').value;
+    let CategoryID = document.getElementById('category-id') ? document.getElementById('category-id').value : '';
+    let RefKey = document.getElementById('RefKey').value;
+    let shortDescription = document.getElementById('short-description').value;
+    let longDescription = document.getElementById('long-description').value;
+
+
+    // Create a new FormData object
+    let formData = new FormData();
+    formData.append('productName', productName);
+    formData.append('productLink', productLink);
+    formData.append('CategoryID', CategoryID);
+    formData.append('languageID', languageID);
+    formData.append('short-description', shortDescription);
+    formData.append('long-description', longDescription);
+    formData.append('RefKey', RefKey);
+  
+
+    
+    
+    // Create a new XMLHttpRequest object
+    let xhr = new XMLHttpRequest();
+    
+    
+    // Configure the request
+    xhr.open('POST', '/edit_product_headers');
+    
+
+    xhr.setRequestHeader('X-CSRFToken', csrfToken);
+
+    // Define what happens on successful data submission
+    xhr.onload = function () {
+        if (xhr.status === 200) {
+            let response = JSON.parse(xhr.responseText);
+
+            let mistakesDiv = document.getElementById('mistakes_modal');
+            mistakesDiv.innerHTML = ''; // Clear previous messages
+
+            if (response.status === '2') {
+                // Handle empty product name
+                mistakesDiv.innerHTML = safeMessage(response.answer);
+                mistakesDiv.style.display = 'block';
+
+                // Scroll the window to the mistakesDiv with smooth behavior
+                mistakesDiv.scrollIntoView({ behavior: 'smooth' });
+
+                saveButton.classList.remove('hidden');
+                saving.classList.add('hidden');
+
+            } else if (response.status === '3') {
+                // Handle existing product name
+                mistakesDiv.textContent = response.answer;
+                mistakesDiv.style.display = 'block';
+
+                // Scroll the window to the mistakesDiv with smooth behavior
+                mistakesDiv.scrollIntoView({ behavior: 'smooth' });
+
+                saveButton.classList.remove('hidden');
+                saving.classList.add('hidden');
+
+            } else if (response.status === '4') {
+                // Handle empty product link
+                mistakesDiv.textContent = response.answer;
+                mistakesDiv.style.display = 'block';
+
+                // Scroll the window to the mistakesDiv with smooth behavior
+                mistakesDiv.scrollIntoView({ behavior: 'smooth' });
+
+                saveButton.classList.remove('hidden');
+                saving.classList.add('hidden');
+
+            } else if (response.status === '5') {
+                // Handle existing product link
+                mistakesDiv.textContent = response.answer;
+                mistakesDiv.style.display = 'block';
+
+                // Scroll the window to the mistakesDiv with smooth behavior
+                mistakesDiv.scrollIntoView({ behavior: 'smooth' });
+
+                saveButton.classList.remove('hidden');
+                saving.classList.add('hidden');
+
+            }  else if (response.status === '6') {
+                // Handle product category error
+                mistakesDiv.textContent = response.answer;
+                mistakesDiv.style.display = 'block';
+                
+                // Scroll the window to the mistakesDiv with smooth behavior
+                mistakesDiv.scrollIntoView({ behavior: 'smooth' });
+                
+                saveButton.classList.remove('hidden');
+                saving.classList.add('hidden');
+                
+            }  else if (response.status === '0') {
+                // Handle Unknown Error
+                mistakesDiv.textContent = response.answer;
+                mistakesDiv.style.display = 'block';
+
+                // Scroll the window to the mistakesDiv with smooth behavior
+                mistakesDiv.scrollIntoView({ behavior: 'smooth' });
+
+                saveButton.classList.remove('hidden');
+                saving.classList.add('hidden');
+
+            } else if (response.status === '1') {
+                // Handle success
+                // alert(response.answer);
+                let currentUrl = window.location.href;
+                location.href = currentUrl;
+            }
+        } else {
+            // Handle error response
+            saveButton.classList.remove('hidden');
+            saving.classList.add('hidden');
+
+            console.error('Error adding category:', xhr.responseText);
+        }
+    };
+
+    // Send the request with the FormData object
+    xhr.send(formData);
+
+                });
+
+
+                document.getElementById('cancelHeaderEdit').addEventListener("click", function () {
+                    closeHeaderEditorModal(headerEditorModal);
+                    document.getElementById('slides').style.display = 'flex';
+                    document.getElementById('editorContent').style.display = 'block';
+                });
+            };
+
+            document.getElementById('headerButton').onclick = function () {
+                openHeaderEditorModal(prData);
+                document.getElementById('editorStatus').value = 0;
+            };
+
+            // Escape closes the "Edit Header" window, like its close button
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape' && document.getElementById('headerEditorModal')) {
+                    document.getElementById('cancelHeaderEdit').click();
+                }
+            });
+
+
+            function closeHeaderEditorModal(modal) {
+                modal.remove();
+                // Hide the overlay
+                document.getElementById('overlay').classList.remove('show');
+            };
+
+    </script>
+
+</span>
+
+{{ slideShow | safe }}
+    <!-- End of Slide Show and image uploader -->
+
+<!-- </div>
+<div class="con"> -->
+<!-- Reach Text Editor -->
+    {% set editorStatus = 0 %}
+    {% set prStyle = "display: none" %}
+    {% set editorStyle = "display: block" %}
+    {% if prData.Text is none %}
+        {% set prStyle = "display: block" %}
+        {% set editorStyle = "display: none" %}
+        {% set editorStatus = 1 %}
+    {% endif %}
+    
+    
+
+<!-- <div id="editorContentParent"> -->
+{% set show = '' %} 
+{% if prData.Text is none %}
+   {% set show = 'display: none' %} 
+{% endif %}
+<div id="editorContentParent" style="{{ show }}">
+    <span id="editorContent" class="ql-editor" style="{{ editorStyle }}"></span>
+</div>
+
+    <span class="blocks" id="myReachTextEditor" style="{{ prStyle }}">
+<!-- 
+    <div id="toolbar">
+    </div>
+     -->
+
+    <!-- <div id="toolbar" class="customToolbar"> -->
+        <!-- Formatting buttons -->
+        <!-- <button class="ql-bold"></button> -->
+        <!-- <button class="ql-italic"></button> -->
+        <!-- <button class="ql-underline"></button> -->
+        <!-- <button class="ql-strike"></button> -->
+      
+        <!-- Blockquote, code-block -->
+        <!-- <button class="ql-blockquote"></button> -->
+        <!-- <button class="ql-code-block"></button> -->
+      
+        <!-- Link, image, video, formula -->
+        <!-- <button class="ql-link"></button> -->
+        <!-- <button class="ql-image"></button> -->
+        <!-- <button class="ql-video"></button> -->
+        <!-- <button class="ql-formula"></button> -->
+      
+        <!-- Headers -->
+        <!-- <button class="ql-header" value="1"></button>
+        <button class="ql-header" value="2"></button> -->
+      
+        <!-- Lists -->
+        <!-- <button class="ql-list" value="ordered"></button> -->
+        <!-- <button class="ql-list" value="bullet"></button> -->
+        <!-- <button class="ql-list" value="check"></button> -->
+      
+        <!-- Script -->
+        <!-- <button class="ql-script" value="sub"></button> -->
+        <!-- <button class="ql-script" value="super"></button> -->
+      
+        <!-- Indent -->
+        <!-- <button class="ql-indent" value="-1"></button> -->
+        <!-- <button class="ql-indent" value="+1"></button> -->
+      
+        <!-- Direction -->
+        <!-- <button class="ql-direction" value="rtl"></button> -->
+
+        <!-- Size -->
+        <!-- <select class="ql-size"> -->
+          <!-- <option value="small"></option> -->
+          <!-- Note that the '' option means default size -->
+          <!-- <option selected></option>  -->
+          <!-- <option value="large"></option> -->
+          <!-- <option value="huge"></option> -->
+
+
+        <!-- </select> -->
+      
+        <!-- Header levels -->
+        <!-- <select class="ql-header">
+          <option value="1"></option>
+          <option value="2"></option>
+          <option value="3"></option>
+          <option value="4"></option>
+          <option value="5"></option>
+          <option value="6"></option> -->
+          <!-- Note that the 'false' option means paragraph -->
+          <!-- <option selected></option> 
+        </select> -->
+      
+        <!-- Font types -->
+        <!-- <select class="ql-font"> -->
+          <!-- Options will be dynamically generated based on what's available in your theme/quill setup -->
+        <!-- </select> -->
+      
+        <!-- Text alignment -->
+        <!-- <select class="ql-align"> -->
+          <!-- Options will be dynamically generated based on what's available in your theme/quill setup -->
+        <!-- </select> -->
+      
+        <!-- Clean formatting button -->
+        <!-- <button class="ql-clean"></button> -->
+
+        <!-- Text color, background color -->
+        <!-- <span class="ql-formats">
+            <button id="text-color-picker-btn" class="ql-color-picker"></button>
+            <button id="background-color-picker-btn" class="ql-color-picker"></button>
+        </span>
+      </div> -->
+      
+      
+
+      
+
+        <!-- Quill.js editor container -->
+         <!-- hidden pickrs, outside of the toolbar: -->
+        <div id="text-pickr-container" style="display: none;"></div>
+        <div id="bg-pickr-container"   style="display: none;"></div>
+        <div id="editor-wrapper" class="quill-editor scroll-container" style="height: 600px; overflow-y: auto;">
+            <div id="editor-container"></div>
+        </div>
+
+        <!-- Button to submit content -->
+        <div class="pcButton" id="submit-btn">{{ _('Submit') }}</div>
+        <div id="saving-btn" class="hidden pcButton">{{ _('Saving...') }}</div>
+    </span>
+    <input type="hidden" id="editorStatus" value="{{ editorStatus }}" >
+    
+<!-- End of Reach Text Editor -->
+
+<script nonce="{{ csp_nonce() }}" src="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/pickr.min.js"></script>
+    
+
+<div id="submitted-content"></div>
+
+<!-- Include Quill.js script -->
+<!-- <script nonce="{{ csp_nonce() }}" src="https://cdn.quilljs.com/1.3.6/quill.js"></script> -->
+<script nonce="{{ csp_nonce() }}" src="{{ url_for('static', filename='JS/araxi-palette.js') }}"></script>
+<script nonce="{{ csp_nonce() }}" src="{{ url_for('static', filename='JS/1-3-6-quill.js') }}"></script>
+<script nonce="{{ csp_nonce() }}">
+
+document.addEventListener('DOMContentLoaded', function() {
+
+
+    const Font = Quill.import('formats/font');
+    const fonts = [
+        'montserrat',
+        'lato',
+        'roboto',
+        'raleway',
+        'cursive'
+    ];
+
+    Font.whitelist = fonts;
+    Quill.register(Font, true);
+
+    
+    let Size = Quill.import('attributors/style/size');
+    // Define exactly the sizes you want (with units!)
+    Size.whitelist = [
+    '8px', '9px', '10px', '11px', '12px', '14px',
+    '16px', '18px', '20px', '24px', '28px', '32px',
+    '36px', '48px', '72px'
+    ];
+
+    // Tell Quill to use your version
+    Quill.register(Size, true);
+
+    // Initialize Quill.js editor
+    const toolbarOptions = [
+        ['bold', 'italic', 'underline', 'strike'],
+        ['blockquote'],
+        ['link', 'image', 'video'],
+        [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'list': 'check' }],
+        [{ 'script': 'sub' }, { 'script': 'super' }],
+        [{ 'indent': '-1' }, { 'indent': '+1' }],
+        [{ 'direction': 'rtl' }],
+        // [{ 'size': ['small', false, 'large', 'huge'] }],
+        // false = no size / no font chosen ("Normal" / "Sans Serif"), so the pickers are never blank
+        [{ 'size': [false, ...Size.whitelist] }],
+        [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+        [{ 'color': [] }, { 'background': [] }],
+        [{ 'font': [false, ...Font.whitelist] }],
+        [{ 'align': [] }],
+        ['clean']
+    ];
+
+    function imageHandler() {
+            const input = document.createElement('input');
+            input.setAttribute('type', 'file');
+            input.setAttribute('accept', 'image/*');
+            input.click();
+
+            input.onchange = function () {
+                const file = input.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        const base64String = e.target.result;
+                        const base64WithFileName = 'data:' + file.type + ';filename=' + file.name + ';base64,' + base64String.split(',')[1];
+                        insertBase64Image(base64WithFileName);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+        }
+
+        function insertBase64Image(base64String) {
+            const range = quill.getSelection();
+            quill.insertEmbed(range.index, 'image', base64String);
+        }
+
+    const quill = new Quill('#editor-container', {
+        modules: { 
+            toolbar: {
+                    container: toolbarOptions,
+                    // container: '#toolbar',
+                    handlers: {
+                        'image': imageHandler
+                    }
+                },
+            keyboard: {
+                bindings: {
+                    // Replaces Quill's default 'tab' binding (which inserts "\t"):
+                    // Tab inserts four spaces and keeps focus in the editor.
+                    // Tab in lists, blockquotes and code blocks still indents as before.
+                    // The spaces are non-breaking: the editor uses "white-space: pre-line"
+                    // (quill.snow.css), which would collapse four plain spaces into one.
+                    tab: {
+                        key: 9,
+                        handler: function (range) {
+                            this.quill.history.cutoff();
+                            this.quill.deleteText(range.index, range.length, Quill.sources.USER);
+                            this.quill.insertText(range.index, String.fromCharCode(160).repeat(4), Quill.sources.USER); // 160 = &nbsp;
+                            this.quill.history.cutoff();
+                            this.quill.setSelection(range.index + 4, Quill.sources.SILENT);
+                        }
+                    }
+                }
+            }
+        },
+        theme: 'snow',
+        scrollingContainer: '#editor-wrapper'
+    });
+
+    // No font is forced on start: text without a chosen font is Sans Serif (see rte.css).
+    // Formatting here also focused the hidden editor and left a stray caret placeholder in it.
+    const tb = quill.getModule('toolbar').container;
+    tb.id = 'toolbar';
+
+
+    
+// Select the target element
+// const fontLabel = document.querySelector('.ql-font .ql-picker-label');
+
+// if (fontLabel) {
+//   // Create a MutationObserver instance to watch for attribute changes
+//   const observer = new MutationObserver((mutationsList) => {
+//     mutationsList.forEach((mutation) => {
+//       if (mutation.type === 'attributes' && mutation.attributeName === 'data-value') {
+//         const newValue = fontLabel.getAttribute('data-value');        
+//         updateCSSContent(newValue);
+//       }
+//     });
+//   });
+
+//   // Start observing the target element for attribute changes to 'data-value'
+//   observer.observe(fontLabel, { attributes: true, attributeFilter: ['data-value'] });
+// } else {
+//   console.warn('Element .ql-font .ql-picker-label not found');
+// }
+
+
+// // Function to update (or create) a style element with new CSS rule
+// function updateCSSContent(newValue) {
+//   newValue = formatFontName(newValue); 
+//   console.log('New data-value:', newValue);
+//   // Try to find an existing style element we can update
+//   let styleElem = document.getElementById('dynamic-font-style');
+//   if (!styleElem) {
+//     styleElem = document.createElement('style');
+//     styleElem.id = 'dynamic-font-style';
+//     document.head.appendChild(styleElem);
+//   }
+//   // Update the CSS rule. The content property must be quoted.
+//   styleElem.innerHTML = `
+//     .ql-snow .ql-picker.ql-font .ql-picker-label::before,
+//     .ql-snow .ql-picker.ql-font .ql-picker-item::before {
+//       content: '${newValue}';
+//       font-family: '${newValue}';
+//     }
+//   `;
+// }
+
+
+// function formatFontName(fontKey) {
+//   return fontKey
+//     .split('-') // split by dash
+//     .map(word => word.charAt(0).toUpperCase() + word.slice(1)) // capitalize each part
+//     .join(' '); // rejoin with space
+// }
+
+
+
+
+// const quill = new Quill('#editor-container', {
+//   theme: 'snow',
+//   placeholder: "{{ _('Additional notes') }}",
+//   modules: {
+//     toolbar: {
+//       container: toolbarOptions, 
+//       handlers: {
+//         image: imageHandler
+//       }
+//     }
+//   }
+// });
+
+
+    // Initialize Quill editor
+// const quill = new Quill('#editor', {
+//     theme: 'snow',
+//     modules: {
+//         toolbar: toolbarOptions
+//     }
+// });
+
+// // Initialize Pickr for text color
+// const textColorPickr = Pickr.create({
+//     el: '.ql-color-picker ',
+//     theme: 'classic',
+//     default: '#3E3E4547',
+//     components: {
+//         preview: true,
+//         opacity: true,
+//         hue: true,
+//         interaction: {
+//             hex: true,
+//             // rgba: true,
+//             // hsla: true,
+//             // hsva: true,
+//             // cmyk: true,
+//             input: true,
+//             clear: true,
+//             save: true
+//         }
+//     }
+// });
+
+// // Update Quill editor when a text color is picked
+// textColorPickr.on('save', (color) => {
+//     const hexColor = color.toHEXA().toString();
+//     const range = quill.getSelection();
+//     if (range) {
+//         quill.format('color', hexColor);
+//     }
+// });
+
+
+// // Initialize Pickr for background color
+// const backgroundColorPickr = Pickr.create({
+//     el: '.ql-background',
+//     theme: 'classic',
+//     default: '#935CA5A8',
+//     components: {
+//         preview: true,
+//         opacity: true,
+//         hue: true,
+//         interaction: {
+//             hex: true,
+//             // rgba: true,
+//             // hsla: true,
+//             // hsva: true,
+//             // cmyk: true,
+//             input: true,
+//             clear: true,
+//             save: true
+//         }
+//     }
+// });
+
+
+// // Update Quill editor when a background color is picked
+// backgroundColorPickr.on('save', (color) => {
+//     const hexColor = color.toHEXA().toString();
+//     const range = quill.getSelection();
+//     if (range) {
+//         quill.format('background', hexColor);
+//     }
+// });
+
+
+// 1. grab the label nodes
+// const textBtn = document.querySelector('.ql-color .ql-picker-label');
+// const bgBtn   = document.querySelector('.ql-background .ql-picker-label');
+
+// 2. instantiate Pickr on those
+const textColorPickr = Pickr.create({
+  el:  '#text-pickr-container',
+  theme: 'classic',
+  default: '#FCC628',
+  swatches: window.ARAXI_PALETTE,   // Araxi Travel colours (static/JS/araxi-palette.js)
+  position: 'top-middle',
+  autoReposition: false, 
+  components: {
+    preview: true, opacity: true, hue: true,
+    interaction: { hex: true, input: true, clear: true, save: true }
+  }
+});
+const bgColorPickr = Pickr.create({
+  el:  '#bg-pickr-container',
+  theme: 'classic',
+  default: '#ccc',
+  position: 'top-middle',
+  autoReposition: false, 
+  components: {
+    preview: true, opacity: true, hue: true,
+    interaction: { hex: true, input: true, clear: true, save: true }
+  }
+});
+
+// 3. when they click “save,” apply to Quill
+textColorPickr.on('save', color => {
+  const hex = color.toHEXA().toString();
+  const range = quill.getSelection();
+  if (range) quill.format('color', hex);
+  textColorPickr.hide();
+});
+bgColorPickr.on('save', color => {
+  const hex = color.toHEXA().toString();
+  const range = quill.getSelection();
+  if (range) quill.format('background', hex);
+  bgColorPickr.hide();
+});
+
+// grab the Quill “A” icons
+const textLabel = document.querySelector('.ql-color .ql-picker-label');
+const bgLabel   = document.querySelector('.ql-background .ql-picker-label');
+
+textLabel.addEventListener('click', e => {
+  e.preventDefault();
+  e.stopPropagation();
+  textColorPickr.show();
+});
+
+bgLabel.addEventListener('click', e => {
+  e.preventDefault();
+  e.stopPropagation();
+  bgColorPickr.show();
+});
+
+textColorPickr.on('save', color => {
+  quill.format('color', color.toHEXA().toString());
+  textColorPickr.hide();
+});
+// a palette colour applies at once, no need to press Save
+textColorPickr.on('swatchselect', color => {
+  quill.format('color', color.toHEXA().toString());
+  textColorPickr.hide();
+});
+bgColorPickr.on('save', color => {
+  quill.format('background', color.toHEXA().toString());
+  bgColorPickr.hide();
+});
+
+
+// after you’ve whitelisted & registered Font and init’d Quill…
+const fontPicker = document.querySelector('.ql-picker.ql-font');
+
+// run this each time the menu opens
+// fontPicker.addEventListener('click', () => {
+//   // give Quill a moment to inject the items
+//   requestAnimationFrame(() => {
+//     const options = fontPicker.querySelector('.ql-picker-options');
+//     const items   = Array.from(options.querySelectorAll('.ql-picker-item'));
+
+//     // measure each label’s scrollWidth
+//     let max = 0;
+//     items.forEach(item => {
+//       const w = item.scrollWidth;
+//       if (w > max) max = w;
+//     });
+
+//     // pad for scrollbar / padding
+//     options.style.width = `${max + 32}px`;
+//   });
+// });
+
+
+
+
+    document.getElementById('submit-btn').addEventListener('click', function (event) {
+        let content = quill.root.innerHTML;
+        let languageID = document.getElementById('language-id').value;
+        let RefKey = document.getElementById('RefKey').value;
+        event.preventDefault();
+
+        const saveButton = document.getElementById('submit-btn');
+        const saving = document.getElementById('saving-btn');
+
+        saveButton.classList.add('hidden');
+        saving.classList.remove('hidden');
+
+        let formData = new FormData();
+        formData.append('content', content);
+        formData.append('language-id', languageID);
+        formData.append('RefKey', RefKey);
+
+        // Create a new XMLHttpRequest object
+        var xhr = new XMLHttpRequest();
+
+        // Configure the request
+        xhr.open('POST', '/submit_product_text');
+        xhr.setRequestHeader('X-CSRFToken', csrfToken);
+
+        // Define what happens on successful data submission
+        xhr.onload = function () {
+            if (xhr.status === 200) {
+                var response = JSON.parse(xhr.responseText);
+
+                var mistakesDiv = document.getElementById('mistakes');
+                mistakesDiv.innerHTML = ''; // Clear previous messages
+
+            if (response.status === '1') {
+                    // Handle success
+                    let RefKey = document.getElementById('RefKey').value;
+                    let prURL = window.location.origin  + '/product/' + RefKey;
+                    location.href = prURL;
+                }
+            } else {
+                // Handle error response
+                saveButton.classList.remove('hidden');
+                saving.classList.add('hidden');
+
+                console.error('Error adding category:', xhr.responseText);
+            }
+        };
+
+        // Send the request with the FormData object
+        xhr.send(formData);
+        });
+
+
+    // Function to convert HTML to Delta
+    function convertHtmlToDelta(html) {
+        const container = document.createElement('div');
+        container.innerHTML = html;
+        return quill.clipboard.convert(container);
+    }
+
+    document.querySelectorAll('.chooseBlock').forEach(item => {
+        item.addEventListener('click', function (event) {
+            document.getElementById('editorContentParent').style.marginTop = '75px';
+            const clickedId = event.currentTarget.id;
+            document.getElementById("topLeftNav").classList.toggle('collapsed');
+
+            // Hide all elements with the class 'blocks'
+            // if (clickedId === "textEditorButton") {
+                document.querySelectorAll('.blocks').forEach(block => {
+                    if (!block.id === 'mySlideShow') {
+                    }                        
+                        block.style.display = 'none'; 
+                });
+
+            // } else {
+            //     document.querySelectorAll('.blocks').forEach(block => {
+            //         block.style.display = 'none'; 
+            //     });
+            // }
+
+            
+            // Get the id of the clicked element
+            
+            // Conditionally show the correct element based on the clicked id
+            if (clickedId === 'sliderButton') {
+                document.getElementById("editorContent").style.display = "none";
+                document.getElementById("editorStatus").value = 0; // This is for reach text editor hide-show manipulations
+                document.getElementById(clickedId).innerHTML = "{{ _('Loading...') }}";
+                
+                let languageID = prData.LanguageID;
+                let ProductID = prData.Product_ID;
+
+                let formData = new FormData();
+                formData.append('languageID', languageID);
+                formData.append('ProductID', ProductID);
+
+                // Create a new XMLHttpRequest object
+                let xhr = new XMLHttpRequest();
+
+                // Configure the request
+                xhr.open('POST', '/get_slides');
+                xhr.setRequestHeader('X-CSRFToken', csrfToken);
+
+                // Define what happens on successful data submission
+                xhr.onload = function () {
+                    if (xhr.status === 200) {
+                        let response = JSON.parse(xhr.responseText);
+                        
+                        // Add image from url to dropzone
+
+                        // Helper function to fetch images and maintain order
+                        function fetchImage(imgName, AltText, src, sliderID) {
+                            return new Promise((resolve, reject) => {
+                                if (imgName.length > 0) {
+                                    let url = window.location.origin + '/static/images/' + src + '/' + imgName;
+                                    let fileType = "image/" + imgName.split('.').pop();
+
+                                    fetch(url)
+                                        .then(response => response.blob())
+                                        .then(blob => {
+                                            let file = new File([blob], imgName, { type: fileType });
+                                            resolve({ file: file, altText: AltText, sliderId: sliderID });
+                                        })
+                                        .catch(error => {
+                                            console.error('Error fetching the image:', error);
+                                            reject(error);
+                                        });
+                                }
+                            });
+                        }
+
+                        // Array to keep the images and alt texts in the desired order
+                        const imagesToAdd = response;
+
+                        let src = 'product_slider';
+                        
+                        // Clear all images from Dropzone before fetching and adding new images
+                        myDropzone.removeAllFiles(true); // 'true' will ensure even files marked as 'uploaded' are removed
+                        
+                        // Fetch all images and add them to Dropzone in the correct order
+                        Promise.all(imagesToAdd.map(img => fetchImage(img.imgName, img.AltText, src, img.sliderID)))
+                            .then(fetchedImages => {
+                                fetchedImages.forEach(({ file, altText, sliderId }) => {
+                                    imgAlt = altText;
+                                    slider_id = sliderId;
+                                    myDropzone.addFile(file);
+                                    imgAlt = '';
+                                    slider_id = '';
+                                });
+                            })
+                            .catch(error => console.error('Error adding images:', error));
+                        
+                        // End of Add image from url to dropzone
+
+
+                        
+                    } else {
+                        // Handle error response
+                        console.error('Error adding category:', xhr.responseText);
+                    }
+                };
+
+                // Send the request with the FormData object
+                xhr.send(formData);
+            
+
+                document.getElementById(clickedId).innerHTML = "{{ _('Slider') }}";
+                document.getElementById('mySlideShow').style.display = 'block';
+                document.getElementById('mySlideShow').classList.remove('hidden');
+
+            } else if (clickedId === 'thumbnailButton') {
+                urlTo = window.location.origin + '/pr-thumbnail/' + {{ prData.RefKey }}
+                window.location = urlTo
+                // alert(urlTo)
+            } else if (clickedId === 'textEditorButton') {
+                document.getElementById('editorContentParent').style.marginTop = '0px'; //Stegh
+                let ReachTextEditorSpan = document.getElementById("myReachTextEditor");
+                let editorContent = document.getElementById("editorContent");
+                let editorStatus = document.getElementById("editorStatus").value;
+                if (editorStatus == 1) {
+                    // ReachTextEditorSpan = document.getElementById("myReachTextEditor");
+                    ReachTextEditorSpan.style.display = 'none';
+                    editorContent.style.display = 'block';
+                    document.getElementById("editorStatus").value = 0;
+                    
+                    // Get the length of the inserted content
+                    let insertedContentLength = quill.getLength();
+                    if (insertedContentLength > 0) {
+                        // Remove the inserted content
+                        quill.deleteText(0, insertedContentLength);
+                    }     
+
+
+                } else {
+                    let htmlToInsert = prData.Text
+                    
+                    // alert(htmlToInsert)
+                    if (htmlToInsert !== null) {
+
+                        // Quill's paste cleanup collapses runs of spaces unless the text is in a
+                        // "white-space: pre*" element, so 4 saved spaces came back as 2 or 3.
+                        // Saved content is the editor's own HTML, so load it with spaces kept as is.
+                        // (Normal Ctrl+V pasting still collapses spaces as before.)
+                        const clipboardBox = quill.clipboard.container;
+                        clipboardBox.style.whiteSpace = 'pre-wrap';
+                        try {
+                            quill.clipboard.dangerouslyPasteHTML(0, htmlToInsert);
+                        } finally {
+                            clipboardBox.style.whiteSpace = '';
+                        }
+                        // quill.setText(delta);
+                    
+                    }
+                    
+                    editorContent.style.display = 'none';
+                    ReachTextEditorSpan.style.display = 'block';
+                    document.getElementById("editorStatus").value = 1;
+                }
+
+            }
+        });
+    });
+});
+
+    document.getElementById('mySwitch').addEventListener('click', function() {
+        const slider = this.querySelector('.sliderA');
+        let product_status = '';
+        slider.classList.toggle('checked');  
+        if (slider.classList.contains('checked')) {
+            // Action to be performed when switch is on
+            product_status = '2'
+        } else {
+            // Action to be performed when switch is off
+            product_status = '1'
+        }
+
+        let languageID = document.getElementById('language-id').value;
+        let RefKey = document.getElementById('RefKey').value;
+
+        let formData = new FormData();
+        formData.append('languageID', languageID);
+        formData.append('RefKey', RefKey);
+        formData.append('productStatus', product_status);
+
+        // Create a new XMLHttpRequest object
+        var xhr = new XMLHttpRequest();
+
+        // Configure the request
+        xhr.open('POST', '/publish-product');
+        xhr.setRequestHeader('X-CSRFToken', csrfToken);
+
+        // Define what happens on successful data submission
+        xhr.onload = function () {
+            if (xhr.status === 200) {
+                var response = JSON.parse(xhr.responseText);
+
+                if (response.status === '1') {
+                    // Handle success
+                    alert(response.answer);
+                    window.location.reload(); 
+                }
+            } else {
+                // Handle error response
+                console.error('Error adding category:', xhr.responseText);
+            }
+        };
+
+        // Send the request with the FormData object
+        xhr.send(formData);
+    });
+
+
+
+
+    // let htmlToInsert = prData.Text
+    let savedHtmlContent = prData.Text 
+    document.getElementById('editorContent').innerHTML = savedHtmlContent;
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('myDropzone').addEventListener('click', function() {
+        cropperState = 1;    
+    });
+
+
+    
+            // Handle the file upload when the button is clicked
+            let uploadButton = document.getElementById("uploadButton");
+            let saving = document.getElementById("saveUploads");
+            
+            uploadButton.addEventListener("click", function () {
+                uploadButton.classList.toggle('hidden');
+                saving.classList.toggle('hidden');
+
+                // Create a FormData object to hold the files
+                let formData = new FormData();
+
+                // console.log(myDropzone.files)
+
+        let i = 0
+        myDropzone.files.forEach(function (file) {
+            let fileName = "file_" + i;
+            formData.append(fileName, file);
+
+            // Add the alt text as a separate field if available
+            let altInput = file.previewElement.querySelector(".alt-input");
+            let altText = altInput ? altInput.value : ''; // Use empty string if altInput is missing
+            let altTextName = "alt_text_" + i;
+            formData.append(altTextName, altText);
+
+            // Add the id of slider as a separate field if available
+            let slideIDInput = file.previewElement.querySelector(".slideID");
+            let slideID = slideIDInput ? slideIDInput.value : ''; // Use empty string if altInput is missing
+            let slideIDName = "slideID_" + i;
+            formData.append(slideIDName, slideID);
+
+            // Add upload status as a separate field if available
+            // If upload status is 0 server will upload new image
+            // if upload status is 1 server will get image from repositiry
+            // Then will check and change the order of image if needed
+            let uploadStatusInput = file.previewElement.querySelector(".uploadStatus");
+            let uploadStatusValue = uploadStatusInput ? uploadStatusInput.value : '0'; // Default to '0' if missing
+            let uploadStatus = "upload_status_" + i;
+            formData.append(uploadStatus, uploadStatusValue);
+
+            i++;
+      
+    });
+
+                let fileStatus = true;  
+                if (i === 0) {
+                    fileStatus = false;
+                } 
+                formData.append('fileStatus', fileStatus); 
+                
+                let languageID = prData.LanguageID;
+                let ProductID = prData.Product_ID;
+
+                // formData.append("languageID", languageID);
+                formData.append("ProductID", ProductID);
+                formData.append("Type", '1');
+
+                // Create a new XMLHttpRequest object
+                let xhr = new XMLHttpRequest();
+                
+                // Configure the request
+                xhr.open('POST', '/upload_slides');                   
+                xhr.setRequestHeader('X-CSRFToken', csrfToken);
+
+                // Define what happens on successful data submission
+                xhr.onload = function () {
+                    if (xhr.status === 200) {
+                        var response = JSON.parse(xhr.responseText);
+
+                        var mistakesDiv = document.getElementById('mistakes');
+                        mistakesDiv.innerHTML = ''; // Clear previous messages
+                        
+                        if (response.status === '0') {
+                            // Handle Unknown Error
+                            mistakesDiv.textContent = response.answer;
+                            // mistakesDiv.style.color = 'red';
+                            mistakesDiv.style.display = 'flex';
+
+                            uploadButton.classList.toggle('hidden');
+                            saving.classList.toggle('hidden');
+                            
+                            // Scroll the window to the mistakesDiv with smooth behavior
+                            mistakesDiv.scrollIntoView({ behavior: 'smooth' });                              
+                            
+                            
+                        } else if (response.status === '1') {
+                            mistakesDiv.style.display = 'none';
+                            uploadButton.classList.toggle('hidden');
+                            saving.classList.toggle('hidden');
+                            
+                            // Handle success
+                            alert(response.answer);
+                            let currentUrl = window.location.href;
+                            location.href = currentUrl;
+                        }
+                    } else {
+                        // Handle error response
+                        uploadButton.classList.toggle('hidden');
+                        saving.classList.toggle('hidden');
+
+                        console.error('Error adding category:', xhr.responseText);
+                    }
+                };
+
+                // Send the request with the FormData object
+                xhr.send(formData);
+
+
+            });
+
+    // Adjusts uploadStatus to 0 if any change was made to nearest input element with alt-input class
+    document.addEventListener('input', function (event) {
+    // Check if the changed element has the 'alt-input' class
+    if (event.target.classList.contains('alt-input')) {
+        // Find the nearest uploadStatus input
+        const uploadStatusInput = event.target.closest('div')?.querySelector('.uploadStatus');
+        
+        if (uploadStatusInput) {
+            // Set its value to 0
+            uploadStatusInput.value = 0;
+        }
+    }
+    });
+});   
+
+
+document.querySelector('.changePrOrder').onchange = function(event) {
+    const order = this.value;
+    const prID = prData.Product_ID;
+
+    let formData = new FormData();
+        formData.append('order', order);
+        formData.append('prID', prID);
+
+        // Create a new XMLHttpRequest object
+        var xhr = new XMLHttpRequest();
+
+        // Configure the request
+        xhr.open('POST', '/changeprorder');
+        xhr.setRequestHeader('X-CSRFToken', csrfToken);
+
+        // Define what happens on successful data submission
+        xhr.onload = function () {
+            if (xhr.status === 200) {
+                let response = JSON.parse(xhr.responseText);
+
+                if (response.status === '1') {
+                    // Handle success
+                    let RefKey = document.getElementById('RefKey').value;
+                    let prURL = window.location.origin  + '/product/' + RefKey;
+                    location.href = prURL;
+                } else {
+                    alert(response.answer)
+                }
+            } else {
+                console.error('Error adding category:', xhr.responseText);
+            }
+        };
+
+        // Send the request with the FormData object
+        xhr.send(formData);
+};
+</script>
+
+    </body>
+</html>

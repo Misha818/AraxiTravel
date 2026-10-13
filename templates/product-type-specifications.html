@@ -1,0 +1,379 @@
+{% extends 'base.html' %}
+{% block title %}
+{{ _('Product Type Specifications') }}
+{% endblock %}
+
+
+{% block head %}
+<style>
+   .option-box {
+      max-width: 1200px;
+      margin-left: 0%;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      background-color: white;
+      border-radius: 6px;
+      margin-bottom: 15px;
+    }
+
+    .checkbox {
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border: 1px solid #4CAF50;
+      border-radius: 5px;
+      position: relative;
+      cursor: pointer;
+      outline: none;
+      background-color: white;
+      transition: all 0.3s ease-in-out;
+      margin-left: 10px;
+  }
+
+  .checkbox:checked {
+    background-color: #4CAF50;
+    border-color: #4CAF50;
+  }
+
+  .checkbox:checked::after {
+    content: "\2713";
+    font-size: 14px;
+    color: white;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-weight: bold;
+  }
+
+  .untranslated {
+    width: 100%;
+    /* border: 1px solid; */
+    padding: 10px;
+    margin: -5px auto -5px auto;
+  }
+
+  .container {
+    width: 70%;
+    padding-top: unset;
+  }
+
+  /* rows shown by "Show Originals" (not translated yet) */
+  .transparent {
+    opacity: 0.6;
+  }
+
+  .option-box.pts-filters {
+    margin-top: 40px !important;
+    padding: 10px 14px;
+    gap: 10px;
+    box-sizing: border-box;
+  }
+
+  .pts-filters .untranslated {
+    width: auto;
+    margin: 0;
+    padding: 0;
+    cursor: pointer;
+  }
+
+  #myTable td.row-actions {
+    width: 1%;
+    white-space: nowrap;
+    text-align: center;
+  }
+
+  #myTable td.row-actions a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    min-height: 40px;
+    border-radius: 6px;
+    text-decoration: none;
+  }
+
+  #myTable td.row-actions a:hover,
+  #myTable td.row-actions a:focus-visible {
+    background-color: #fbe9e4;
+  }
+
+  #myTable td.row-actions a:focus-visible {
+    outline: 3px solid #264653;
+    outline-offset: 2px;
+  }
+
+  .sort-icons i {
+    padding: 2px 4px;
+  }
+
+  #myTable td.table-empty {
+    text-align: center;
+    color: #666;
+  }
+
+  @media (max-width: 768px) {
+    .container {
+      width: 92%;
+    }
+
+    .option-box.pts-filters {
+      margin-top: 16px !important;
+    }
+
+    #tableDaddy {
+      margin-left: 0 !important;
+    }
+
+    #myTable tr {
+      padding: 12px 16px;
+    }
+
+    #myTable td {
+      align-items: center;
+      gap: 12px;
+      text-align: right;
+    }
+
+    #myTable td::before {
+      flex-shrink: 0;
+      text-align: left;
+    }
+
+    #myTable td.row-actions {
+      width: auto;
+    }
+
+    #myTable td.table-empty {
+      justify-content: center;
+    }
+
+    #myTable td.table-empty::before {
+      display: none;
+    }
+  }
+
+</style>
+
+{% endblock %}
+
+{% block content %}
+
+{{ sideBar | safe }}
+<span class="option-box container pts-filters" style="padding-top: unset;">
+  {% if translated == True %}
+    <input type="checkbox" class="checkbox" id="show-originals">
+    <label for="show-originals" class="untranslated" style="font-style: italic; font-weight: 600;">{{ _('Show Originals') }}</label>
+  {% endif %}
+</span>
+
+<div class="container" >
+<div class="table-container toRight" id="tableDaddy">
+  <table id="myTable">
+    <thead>
+      <tr>
+
+      <th>
+        <div style="display: flex; align-items: center;">
+         {{ _('ID') }} 
+
+          <div class="sort-icons" style="margin-left: 5px;">
+            <i class="fas fa-sort-up myup" data-onclick='["sortTable", "$this", 0, "up"]'></i>
+            <i class="fas fa-sort-down mydown" data-onclick='["sortTable", "$this", 0, "down"]'></i>
+          </div>
+        </div>
+      </th>
+
+      <th>
+        <div style="display: flex; align-items: center;">
+         {{ _('Name') }}
+
+          <div class="sort-icons" style="margin-left: 5px;">
+            <i class="fas fa-sort-up myup" data-onclick='["sortTable", "$this", 1, "up"]'></i>
+            <i class="fas fa-sort-down mydown" data-onclick='["sortTable", "$this", 1, "down"]'></i>
+          </div>
+        </div>
+      </th>
+
+      <th> 
+        <div style="display: flex; align-items: center;">
+          {{ _('Status') }}
+
+          <div class="sort-icons" style="margin-left: 5px;">
+            <i class="fas fa-sort-up myup" data-onclick='["sortTable", "$this", 2, "up"]'></i>
+            <i class="fas fa-sort-down mydown" data-onclick='["sortTable", "$this", 2, "down"]'></i>
+          </div>
+        </div>
+    </th>
+    
+      <th></th>
+      </tr>
+    </thead>
+    <tbody>
+  {% if result.length > 0 %}
+      {% for row in result.data %}
+      {% set status = _('Active') %}
+      {% set statusStyle = 'status-open' %}
+      {% if row['Status'] == 0 %}
+        {% set status = _('Disabled') %}
+        {% set statusStyle = 'status-on-hold' %}
+      {% endif %}
+      {% set editUrl = 'edit-pts/' + row['Ref_Key']|string %}
+      <tr>
+        <td data-label="{{ _('ID') }}" >
+          {{ row['Ref_Key'] }}
+        </td>
+
+        <td data-label="{{ _('Name') }}">
+          {{ row['Name'] }}
+        </td>
+
+        <td data-label="{{ _('Status') }}"><span class="status-label {{ statusStyle }}">{{ status }}</span></td>
+
+        <td class="edit-user row-actions" data-label="{{ _('Edit') }}">
+          <a href="{{ url_for('home', _external=True) + editUrl }}" title="{{ _('Edit') }}" aria-label="{{ _('Edit') }}: {{ row['Name'] }}">
+            <i class="fas fa-pencil" aria-hidden="true"></i>
+          </a>
+        </td>
+      </tr>
+      {% endfor %}
+  {% else %}
+      <tr><td class="table-empty" colspan="4">{{ _('No data to show!') }}</td></tr>
+  {% endif %}
+    </tbody>
+  </table>
+
+  {% from '_pagination.html' import pagination as pagination_bar %}
+  {{ pagination_bar(page, numRows, pagination, pbc, 'pt_specifications') }}
+
+
+<script nonce="{{ csp_nonce() }}">
+let csrfToken = "{{ csrf_token() }}";
+window.addEventListener('load', () => {
+  document.querySelector('body').classList.add('loaded');
+});
+
+// Sorts the table rows by the clicked column: "up" = A to Z / smallest first, "down" = the reverse.
+function sortTable(arrowElement, column, direction) {
+  const tbody = document.getElementById('myTable').tBodies[0];
+  if (!tbody) {
+    return;
+  }
+  const rows = Array.from(tbody.rows).filter(row => row.cells.length > 1);
+
+  const cellValue = row => {
+    const cell = row.cells[column];
+    return cell ? cell.textContent.trim() : '';
+  };
+
+  rows.sort((a, b) => {
+    const result = cellValue(a).localeCompare(cellValue(b), undefined, { numeric: true, sensitivity: 'base' });
+    return direction === 'down' ? -result : result;
+  });
+  rows.forEach(row => tbody.appendChild(row));
+
+  document.querySelectorAll('.sort-icons i').forEach(icon => icon.style.color = '#fff');
+  arrowElement.style.color = '#ff0000';
+}
+
+if (document.querySelector('.checkbox')) {
+    document.querySelector('.checkbox').addEventListener('change', function(e) {
+      if (e.target.checked) {
+        if (document.querySelectorAll('.transparent').length > 0) {
+          document.querySelectorAll('.transparent').forEach(tr => {
+            tr.style.display = 'table-row';
+          });
+          if (document.getElementById('answerID')) {
+            document.getElementById('answerID').style.display = 'revert';
+          }
+        } else {
+
+          
+          let formData = new FormData();
+          
+          formData.append('shTP', '1');
+          
+          // Create a new XMLHttpRequest object
+          let xhr = new XMLHttpRequest();
+          
+          // Configure the request
+          xhr.open('POST', '/pt-specifications');                   
+          xhr.setRequestHeader('X-CSRFToken', csrfToken);
+          
+          // Define what happens on successful data submission
+          xhr.onload = function () {
+            if (xhr.status === 200) {
+              let response = JSON.parse(xhr.responseText);
+              
+              if (response.status === "1") {
+                if (response.data.length > 0) {
+                  let newRows = '';
+                  console.log(response.data)
+                  response.data.data.forEach(row => {
+                  console.log(row.Ref_Key);
+                  
+                  let translateUrl = `{{ url_for('home', _external=True) }}edit-pts/` + row.Ref_Key;
+                  
+                  let status = `{{ _('Active') }}`;
+                  let statusStyle = 'status-open';
+                  if (row['Status'] === 0) {
+                    status = `{{ _('Disabled') }}`;
+                    statusStyle = 'status-on-hold';
+                  }
+
+                  
+                  
+                  newRows += `
+                        <tr class="transparent">
+                          <td data-label="{{ _('ID') }}" >
+                            ${escapeHtml(row['Ref_Key'])}
+                          </td>
+
+                          <td data-label="{{ _('Name') }}">
+                            ${escapeHtml(row['Name'])}
+                          </td>
+
+                          <td data-label="{{ _('Status') }}"><span class="status-label ${ statusStyle }">${ status }</span></td>
+
+                          <td class="edit-user row-actions" data-label="{{ _('Translate') }}">
+                            <a href="${escapeHtml(translateUrl)}" title="{{ _('Translate') }}" aria-label="{{ _('Translate') }}: ${escapeHtml(row['Name'])}">
+                              <i class="fas fa-language" aria-hidden="true"></i>
+                            </a>
+                          </td>
+                        </tr>`;
+                          
+                        });
+                
+                        document.querySelector('#myTable tbody').insertAdjacentHTML('afterbegin', newRows);
+                        
+                      }
+                    }                
+                  } else {
+                    // Handle error response
+                    console.error('Error adding category:', xhr.responseText);
+                  }
+                  
+                };
+                
+                // Send the request with the FormData object
+                xhr.send(formData);
+              }
+                
+      } else {
+        if (document.querySelectorAll('.transparent').length > 0) {
+          document.querySelectorAll('.transparent').forEach(tr => {
+            tr.style.display = 'none';
+          });
+          if (document.getElementById('answerID')) {
+            document.getElementById('answerID').style.display = 'none';
+          }
+        }
+      }
+    });
+  }
+
+</script>
+
+
+{% endblock %}
