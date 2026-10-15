@@ -228,17 +228,36 @@ CREATE TABLE `sub_product_specification` (
 ALTER TABLE `sub_product_specification` AUTO_INCREMENT = 1;
 
 
-DROP TABLE IF EXISTS `sub_product_specifications`;
+DROP TABLE IF EXISTS `sub_product_specifications`; 
 CREATE TABLE `sub_product_specifications` (
     `ID` INT AUTO_INCREMENT,
     `Name` VARCHAR(255),
     `spsID` INT,
+    `spssCategoryID` INT,
     `Order` INT,
     `Status` INT,
     PRIMARY KEY (`ID`)
 ) ENGINE=InnoDB;
 ALTER TABLE `sub_product_specifications` AUTO_INCREMENT = 1;
 
+DROP TABLE IF EXISTS `spss_category`;
+CREATE TABLE `spss_category` (
+    `ID` INT AUTO_INCREMENT,
+    `Category` VARCHAR(255), -- Text, Num, Bool, Date, DateTime, Location [map/text], 
+    PRIMARY KEY (`ID`)
+) ENGINE=InnoDB;
+ALTER TABLE `spss_category` AUTO_INCREMENT = 1;
+
+DROP TABLE IF EXISTS `product_type_details`;
+CREATE TABLE `product_type_details` (
+    `ID` INT AUTO_INCREMENT,
+    `Text` VARCHAR(255),
+    `spssID` INT,
+    `productTypeID` INT,
+    -- `Status` INT,
+    PRIMARY KEY (`ID`)
+) ENGINE=InnoDB;
+ALTER TABLE `product_type_details` AUTO_INCREMENT = 1;
 
 DROP TABLE IF EXISTS `sps_relatives`;
 CREATE TABLE `sps_relatives` (
@@ -264,19 +283,6 @@ CREATE TABLE `spss_relatives` (
     PRIMARY KEY (`ID`)
 ) ENGINE=InnoDB;
 ALTER TABLE `spss_relatives` AUTO_INCREMENT = 1;
-
-
-DROP TABLE IF EXISTS `product_type_details`;
-CREATE TABLE `product_type_details` (
-    `ID` INT AUTO_INCREMENT,
-    `Text` VARCHAR(255),
-    `spssID` INT,
-    `productTypeID` INT,
-    -- `Status` INT,
-    PRIMARY KEY (`ID`)
-) ENGINE=InnoDB;
-ALTER TABLE `product_type_details` AUTO_INCREMENT = 1;
-
 
 DROP TABLE IF EXISTS `quantity`;
 CREATE TABLE `quantity` (
@@ -765,6 +771,15 @@ INSERT INTO `languages` (`Language`, `Prefix`) VALUES
 ('Português', 'pt'),
 ('Русский', 'ru')
 ;
+
+INSERT INTO `spss_category` (`Category`)
+VALUES 
+    ('Text'),
+    ('Num'),
+    ('Bool'),
+    ('Date'),
+    ('DateTime'),
+    ('Location'); -- embed a google map or wright down an address
 
 INSERT INTO `payment_methods` (`method`, `Status`) VALUES
 ('Credit/Debit card', 1),

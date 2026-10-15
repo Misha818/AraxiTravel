@@ -8,11 +8,14 @@
 
 <title>Login Form</title>
 
+<!-- Araxi Travel colours (static/css/araxi-tokens.css) -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/araxi-tokens.css') }}">
+
 
 <style>
   body {
     font-family: Arial, sans-serif;
-    background-color: #f4f4f9;
+    background-color: var(--cream-50);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -28,34 +31,34 @@
     background: white;
     border-radius: 8px;
     padding: 30px;
-    box-shadow: 0 15px 25px rgba(0, 0, 0, 0.15);
+    box-shadow: var(--shadow-card);
   }
 
   .login-container h1 {
     font-size: 24px;
     margin-bottom: 20px;
-    color: #333;
+    color: var(--navy-900);
     text-align: center;
   }
 
   .input-field {
     width: 100%;
     padding: 10px;
-    border: 2px solid #ddd;
+    border: 2px solid var(--cream-200);
     border-radius: 4px;
     box-sizing: border-box;
     margin-bottom: 10px;
   }
 
   .input-field:focus {
-    border-color: #007bff;
+    border-color: var(--river-600);
     outline: none;
   }
 
   .submit-button {
     padding: 10px;
     margin-top: 10px;
-    background-color: #007bff;
+    background-color: var(--river-600);
     color: white;
     font-size: 16px;
     border: none;
@@ -64,7 +67,7 @@
   }
 
   .submit-button:hover {
-    background-color: #0056b3;
+    background-color: var(--navy-700);
   }
 
   .hidden {
@@ -90,7 +93,7 @@
     appearance: none;
     width: 20px;
     height: 20px;
-    border: 1px solid #4CAF50;
+    border: 1px solid var(--river-600);
     border-radius: 5px;
     position: relative;
     cursor: pointer;
@@ -100,8 +103,8 @@
   }
 
   .checkbox:checked {
-    background-color: #4CAF50;
-    border-color: #4CAF50;
+    background-color: var(--river-600);
+    border-color: var(--river-600);
   }
 
   .checkbox:checked::after {
