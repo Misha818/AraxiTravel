@@ -1,0 +1,21 @@
+{#- Category of a product type specification (spss_category: how its value is read), shown next to
+    the specification's name on /add-sps (create and translate) and /edit-pts.
+    name: the field's name (category_<n>, n as in text_<n>); categories: the spss_category rows;
+    selected: the specification's spss_category ID, if it has one.
+    Import with context (for _): {% from '_spss_category_select.html' import spss_category_select with context %} -#}
+{% macro spss_category_select(name, categories, selected=None) -%}
+{%- set labels = {
+    'Text': _('Text'),
+    'Num': _('Number'),
+    'Bool': _('Yes / No'),
+    'Date': _('Date'),
+    'DateTime': _('Date and time'),
+    'Location': _('Location')
+} -%}
+<select name="{{ name }}" class="spss-category" aria-label="{{ _('Category') }}" title="{{ _('Category') }}" required>
+    <option value=""{% if not selected %} selected{% endif %}>{{ _('Category') }}</option>
+    {%- for category in categories %}
+    <option value="{{ category['ID'] }}"{% if category['ID'] == selected %} selected{% endif %}>{{ labels.get(category['Category'], category['Category']) }}</option>
+    {%- endfor %}
+</select>
+{%- endmacro %}

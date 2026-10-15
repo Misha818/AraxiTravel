@@ -864,9 +864,9 @@ def getDefLang():
     return defLang
 
 
-def getSupportedLangs():
-    return ['hy', 'en']
-    # return ['en', 'hy', 'ru']
+def getSupportedLangsPrefixes():
+    arr = supported_langs()
+    return [lang['Prefix'] for lang in arr] # ['en', 'hy', 'ru']
 
 def getSupportedLangIDs():
     arr = supported_langs()
@@ -875,8 +875,8 @@ def getSupportedLangIDs():
 def supported_langs():
     arr = [
             {'Language_ID': 1, 'Language': 'Հայերեն', 'Prefix':	'hy', 'Flag': 'am.svg'},
-            {'Language_ID': 2, 'Language': 'English', 'Prefix':	'en', 'Flag': 'gb.svg'}
-            # {'Language_ID': 8, 'Language': 'Русский', 'Prefix':	'ru', 'Flag': 'ru.svg'}
+            {'Language_ID': 2, 'Language': 'English', 'Prefix':	'en', 'Flag': 'gb.svg'},
+            {'Language_ID': 8, 'Language': 'Русский', 'Prefix':	'ru', 'Flag': 'ru.svg'}
           ]
     return arr
 

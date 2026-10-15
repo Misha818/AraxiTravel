@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from '_spss_category_select.html' import spss_category_select with context %}
 
 {% block title %}
     {{ _('Edit Product Type Specifications') }}
@@ -62,6 +63,25 @@
         box-sizing: border-box;
     }
 
+    /* Category of each specification (templates/_spss_category_select.html) */
+    .sps-card .spss-category {
+        flex: 0 0 180px;
+        min-width: 0;
+        padding: 10px 12px;
+        font-size: 16px;
+        color: var(--ink-900);
+        background-color: #fff;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+        cursor: pointer;
+    }
+
+    .sps-card .spss-category:focus-visible {
+        outline: 3px solid var(--navy-900);
+        outline-offset: 2px;
+    }
+
     .sps-card .remove {
         display: inline-flex;
         align-items: center;
@@ -121,6 +141,21 @@
             font-size: 1.35rem;
         }
     }
+
+    /* Phones: the name takes the whole row, the category and remove button go under it */
+    @media (max-width: 520px) {
+        .sps-card .parent {
+            flex-wrap: wrap;
+        }
+
+        .sps-card .parent input[type="text"] {
+            flex: 1 1 100%;
+        }
+
+        .sps-card .spss-category {
+            flex: 1 1 0;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -144,6 +179,7 @@
     <div class="containerSPS parent" id="parent_{{ loop.index }}" draggable="true">
         
         <input type="text" name="text_{{ loop.index }}" value="{{ row['Text']}}">
+        {{ spss_category_select('category_' ~ loop.index, spssCategories, row['spssCategoryID']) }}
         <input type="hidden" name="spssID" value="{{ row['spssID'] }}">
         <div class="remove" data-onclick='["handleRemoveClick", "$this"]' role="button" tabindex="0" title="{{ _('Remove') }}" aria-label="{{ _('Remove') }}">-</div>
                    
@@ -233,7 +269,20 @@
                 let formData = new FormData();
             
                 let i = 0;
+                const specificationRows = [...document.querySelectorAll('#myForm .parent')];
                 docFormData.forEach((value, key) => {
+                    // Category of a specification: sent as category_<n>, where n is the position of
+                    // its row, as for the specification's name (text_<n>). Choosing one is required
+                    if (key.startsWith('category_')) {
+                        const categorySelect = document.querySelector(`[name="${key}"]`);
+                        categorySelect.style.borderColor = value === '' ? 'red' : '';
+                        if (value === '') {
+                            flag = true;
+                        }
+                        formData.append('category_' + specificationRows.indexOf(categorySelect.closest('.parent')), value);
+                        return;
+                    }
+
                     const inputElement = document.querySelector(`[name="${key}"]`);
                     const elementType = inputElement.type;
 
@@ -383,6 +432,12 @@
             
             let hiddenInputElement = clonedParent.querySelector("input[name='spssID']");
             hiddenInputElement.value = '';
+
+            // the new specification's category is chosen anew
+            let categorySelect = clonedParent.querySelector("select.spss-category");
+            categorySelect.name = 'category_' + strNum;
+            categorySelect.value = '';
+            categorySelect.style.borderColor = '';
             
             // Change the parent div's id
             let newParentId = "parent_" + strNum

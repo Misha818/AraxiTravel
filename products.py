@@ -1,6 +1,6 @@
 from flask import session, redirect, jsonify
 from flask_babel import Babel, _, lazy_gettext as _l, gettext
-from sysadmin import sanitize_html, get_full_website_name, checkForRedundantFiles, removeRedundantFiles, get_pr_id_by_lang, get_ar_id_by_lang, sqlInsert, sqlSelect, sqlUpdate, getLangID, getDefLang, getSupportedLangs, getUserID, get_pc_ref_key, get_pc_id_by_lang, pr_name_check, pr_url_check, fileUpload
+from sysadmin import sanitize_html, get_full_website_name, checkForRedundantFiles, removeRedundantFiles, get_pr_id_by_lang, get_ar_id_by_lang, sqlInsert, sqlSelect, sqlUpdate, getLangID, getDefLang, getSupportedLangsPrefixes, getUserID, get_pc_ref_key, get_pc_id_by_lang, pr_name_check, pr_url_check, fileUpload
 from werkzeug.utils import secure_filename
 import os
 import re

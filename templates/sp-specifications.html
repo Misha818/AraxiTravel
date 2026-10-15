@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from '_spss_category_select.html' import spss_category_select with context %}
 
 {% set title = _('Create Specifications for Product Type') %}
 {% set placeholderName =  _('Product Type Situation name') %}
@@ -71,6 +72,40 @@
         box-sizing: border-box;
     }
 
+    /* Category of each specification (templates/_spss_category_select.html) */
+    .sps-card .spss-category {
+        flex: 0 0 180px;
+        min-width: 0;
+        padding: 10px 12px;
+        font-size: 16px;
+        color: var(--ink-900);
+        background-color: #fff;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+        cursor: pointer;
+    }
+
+    /* Translate page: the language whose field names are shown as placeholders */
+    .sps-card .source-lang {
+        width: 100%;
+        margin-bottom: 10px;
+        padding: 10px 12px;
+        font-size: 16px;
+        color: var(--ink-900);
+        background-color: #fff;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+        cursor: pointer;
+    }
+
+    .sps-card .source-lang:focus-visible,
+    .sps-card .spss-category:focus-visible {
+        outline: 3px solid var(--navy-900);
+        outline-offset: 2px;
+    }
+
     .sps-card .remove {
         display: inline-flex;
         align-items: center;
@@ -130,6 +165,21 @@
             font-size: 1.35rem;
         }
     }
+
+    /* Phones: the name takes the whole row, the category and remove button go under it */
+    @media (max-width: 520px) {
+        .sps-card .parent {
+            flex-wrap: wrap;
+        }
+
+        .sps-card .parent input[type="text"] {
+            flex: 1 1 100%;
+        }
+
+        .sps-card .spss-category {
+            flex: 1 1 0;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -142,37 +192,50 @@
 <h1>{{ title }}</h1>
 <div id="response" role="alert" aria-live="polite"></div>
 <input type="hidden" name="spsRefKey" id="spsRefKey" value="{{ refKey }}">
+{% if data | length > 0 %}
+{# Translate page: the specification may already exist in several languages. Its fields are shown in
+   one of them (the first); this only changes the placeholders and titles, not the app's language #}
+<label for="sourceLang" class="field-label">{{ _('Translate from') }}</label>
+<select id="sourceLang" class="source-lang">
+    {%- for lang in sourceLanguages %}
+    <option value="{{ lang['ID'] }}">{{ lang['Language'] }}</option>
+    {%- endfor %}
+</select>
+{% endif %}
 <label for="name" class="field-label">{{ _('Name') }}</label>
 <div class="mb-3 containerSPS pr-name">
-    <input autocomplete="off" autofocus class="" id="name" name="name" placeholder="{{ placeholderName }}" type="text">
+    <input autocomplete="off" autofocus class="" id="name" name="name" placeholder="{{ placeholderName }}" title="{{ placeholderName }}" type="text">
 </div>
 
 <span class="field-label">{{ _('Product Type Specifications') }}</span>
 <form id="myForm" >
     <!-- Dynamic fields --> 
-    {% if spsRefKey is not none %}  
-        {% for row in data %}       
-        <div class="containerSPS parent" id="parent_{{ loop.index }}" draggable="true">
-            
-            <input type="text" name="text_{{ loop.index }}" placeholder="{{ _('The field name to be translated:') + ' ' + row['spssName']}}">
-            <!-- <input type="hidden" name="spssID" value="{{ row['spssID'] }}"> -->
-            <div class="remove" data-onclick='["handleRemoveClick", "$this"]' role="button" tabindex="0" title="{{ _('Remove') }}" aria-label="{{ _('Remove') }}">-</div>
-                    
-        </div>
-        {% endfor %}
+    {% if spsRefKey is not none %}
+        {# the rows are added by the script below, from the fields of the language chosen in #sourceLang #}
     {% else %}
     <div class="containerSPS parent" id="parent_1" draggable="true">
         
         
             <input type="text" name="text_1">
+            {{ spss_category_select('category_1', spssCategories) }}
             <div class="remove" data-onclick='["handleRemoveClick", "$this"]' role="button" tabindex="0" title="{{ _('Remove') }}" aria-label="{{ _('Remove') }}">-</div>
             
             
     </div>
     {% endif %}
     <!-- End of dynamic fields -->
-    
+
 </form>
+{% if spsRefKey is not none %}
+<template id="spssRowTemplate">
+    <div class="containerSPS parent" draggable="true">
+        <input type="text" name="text_0">
+        {{ spss_category_select('category_0', spssCategories) }}
+        <div class="remove" data-onclick='["handleRemoveClick", "$this"]' role="button" tabindex="0" title="{{ _('Remove') }}" aria-label="{{ _('Remove') }}">-</div>
+    </div>
+</template>
+<script type="application/json" id="spsSourceData">{{ data | tojson }}</script>
+{% endif %}
 
 <div class="containerH sps-actions">
 
@@ -263,7 +326,20 @@
                 let formData = new FormData();
             
                 let i = 0;
+                const specificationRows = [...document.querySelectorAll('#myForm .parent')];
                 docFormData.forEach((value, key) => {
+                    // Category of a specification: sent as category_<n>, where n is the position of
+                    // its row, as for the specification's name (text_<n>). Choosing one is required
+                    if (key.startsWith('category_')) {
+                        const categorySelect = document.querySelector(`[name="${key}"]`);
+                        categorySelect.style.borderColor = value === '' ? 'red' : '';
+                        if (value === '') {
+                            flag = true;
+                        }
+                        formData.append('category_' + specificationRows.indexOf(categorySelect.closest('.parent')), value);
+                        return;
+                    }
+
                     const inputElement = document.querySelector(`[name="${key}"]`);
                     const elementType = inputElement.type;
 
@@ -412,6 +488,15 @@
             let inputElement = clonedParent.querySelector("input");
             inputElement.value = '';
             inputElement.name = 'text_' + strNum;
+            inputElement.removeAttribute('placeholder');
+            inputElement.removeAttribute('title');
+            delete clonedParent.dataset.sourceIndex;
+
+            // the new specification's category is chosen anew
+            let categorySelect = clonedParent.querySelector("select.spss-category");
+            categorySelect.name = 'category_' + strNum;
+            categorySelect.value = '';
+            categorySelect.style.borderColor = '';
             // Change the parent div's id
             let newParentId = "parent_" + strNum
             clonedParent.setAttribute("id", newParentId);
@@ -459,6 +544,83 @@
 
   
     </script>
+
+    {% if spsRefKey is not none %}
+    <script nonce="{{ csp_nonce() }}">
+        // Translate page. spsSourceData holds the specification in every language it already exists in
+        // (one row per field: LangID, spsName, spssName, spssCategoryID). The rows are built from the
+        // first language of #sourceLang; choosing another one shows its names as placeholders and titles.
+        (function () {
+            const sourceData = JSON.parse(document.getElementById('spsSourceData').textContent);
+            const sourceLang = document.getElementById('sourceLang');
+            const rowTemplate = document.getElementById('spssRowTemplate');
+            const toTranslate = {{ _('The field name to be translated:') | tojson }};
+            const nameInput = document.getElementById('name');
+            let madeFor = 0;   // rows were made for the first madeFor fields
+
+            function rowsOf(langID) {
+                return sourceData.filter(row => row.LangID === langID);
+            }
+
+            // Fields of a language, in their order (none when the specification has no fields)
+            function fieldsOf(langID) {
+                return rowsOf(langID).filter(row => row.spssID !== null);
+            }
+
+            function addRow(field, sourceIndex) {
+                let n = 0;
+                container.querySelectorAll('.parent').forEach(row => {
+                    n = Math.max(n, parseInt(row.id.split('_')[1], 10));
+                });
+                n = n + 1;
+                const row = rowTemplate.content.firstElementChild.cloneNode(true);
+                row.id = 'parent_' + n;
+                row.querySelector('input').name = 'text_' + n;
+                const categorySelect = row.querySelector('select.spss-category');
+                categorySelect.name = 'category_' + n;
+                if (field) {
+                    row.dataset.sourceIndex = sourceIndex;
+                    // the translated field starts with the category of the field it translates
+                    categorySelect.value = field.spssCategoryID === null ? '' : String(field.spssCategoryID);
+                }
+                container.append(row);
+            }
+
+            // Placeholders and titles in the chosen language. Each row keeps the position of the
+            // field it was made for (data-source-index), so this still matches after drag or remove
+            function showLanguage(langID) {
+                const rows = rowsOf(langID);
+                const fields = fieldsOf(langID);
+                if (rows.length) {
+                    nameInput.placeholder = toTranslate + ' ' + rows[0].spsName;
+                    nameInput.title = rows[0].spsName;
+                }
+
+                // a language with more fields than the rows made so far gets rows for the rest
+                for (let k = madeFor; k < fields.length; k++) {
+                    addRow(fields[k], k);
+                }
+                madeFor = Math.max(madeFor, fields.length);
+
+                container.querySelectorAll('.parent[data-source-index]').forEach(row => {
+                    const field = fields[parseInt(row.dataset.sourceIndex, 10)];
+                    const input = row.querySelector('input');
+                    input.placeholder = field ? toTranslate + ' ' + field.spssName : '';
+                    input.title = field ? field.spssName : '';
+                });
+                num = container.querySelectorAll('.parent').length;
+            }
+
+            showLanguage(parseInt(sourceLang.value, 10));
+            if (!container.querySelector('.parent')) {
+                addRow(null);   // no fields yet: one empty row
+                num = 1;
+            }
+
+            sourceLang.addEventListener('change', () => showLanguage(parseInt(sourceLang.value, 10)));
+        })();
+    </script>
+    {% endif %}
 
     <script nonce="{{ csp_nonce() }}">
         // The add / remove / submit controls are divs: let Enter and Space press them too

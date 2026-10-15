@@ -5,7 +5,7 @@ from flask_babel import Babel, _, lazy_gettext as _l, gettext
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from products import productHeaderData, email_text, submit_notes_text, get_pr_order, slidesToEdit, checkCategoryName, checkProductCategoryName, get_RefKey_LangID_by_link, get_article_category_images, get_product_category_images, edit_p_h, submit_reach_text, submit_product_text, add_p_c_sql, edit_p_c_view, edit_a_c_view, edit_p_c_sql, get_product_categories, get_ar_thumbnail_images, get_pr_thumbnail_images, add_product, productDetails, constructPrData, add_product_lang
-from sysadmin import sanitize_html, sanitize_text_format, jsonSanitaizer, get_pt_payment_methods, get_payment_methods, is_valid_url, validate_request, send_confirmation_email, get_create_email_id, inline_css, init_sysadmin_context, check_rol_id, check_delivery_status, send_email_mailgun, getSupportedLangIDs, getLangdata, check_alias, get_order_status_list, get_affiliates, get_affiliate_reward_progress, get_promo_code_id_affiliateID, deletePUpdateP, reservePUpdateP, insertPUpdateP, insertIntoBuffer, calculate_price_promo, clientID_contactID, checkSPSSDataLen, replace_spaces_in_text_nodes, totalNumRows, countRows, filter_multy_dict, getLangdatabyID, supported_langs, get_full_website_name, generate_random_unique_string, get_meta_tags, removeRedundantFiles, checkForRedundantFiles, getFileName, fileUpload, get_ar_id_by_lang, get_pr_id_by_lang, getDefLang, getSupportedLangs, getLangID, sqlSelect, sqlInsert, sqlUpdate, sqlDelete, get_pc_id_by_lang, get_pc_ref_key, login_required
+from sysadmin import sanitize_html, sanitize_text_format, jsonSanitaizer, get_pt_payment_methods, get_payment_methods, is_valid_url, validate_request, send_confirmation_email, get_create_email_id, inline_css, init_sysadmin_context, check_rol_id, check_delivery_status, send_email_mailgun, getSupportedLangIDs, getLangdata, check_alias, get_order_status_list, get_affiliates, get_affiliate_reward_progress, get_promo_code_id_affiliateID, deletePUpdateP, reservePUpdateP, insertPUpdateP, insertIntoBuffer, calculate_price_promo, clientID_contactID, checkSPSSDataLen, replace_spaces_in_text_nodes, totalNumRows, countRows, filter_multy_dict, getLangdatabyID, supported_langs, get_full_website_name, generate_random_unique_string, get_meta_tags, removeRedundantFiles, checkForRedundantFiles, getFileName, fileUpload, get_ar_id_by_lang, get_pr_id_by_lang, getDefLang, getSupportedLangsPrefixes, getLangID, sqlSelect, sqlInsert, sqlUpdate, sqlDelete, get_pc_id_by_lang, get_pc_ref_key, login_required
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 from werkzeug.datastructures import FileStorage
@@ -166,7 +166,7 @@ app.config['SESSION_COOKIE_SECURE'] = os.getenv('SESSION_COOKIE_SECURE', '1') ==
 # Upper bound for a whole request (slider uploads send several images at once)
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024
 app.config['BABEL_DEFAULT_LOCALE'] = defLang['Prefix']
-app.config['BABEL_SUPPORTED_LOCALES'] = getSupportedLangs()  # Supported languages here
+app.config['BABEL_SUPPORTED_LOCALES'] = getSupportedLangsPrefixes()  # Supported languages' prefixes here
 
 csrf = CSRFProtect(app)
 PAGINATION = os.getenv('PAGINATION')
@@ -427,7 +427,7 @@ def submit_r_t():
 
 def get_locale():
     # Check if the language query parameter is set and valid
-    supportedLangs = getSupportedLangs()
+    supportedLangs = getSupportedLangsPrefixes()
     if 'lang' in request.args:
         lang = request.args.get('lang')        
         if lang in supportedLangs:
@@ -5273,6 +5273,33 @@ def pt_specifications(page=1):
         else:
             return jsonify({'status': '0', 'newCSRFtoken': newCSRFtoken})
 
+# Value types of product type specifications (spss_category: Text, Num, Bool, Date, DateTime,
+# Location): sub_product_specifications.spssCategoryID says how the value given for a specification
+# with a price (product_type_details.Text) is to be read
+def get_spss_categories():
+    result = sqlSelect("SELECT `ID`, `Category` FROM `spss_category` ORDER BY `ID`;", None, True)
+    return result['data']
+
+
+# The 'text_<i>' fields of the add / edit specification forms, up to the first empty one
+def spss_texts_from_form():
+    texts = []
+    while request.form.get('text_' + str(len(texts))):
+        texts.append(request.form.get('text_' + str(len(texts))))
+    return texts
+
+
+# The category of each of those fields ('category_<i>'): an spss_category ID, or None when it is
+# missing or not one of the spss_category records
+def spss_categories_from_form(count):
+    validIDs = {row['ID'] for row in get_spss_categories()}
+    categories = []
+    for i in range(count):
+        value = request.form.get('category_' + str(i), '')
+        categories.append(int(value) if value.isdigit() and int(value) in validIDs else None)
+    return categories
+
+
 # Edit product type specification (subproduct)
 @app.route("/edit-pts/<ptsRefKey>", methods=['GET'])
 @login_required
@@ -5284,9 +5311,9 @@ def edit_pts_view(ptsRefKey):
     sqlQueryPTS = "SELECT `SPS_ID` FROM `sps_relatives` WHERE `Ref_Key` = %s AND `Language_ID` = %s;"
     resultPTS = sqlSelect(sqlQueryPTS, (ptsRefKey, languageID), True)
     if resultPTS['length'] == 0:
-        if getDefLang()['id'] == getLangdata(session['lang'])['ID']:
-            return render_template('error.html', current_locale=get_locale())
-        else:    
+        # if getDefLang()['id'] == getLangdata(session['lang'])['ID']:
+        #     return render_template('error.html', current_locale=get_locale())
+        # else:    
             redirectUrl = url_for('add_sps_view', spsRefKey=ptsRefKey)
             return redirect(redirectUrl)
 
@@ -5298,7 +5325,8 @@ def edit_pts_view(ptsRefKey):
                     `sub_product_specification`.`Name`,
                     `sub_product_specifications`.`Name` AS `Text`,
                     `sub_product_specifications`.`ID` AS `spssID`,
-                    `sub_product_specifications`.`Status` AS `spssStatus`
+                    `sub_product_specifications`.`Status` AS `spssStatus`,
+                    `sub_product_specifications`.`spssCategoryID`
                 FROM `sub_product_specification`
                 LEFT JOIN `sps_relatives` ON `sps_relatives`.`SPS_ID` = `sub_product_specification`.`ID` 
                 LEFT JOIN `sub_product_specifications` ON `sub_product_specifications`.`spsID` = `sub_product_specification`.`ID`
@@ -5311,7 +5339,7 @@ def edit_pts_view(ptsRefKey):
     if result['length'] == 0:
         return render_template('error.html', current_locale=get_locale())
 
-    return render_template('edit-pts.html', result=result['data'], num=result['length'], sideBar=sideBar, current_locale=get_locale())
+    return render_template('edit-pts.html', result=result['data'], num=result['length'], spssCategories=get_spss_categories(), sideBar=sideBar, current_locale=get_locale())
 
 
 # Change order of product types of a product
@@ -5418,7 +5446,14 @@ def edit_pts():
         answer = gettext('Subproduct situation name exists!') + ' "' + spsName + '"'
         response = {'status': '0', 'answer': answer, 'newCSRFtoken': newCSRFtoken}
         return jsonify(response)
-    
+
+    # Every specification needs one of the spss_category categories (checked before anything is saved)
+    spsCategories = spss_categories_from_form(len(spss_texts_from_form()))
+    if None in spsCategories:
+        answer = gettext('Please select a category for every specification!')
+        response = {'status': '0', 'answer': answer, 'newCSRFtoken': newCSRFtoken}
+        return jsonify(response)
+
     userID = session['user_id']
 
     sqlQueryPtss = """
@@ -5428,6 +5463,7 @@ def edit_pts():
                     `sub_product_specifications`.`Name` AS `Text`,
                     `sub_product_specifications`.`ID` AS `spssID`,
                     `sub_product_specifications`.`Status` AS `spssStatus`,
+                    `sub_product_specifications`.`spssCategoryID`,
                     `spss_relatives`.`Ref_Key` AS `spssRefKey`
                 FROM `sub_product_specification`
                     LEFT JOIN `sps_relatives` ON `sps_relatives`.`SPS_ID` = `sub_product_specification`.`ID` 
@@ -5449,8 +5485,8 @@ def edit_pts():
             return jsonify(response)
         
 
-    sqlQuerySpssUpdate = "UPDATE `sub_product_specifications` SET `Name` = %s WHERE `ID` = %s "    
-    sqlQuerySpssInsert = "INSERT INTO `sub_product_specifications` (`Name`, `Order`, `spsID`, `Status`) VALUES (%s, %s, %s, %s)" 
+    sqlQuerySpssUpdate = "UPDATE `sub_product_specifications` SET `Name` = %s, `spssCategoryID` = %s WHERE `ID` = %s "
+    sqlQuerySpssInsert = "INSERT INTO `sub_product_specifications` (`Name`, `Order`, `spsID`, `Status`, `spssCategoryID`) VALUES (%s, %s, %s, %s, %s)"  
     sqlQuerySPSSRelativeInsert = "INSERT INTO `spss_relatives` (`SPSS_ID`, `Ref_Key`, `Language_ID`, `User_ID`, `Status`) VALUES (%s, %s, %s, %s, %s)"
     
     RefKey = result['data'][-1:][0]['spssRefKey']
@@ -5459,19 +5495,20 @@ def edit_pts():
     
     while True:
         spsText = request.form.get('text_' + str(i))
-        if not spsText: 
+        if not spsText:
             break
-        
+        spsCategoryID = spsCategories[i]
+
         if len(result['data']) > i:
-            if spsText != result['data'][i]['Text']:
-                sqlValTuple = (spsText, result['data'][i]['spssID'])
+            if spsText != result['data'][i]['Text'] or spsCategoryID != result['data'][i]['spssCategoryID']:
+                sqlValTuple = (spsText, spsCategoryID, result['data'][i]['spssID'])
                 updateResult = sqlUpdate(sqlQuerySpssUpdate, sqlValTuple)
                 if updateResult['status'] == '-1':
                     answer = gettext('Something went wrong. Please try again!')
                     response = {'status': '0', 'answer': answer, 'newCSRFtoken': newCSRFtoken}
                     return jsonify(response)
         else:
-            sqlValTuple = (spsText, i, spsID, 1)
+            sqlValTuple = (spsText, i, spsID, 1, spsCategoryID)
             resultInsert = sqlInsert(sqlQuerySpssInsert, sqlValTuple)
             if resultInsert['status'] == 0:
                 answer = gettext('Something went wrong. Please try again!')
@@ -5518,33 +5555,54 @@ def edit_pts():
 def add_sps_view(spsRefKey=None):
     data = []
     num=1
-    if spsRefKey is not None and getDefLang()['id'] != getLangdata(session['lang'])['ID']:
+    # if spsRefKey is not None and getDefLang()['id'] != getLangdata(session['lang'])['ID']:
+    if spsRefKey is not None:
         if not spsRefKey.isdigit():
             return render_template('error.html')
-        
+    # supportedLangIDs = ','.join(getSupportedLangIDs())
+    
         sqlQuery =  """
                     SELECT 
                         `sub_product_specification`.`ID` AS `spsID`,
                         `sub_product_specification`.`Name` AS `spsName`,
                         `sub_product_specifications`.`ID` AS `spssID`,
-                        `sub_product_specifications`.`Name` AS `spssName`
+                        `sub_product_specifications`.`Name` AS `spssName`,
+                        `sub_product_specifications`.`spssCategoryID`,
+                        `sps_relatives`.`Language_ID` AS `LangID`
                     FROM `sub_product_specification`
                         LEFT JOIN `sps_relatives` ON `sps_relatives`.`SPS_ID` = `sub_product_specification`.`ID`
                         LEFT JOIN `sub_product_specifications` ON `sub_product_specifications`.`spsID` = `sub_product_specification`.`ID`
                     WHERE `sps_relatives`.`Ref_Key` = %s
-                        AND `sps_relatives`.`Language_ID` = %s
                     ORDER BY `sub_product_specifications`.`Order`;
                     """
-        sqlValTuple = (spsRefKey, getDefLang()['id'])
+                    #    -- AND `sps_relatives`.`Language_ID` = %s
+        # sqlValTuple = (spsRefKey, getDefLang()['id'])
+        sqlValTuple = (spsRefKey,)
         result = sqlSelect(sqlQuery, sqlValTuple, True)
         if result['length'] == 0:
+            print("ERROR: No data found for spsRefKey:", spsRefKey)
             return render_template('error.html')
-        
+        # else:
+        #     print("Data found for spsRefKey:", spsRefKey)
+        #     return render_template('error.html')
+
         data = result['data']
         num = result['length']
 
+        currentLangID = getLangdata(session['lang'])['ID']
+        for row in result['data']:
+            if row['LangID'] == currentLangID:
+                return redirect(url_for('edit_pts_view', ptsRefKey=spsRefKey))
+
+
+
+    # Languages the specification already exists in, in supported_langs() order. The translate page
+    # shows the fields of one of them (the first) and lets the user switch between them
+    dataLangIDs = {row['LangID'] for row in data}
+    sourceLanguages = [{'ID': lang['Language_ID'], 'Language': lang['Language']} for lang in supported_langs() if lang['Language_ID'] in dataLangIDs]
+
     sideBar = side_bar_stuff()
-    return render_template('sp-specifications.html', spsRefKey=spsRefKey, data=data, num=num, sideBar=sideBar, current_locale=get_locale())
+    return render_template('sp-specifications.html', spsRefKey=spsRefKey, data=data, num=num, sourceLanguages=sourceLanguages, spssCategories=get_spss_categories(), sideBar=sideBar, current_locale=get_locale())
 
 
 @app.route("/emails/<filters>", methods=['GET'])
@@ -6022,7 +6080,14 @@ def add_sps():
         answer = gettext('Subproduct situation name exists!') + ' "' + spsName + '"'
         response = {'status': '0', 'answer': answer, 'newCSRFtoken': newCSRFtoken}
         return jsonify(response)
-    
+
+    # Every specification needs one of the spss_category categories (checked before anything is saved)
+    spsCategories = spss_categories_from_form(len(spss_texts_from_form()))
+    if None in spsCategories:
+        answer = gettext('Please select a category for every specification!')
+        response = {'status': '0', 'answer': answer, 'newCSRFtoken': newCSRFtoken}
+        return jsonify(response)
+
     userID = session['user_id']
 
     if request.form.get('spsRefKey', '') != '':
@@ -6066,7 +6131,7 @@ def add_sps():
     i = 0
     sqlValues = []
     sqlSyntax = ''
-    sqlQuerySPSS = "INSERT INTO `sub_product_specifications` (`Name`, `Order`, `spsID`, `Status`) VALUES (%s, %s, %s, %s)" 
+    sqlQuerySPSS = "INSERT INTO `sub_product_specifications` (`Name`, `Order`, `spsID`, `Status`, `spssCategoryID`) VALUES (%s, %s, %s, %s, %s)"  
     sqlQuerySPSSRel = "INSERT INTO `spss_relatives` (`SPSS_ID`, `Ref_Key`, `Language_ID`, `User_ID`, `Status`) VALUES (%s, %s, %s, %s, %s)"
     
     # Get refkey of sub product specificationS
@@ -6084,7 +6149,7 @@ def add_sps():
         if not spsText: 
             break
 
-        sqlValTuple = (spsText, i, spsID, 1)
+        sqlValTuple = (spsText, i, spsID, 1, spsCategories[i])
         result = sqlInsert(sqlQuerySPSS, sqlValTuple)
 
         spssID = result['inserted_id']
