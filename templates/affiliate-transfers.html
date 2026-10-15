@@ -21,9 +21,9 @@
 <style>
 #orderStatus {
   background-color: white;
-  color: #333;
+  color: var(--ink-900);
   padding: 10px 20px;
-  border: 1px solid #333;
+  border: 1px solid var(--ink-900);
   cursor: pointer;
   font-size: 16px;
   border-radius: 5px;
@@ -37,16 +37,16 @@
 
 .filter-inputs {
   background-color: white;
-  color: #333;
+  color: var(--ink-900);
   padding: 10px 20px;
-  border: 1px solid #333;
+  border: 1px solid var(--ink-900);
   font-size: 16px;
   border-radius: 5px;
   /* margin-right: 1px; */
 }
 
 .dropbtn, .filter {
-  background-color: #E76F51; 
+  background-color: var(--river-600); 
   color: white; 
   padding: 10px 20px; 
   border: none; 
@@ -195,7 +195,7 @@
         <td class="edit-user">
           {% set note = '' %}
             {% if row['note'] is not none %}
-            <span data-value="{{ row['notesID'] }}" class="show-transfer-details" title="{{ _('Transaction Details') }}" style="color:#E76F51"><i class="fas fa-eye"></i></span>
+            <span data-value="{{ row['notesID'] }}" class="show-transfer-details" title="{{ _('Transaction Details') }}" style="color:var(--river-600)"><i class="fas fa-eye"></i></span>
           {% endif %}
           
         </td>

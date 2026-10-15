@@ -44,7 +44,7 @@ tr:nth-child(even) {
 
 #myTable td.row-actions a:hover,
 #myTable td.row-actions a:focus-visible {
-  background-color: #fbe9e4;
+  background-color: var(--river-100);
   outline: none;
 }
 
@@ -128,7 +128,7 @@ tr:nth-child(even) {
       <td data-label="{{ _('Position') }}">{{ _(row['Position']) }}</td>
       <td data-label="{{ _('Status') }}">{{ status }}</td>
       <td class="row-actions" data-label="{{ _('View/Edit') }}">
-        <a href="{{ url_for('home', _external=True) + editUrl }}" target="_blank" title="{{ _('View/Edit') }}" aria-label="{{ _('View/Edit') }}: {{ name }}"><i class="fa-solid fa-pen-to-square" style="font-size: 20px; color: #E76F51;" aria-hidden="true"></i></a>
+        <a href="{{ url_for('home', _external=True) + editUrl }}" target="_blank" title="{{ _('View/Edit') }}" aria-label="{{ _('View/Edit') }}: {{ name }}"><i class="fa-solid fa-pen-to-square" style="font-size: 20px; color: var(--river-600);" aria-hidden="true"></i></a>
       </td>
     </tr>
     

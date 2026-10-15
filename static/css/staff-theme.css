@@ -1,0 +1,59 @@
+/*
+ * Staff pages (templates/base.html): Bootstrap's blue replaced with the Araxi Travel colours
+ * (static/css/araxi-tokens.css). Loaded after Bootstrap; the pages' own styles come later and
+ * still win.
+ */
+
+a {
+    color: var(--river-600);
+}
+a:hover {
+    color: var(--navy-700);
+}
+
+.btn-primary {
+    color: #fff;
+    background-color: var(--river-600);
+    border-color: var(--river-600);
+}
+.btn-primary:hover,
+.btn-primary:active,
+.btn-primary.active,
+.btn-check:checked + .btn-primary {
+    color: #fff;
+    background-color: var(--navy-700);
+    border-color: var(--navy-700);
+}
+.btn-primary:focus,
+.btn-check:focus + .btn-primary {
+    color: #fff;
+    background-color: var(--navy-700);
+    border-color: var(--navy-700);
+    box-shadow: 0 0 0 .25rem rgba(21, 105, 138, .35);
+}
+.btn-primary:disabled,
+.btn-primary.disabled {
+    background-color: var(--river-600);
+    border-color: var(--river-600);
+}
+
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus {
+    border-color: var(--river-400);
+    box-shadow: 0 0 0 .25rem rgba(21, 105, 138, .2);
+}
+
+.form-check-input:checked {
+    background-color: var(--river-600);
+    border-color: var(--river-600);
+}
+
+.text-primary {
+    color: var(--river-600) !important;
+}
+
+.list-group-item.active {
+    background-color: var(--river-600);
+    border-color: var(--river-600);
+}

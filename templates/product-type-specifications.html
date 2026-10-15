@@ -21,7 +21,7 @@
       appearance: none;
       width: 20px;
       height: 20px;
-      border: 1px solid #4CAF50;
+      border: 1px solid var(--river-600);
       border-radius: 5px;
       position: relative;
       cursor: pointer;
@@ -32,8 +32,8 @@
   }
 
   .checkbox:checked {
-    background-color: #4CAF50;
-    border-color: #4CAF50;
+    background-color: var(--river-600);
+    border-color: var(--river-600);
   }
 
   .checkbox:checked::after {
@@ -96,11 +96,11 @@
 
   #myTable td.row-actions a:hover,
   #myTable td.row-actions a:focus-visible {
-    background-color: #fbe9e4;
+    background-color: var(--river-100);
   }
 
   #myTable td.row-actions a:focus-visible {
-    outline: 3px solid #264653;
+    outline: 3px solid var(--navy-900);
     outline-offset: 2px;
   }
 
@@ -110,7 +110,7 @@
 
   #myTable td.table-empty {
     text-align: center;
-    color: #666;
+    color: var(--ink-600);
   }
 
   @media (max-width: 768px) {

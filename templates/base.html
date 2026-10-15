@@ -6,6 +6,8 @@
     <script nonce="{{ csp_nonce() }}" src="{{ url_for('static', filename='JS/security.js') }}"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
       
+    <!-- Araxi Travel colours (static/css/araxi-tokens.css), used by styles.css and the page styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/araxi-tokens.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     
@@ -13,10 +15,11 @@
       <!-- Bootstrap CSS -->
       <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     {% endif %}
+
     
     <style>
       body {
-        background-color: #FAF9F6!important;
+        background-color: var(--cream-50)!important;
       }
     </style> 
 
@@ -47,6 +50,10 @@
     {% block head %}
     
     {% endblock %}
+
+    <!-- Bootstrap's colours in the Araxi Travel palette: after the page's head, where some pages
+         load their own Bootstrap -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/staff-theme.css') }}">
   </head>
   <body>
     {% if userBool != False %}
@@ -61,7 +68,7 @@
 
       <div class="flex avatar-stuff" style="gap: 10px;">
         <img src="{{ url_for('static', filename='images/stuff-tools.png') }}" data-onclick='["toggleSidebar"]' alt="{{ _('Tools') }}" title="{{ _('Tools') }}" class="avatar" role="button" tabindex="0" aria-controls="sidebar" aria-expanded="false" style="cursor: pointer; width: 70px; height: 70px;">
-        <span style="font-size: 20px; font-weight: bold; color: #ffffff;"> {{ role + ' | ' + actionName }}</span>
+        <span style="font-size: 20px; font-weight: bold; color: var(--navy-900);"> {{ role + ' | ' + actionName }}</span>
       </div>
         <!-- <img src="{{ url_for('static', filename='images/stuff-tools.png') }}" data-onclick='["toggleSidebar"]' alt="{{ _('Tools') }}" style="cursor: pointer; width: 70px; height: 70px;" > -->
       {% else %}
@@ -75,7 +82,7 @@
             data-bs-content="<a href='{{ url_for('edit_profile', stuffID=result['data'][0].stuffID) }}'>{{ _('Edit Profile') }}</a>"
           >
             <img src="{{ url_for('static', filename='images/stuff/') + rolls[0]['Avatar'] }}" class="avatar" alt="{{ rolls[0]['AltText'] }}">
-            <span style="font-size: 20px; font-weight: bold; color: #ffffff;">{{ rolls[0]['Firstname'] + ' ' + rolls[0]['Lastname'] }}</span>
+            <span style="font-size: 20px; font-weight: bold; color: var(--navy-900);">{{ rolls[0]['Firstname'] + ' ' + rolls[0]['Lastname'] }}</span>
           </div>
         {% else %}
           {% set initial_1 =  rolls[0]['Firstname'] %}
@@ -87,8 +94,8 @@
             data-bs-html="true" 
             data-bs-content="<a href='{{ url_for('edit_profile', stuffID=result['data'][0].stuffID) }}'>{{ _('Edit Profile') }}</a>"  
           >
-            <div class="avatar" style="background-color: #ffffff; color: #333; text-align: center; line-height: 80px; font-weight: bold; font-size: 17pt;">{{ initial_1[0] + initial_2[0] }}</div>
-            <span style="font-size: 20px; font-weight: bold; color: #ffffff;">{{ rolls[0]['Firstname'] + ' ' + rolls[0]['Lastname'] }}</span>
+            <div class="avatar" style="background-color: var(--navy-900); color: #fff; text-align: center; line-height: 80px; font-weight: bold; font-size: 17pt;">{{ initial_1[0] + initial_2[0] }}</div>
+            <span style="font-size: 20px; font-weight: bold; color: var(--navy-900);">{{ rolls[0]['Firstname'] + ' ' + rolls[0]['Lastname'] }}</span>
           </div>
         {% endif %}
 
@@ -133,7 +140,7 @@
           {% endfor %}
         </select>
         {% endif %}
-        <a class="" href="{{ url_for('home') + 'logout' }}" title="{{ _('Logout') }}"><i class="fas fa-right-from-bracket" style="font-size: 25px; color: #fff;"></i></a>
+        <a class="" href="{{ url_for('home') + 'logout' }}" title="{{ _('Logout') }}"><i class="fas fa-right-from-bracket" style="font-size: 25px; color: var(--navy-900);"></i></a>
         
       </div>
       
@@ -144,10 +151,11 @@
           margin-bottom: 20px;
           width: 100%;
           padding: 12px;
-          background-color: #2A9D8F;
+          background-color: var(--cream-50);
+          box-shadow: 0 1px 0 rgba(7, 35, 57, .08);
       ">
         <img src="{{ url_for('static', filename='images/logo.jpg') }}" alt="{{ _('Tools') }}" class="avatar" style="width: 70px; height: 70px;">
-        <span style="font-size: 20px; font-weight: bold; color: #ffffff;"></span>
+        <span style="font-size: 20px; font-weight: bold; color: var(--navy-900);"></span>
       </div>
     {% endif %}
     

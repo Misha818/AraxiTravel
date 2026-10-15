@@ -6,8 +6,8 @@
 {% block head %}
 <style>
     a {
-        border: 1px solid brown;
-        color: brown;
+        border: 1px solid var(--river-600);
+        color: var(--river-600);
         border-radius: 10px;
         width: 50%;
         text-align: center;
@@ -31,7 +31,7 @@
 
     <div class="container" style="display: contents;">
         <img src="{{ url_for('static', filename='images/error.png' ) }}" style="margin-top: 110px;">
-        <h1 style="color:brown; font-size: 40pt;"> {{ content.message }} </H1>
+        <h1 style="color: var(--navy-900); font-size: 40pt;"> {{ content.message }} </H1>
         <a href="{{ content.forwardUrl }}">{{ forwardMessage }}</a>    
         <a href="{{ content.backUrl }}">{{ backMessage }}</a>    
     </div>

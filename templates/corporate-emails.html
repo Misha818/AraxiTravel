@@ -20,9 +20,9 @@
 
 #eStatus {
     background-color: white;
-    color: #333;
+    color: var(--ink-900);
     padding: 10px 20px;
-    border: 1px solid #333;
+    border: 1px solid var(--ink-900);
     cursor: pointer;
     font-size: 16px;
     border-radius: 5px;
@@ -35,16 +35,16 @@
 
 .filter-inputs {
   background-color: white;
-  color: #333;
+  color: var(--ink-900);
   padding: 10px 20px;
-  border: 1px solid #333;
+  border: 1px solid var(--ink-900);
   font-size: 16px;
   border-radius: 5px;
   /* margin-right: 1px; */
 }
 
 .dropbtn, .filter {
-  background-color: #E76F51; 
+  background-color: var(--river-600); 
   color: white; 
   padding: 10px 20px; 
   border: none; 
@@ -127,7 +127,7 @@
 #myTable .row-actions a:focus-visible,
 .pagination [role="button"]:focus-visible,
 .pt-quantity-close:focus-visible {
-  outline: 3px solid #264653;
+  outline: 3px solid var(--navy-900);
   outline-offset: 2px;
 }
 
@@ -151,7 +151,7 @@
 
 #myTable td.row-actions > span:hover,
 #myTable td.row-actions > a:hover {
-  background-color: #fbe9e4;
+  background-color: var(--river-100);
 }
 
 .sort-icons i {
@@ -162,7 +162,7 @@
   text-align: center;
   padding: 24px;
   font-size: 18px;
-  color: #666;
+  color: var(--ink-600);
 }
 
 .pagination {
@@ -387,8 +387,8 @@
    
 
         <td class="edit-user row-actions" data-label="{{ _('Actions') }}">
-            <span data-value="{{ row['ID'] }}" class="show-associated-employees" role="button" tabindex="0" title="{{ _('Show associated employees') }}" aria-label="{{ _('Show associated employees') }}" style="color:#E76F51"><i class="fas fa-eye" aria-hidden="true"></i></span>
-            <span data-value="{{ row['ID'] }}" class="edit-corporate-email" role="button" tabindex="0" title="{{ _('Edit email') }}" aria-label="{{ _('Edit email') }}" style="color:#E76F51"><i class="fas fa-pencil-alt" aria-hidden="true"></i></span>
+            <span data-value="{{ row['ID'] }}" class="show-associated-employees" role="button" tabindex="0" title="{{ _('Show associated employees') }}" aria-label="{{ _('Show associated employees') }}" style="color:var(--river-600)"><i class="fas fa-eye" aria-hidden="true"></i></span>
+            <span data-value="{{ row['ID'] }}" class="edit-corporate-email" role="button" tabindex="0" title="{{ _('Edit email') }}" aria-label="{{ _('Edit email') }}" style="color:var(--river-600)"><i class="fas fa-pencil-alt" aria-hidden="true"></i></span>
         </td>
 
       </tr>

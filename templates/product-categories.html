@@ -72,12 +72,12 @@ tr:nth-child(even) {
 
         .actions a:hover,
         .actions a:focus-visible {
-          background-color: #fbe9e4;
+          background-color: var(--river-100);
         }
 
         .actions a:focus-visible,
         .view-types-btn:focus-visible {
-          outline: 3px solid #264653;
+          outline: 3px solid var(--navy-900);
           outline-offset: 2px;
         }
 
@@ -87,7 +87,7 @@ tr:nth-child(even) {
 
         #myTable td.table-empty {
           text-align: center;
-          color: #666;
+          color: var(--ink-600);
         }
 
         @media (max-width: 768px) {
@@ -231,7 +231,7 @@ tr:nth-child(even) {
         <td data-label="{{ _('Name') }}">{{ name }}</td>
         <td data-label="{{ _('Status') }}">{{ status }}</td>
         <td class="actions" data-label="{{ _('Edit') }}">
-          <a href="{{ url_for('home', _external=True) + editUrl }}" title="{{ _('Edit') }}" aria-label="{{ _('Edit') }}: {{ name }}"><i class="fas fa-pencil" style="color: #E76F51" aria-hidden="true"></i></a>
+          <a href="{{ url_for('home', _external=True) + editUrl }}" title="{{ _('Edit') }}" aria-label="{{ _('Edit') }}: {{ name }}"><i class="fas fa-pencil" style="color: var(--river-600)" aria-hidden="true"></i></a>
         </td>
       </tr>
     
@@ -243,7 +243,7 @@ tr:nth-child(even) {
 
 {% else %}
 <div class="table-container">
-  <h3 style="padding: 24px; text-align: center; color: #666;">{{ _('No data to show!') }}</h3>
+  <h3 style="padding: 24px; text-align: center; color: var(--ink-600);">{{ _('No data to show!') }}</h3>
 </div>
 {% endif %}
 </div>

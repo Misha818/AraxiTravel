@@ -33,7 +33,7 @@
     margin: 0 auto 12px auto;
     font-size: 1.6rem;
     text-align: center;
-    color: #333;
+    color: var(--ink-900);
 }
 
 .email-page .transfer-funds {
@@ -54,7 +54,7 @@
 .email-page .field-label {
     margin: 8px 0 2px 0;
     font-weight: bold;
-    color: #333;
+    color: var(--ink-900);
 }
 
 .email-page .styled-select {
@@ -76,9 +76,9 @@
 
 .email-page #to:focus,
 .email-page #subject:focus {
-    border-color: #66afe9;
+    border-color: var(--river-400);
     outline: none;
-    box-shadow: 0 0 5px rgba(102, 175, 233, 0.6);
+    box-shadow: 0 0 5px rgba(69, 150, 178, 0.45);
 }
 
 /* the whole message box is clickable, not just its first line */
@@ -100,7 +100,7 @@
 }
 
 .email-page .email-actions .pcButtonS:focus-visible {
-    outline: 3px solid #264653;
+    outline: 3px solid var(--navy-900);
     outline-offset: 2px;
 }
 
@@ -135,7 +135,7 @@
   text-transform: capitalize;
   /* font-variant: small-caps; */
   letter-spacing: 0.03em;
-  color: #4a4a4a;
+  color: var(--ink-600);
 }
 
 .ql-snow .ql-picker.ql-font 
@@ -557,7 +557,7 @@ const Font = Quill.import('formats/font');
 const textColorPickr = Pickr.create({
   el:  '#text-pickr-container',
   theme: 'classic',
-  default: '#FCC628',
+  default: '#c59054',   // --ochre-500
   swatches: window.ARAXI_PALETTE,   // Araxi Travel colours (static/JS/araxi-palette.js)
   position: 'top-middle',
   autoReposition: false, 
@@ -762,7 +762,7 @@ const fontPicker = document.querySelector('.ql-picker.ql-font');
 
     function myLoader(color) {
         if (color === undefined) {
-          color = 'crimson'
+          color = 'var(--river-600)'
         }
         let loader = document.createElement('div'); // Create a div element for the loader
           loader.id = 'gear';

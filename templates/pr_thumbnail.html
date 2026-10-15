@@ -57,14 +57,14 @@
         font-size: 1rem;
         font-weight: bold;
         text-align: center;
-        color: #333;
+        color: var(--ink-900);
     }
 
     .thumb-hint {
         margin: 0;
         font-size: 14px;
         text-align: center;
-        color: #666;
+        color: var(--ink-600);
     }
 
     /* ---- Images from other languages ---- */
@@ -102,7 +102,7 @@
     }
 
     .thumb-card .pc_slide:focus-visible {
-        box-shadow: 0 0 0 3px #264653;
+        box-shadow: 0 0 0 3px var(--navy-900);
     }
 
     .thumb-card .prev,
@@ -117,7 +117,7 @@
         font-size: 16px;
         text-decoration: none;
         color: #fff;
-        background-color: rgba(38, 70, 83, 0.75);
+        background-color: rgba(7, 35, 57, 0.75);
         border-radius: 50%;
         z-index: 2;
     }
@@ -132,12 +132,12 @@
 
     .thumb-card .prev:hover,
     .thumb-card .next:hover {
-        background-color: #264653;
+        background-color: var(--navy-900);
     }
 
     .thumb-card .prev:focus-visible,
     .thumb-card .next:focus-visible {
-        outline: 3px solid #E76F51;
+        outline: 3px solid var(--river-600);
         outline-offset: 2px;
     }
 
@@ -168,15 +168,15 @@
         min-height: 180px;
         margin: 0;
         padding: 16px;
-        border: 2px dashed #2A9D8F;
+        border: 2px dashed var(--navy-700);
         border-radius: 10px;
-        background-color: #f7fbfa;
+        background-color: var(--cream-50);
         box-sizing: border-box;
         cursor: pointer;
     }
 
     .thumb-card .dropzone:hover {
-        background-color: #eef7f5;
+        background-color: var(--river-100);
     }
 
     /* empty: a compact box; with an image: just the image card, no frame */
@@ -207,7 +207,7 @@
         margin: 0;
         font-size: 16px;
         font-weight: 600;
-        color: #2A9D8F;
+        color: var(--navy-700);
     }
 
     .thumb-card .dropzone .dz-preview {
@@ -251,7 +251,7 @@
 
     .thumb-card .pcButtonS:focus-visible,
     .thumb-card .thumb-back:focus-visible {
-        outline: 3px solid #264653;
+        outline: 3px solid var(--navy-900);
         outline-offset: 2px;
     }
 
@@ -262,7 +262,7 @@
         gap: 6px;
         padding: 8px 4px;
         font-weight: 600;
-        color: #264653;
+        color: var(--navy-900);
         text-decoration: none;
     }
 
@@ -312,24 +312,24 @@
     }
 
     #imageEditorModal #saveEditedImage {
-        background-color: #E76F51;
+        background-color: var(--river-600);
     }
 
     #imageEditorModal #saveEditedImage:hover {
-        background-color: #d65f42;
+        background-color: var(--navy-700);
     }
 
     #imageEditorModal #cancelEdit {
-        color: #264653;
-        background-color: #eef2f3;
+        color: var(--navy-900);
+        background-color: var(--cream-100);
     }
 
     #imageEditorModal #cancelEdit:hover {
-        background-color: #dfe6e8;
+        background-color: var(--cream-200);
     }
 
     #imageEditorModal .crop-actions button:focus-visible {
-        outline: 3px solid #264653;
+        outline: 3px solid var(--navy-900);
         outline-offset: 2px;
     }
 

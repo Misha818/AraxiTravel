@@ -31,7 +31,7 @@ tr:nth-child(even) {
 }
 
 .promo-affiliate small {
-  color: #666;
+  color: var(--ink-600);
   overflow-wrap: anywhere;
 }
 
@@ -66,11 +66,11 @@ tr:nth-child(even) {
 
 #myTable td.row-actions a:hover,
 #myTable td.row-actions a:focus-visible {
-  background-color: #fbe9e4;
+  background-color: var(--river-100);
 }
 
 #myTable td.row-actions a:focus-visible {
-  outline: 3px solid #264653;
+  outline: 3px solid var(--navy-900);
   outline-offset: 2px;
 }
 
@@ -81,7 +81,7 @@ tr:nth-child(even) {
 .promo-empty {
   padding: 24px;
   text-align: center;
-  color: #666;
+  color: var(--ink-600);
 }
 
 @media (max-width: 768px) {
@@ -209,8 +209,8 @@ tr:nth-child(even) {
       <td data-label="{{ _('Status') }}">{{ status }}</td>
       <td class="row-actions" data-label="{{ _('Actions') }}">
         {% set promoFilters = 'promoCode=' + row['Promo'] | string + '&affiliate=' + row['affiliateID'] | string %}
-        <a href="{{ url_for('stuff_promo_code_details', filters=promoFilters ) }}" target="_blank" title="{{ _('Promo Code Details') }}" aria-label="{{ _('Promo Code Details') }}: {{ row['Promo'] }}"><i class="fa-solid fa-eye" style="font-size: 20px; color: #E76F51;" aria-hidden="true"></i></a>
-        <a href="{{ url_for('home', _external=True) + editUrl }}" target="_blank" title="{{ _('Edit') }}" aria-label="{{ _('Edit') }}: {{ row['Promo'] }}"><i class="fa-solid fa-pen-to-square" style="font-size: 20px; color: #E76F51;" aria-hidden="true"></i></a>
+        <a href="{{ url_for('stuff_promo_code_details', filters=promoFilters ) }}" target="_blank" title="{{ _('Promo Code Details') }}" aria-label="{{ _('Promo Code Details') }}: {{ row['Promo'] }}"><i class="fa-solid fa-eye" style="font-size: 20px; color: var(--river-600);" aria-hidden="true"></i></a>
+        <a href="{{ url_for('home', _external=True) + editUrl }}" target="_blank" title="{{ _('Edit') }}" aria-label="{{ _('Edit') }}: {{ row['Promo'] }}"><i class="fa-solid fa-pen-to-square" style="font-size: 20px; color: var(--river-600);" aria-hidden="true"></i></a>
       </td>
     </tr>
     

@@ -17,7 +17,7 @@
 
   <style>
     body {
-      background-color: #fdf6ec;
+      background-color: var(--cream-50);
     }
     .table-container table {
       border-spacing: 0;
@@ -106,7 +106,7 @@
     }
 
     #saveButton:hover {
-      background-color: #2a9d8f!important;
+      background-color: var(--navy-700)!important;
     }
 
     /* ---- Toolbar ---- */
@@ -137,14 +137,14 @@
     }
 
     .store-toolbar .filter-button[aria-expanded="true"] {
-      background-color: #e6f4f2;
+      background-color: var(--river-100);
     }
 
     .store-toolbar .filter-button:focus-visible,
     .store-toolbar .add-to-store-btn:focus-visible,
     .filters #saveButton:focus-visible,
     .view-types-btn:focus-visible {
-      outline: 3px solid #264653;
+      outline: 3px solid var(--navy-900);
       outline-offset: 2px;
     }
 
@@ -349,7 +349,7 @@
     <div class="table-container toRight" id="tableDaddy" style="max-width: 100%;">
       <table id="myTable">
         <thead>
-          <tr style="    border-width: 1px; border-color: #2a9d8f; background-color: #2a9d8f;">
+          <tr style="    border-width: 1px; border-color: var(--navy-700); background-color: var(--navy-700);">
             <th>
               <div style="display: flex; align-items: center;">
               {{ _('Thumbnail') }} 
@@ -463,7 +463,7 @@ function getProductTypes(prID) {
   if (clickedBtn) {
     let chevron = clickedBtn.getElementsByClassName('chevron');
     chevron[0].style.display = 'none';
-    let loader = myLoader('#2a9d8f');
+    let loader = myLoader('var(--navy-700)');
     
     
     clickedBtn.appendChild(loader);
@@ -771,7 +771,7 @@ function rotate(gearElement) {
 
 function myLoader(color) {
   if (color === undefined) {
-    color = 'crimson'
+    color = 'var(--river-600)'
   }
   let loader = document.createElement('div'); // Create a div element for the loader
     loader.id = 'gear';
@@ -900,7 +900,7 @@ function myLoader(color) {
     saveButton.id = 'saveButton';
     saveButton.className = 'pcButtonS';     
     saveButton.textContent = '🔍';
-    saveButton.style = 'background-color: white; border: 1px solid #2a9d8f;';
+    saveButton.style = 'background-color: white; border: 1px solid var(--navy-700);';
     saveButton.setAttribute('role', 'button');
     saveButton.setAttribute('tabindex', '0');
     saveButton.setAttribute('title', "{{ _('Apply') }}");
@@ -911,7 +911,7 @@ function myLoader(color) {
     savingDiv.id = 'saving';
     savingDiv.className = 'pcButtonS hidden';
     savingDiv.textContent = "{{ _('Loading...') }}";
-    savingDiv.style = 'background-color: white; border: 1px solid #2a9d8f; color: #2a9d8f;';
+    savingDiv.style = 'background-color: white; border: 1px solid var(--navy-700); color: var(--navy-700);';
 
     // 4. Append both to .filters (at the end)
     filtersContainer.appendChild(saveButton);

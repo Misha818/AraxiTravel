@@ -59,7 +59,7 @@
         padding: 5px 10px;
         align-items: center;
         cursor: pointer;
-        color: #333;
+        color: var(--ink-900);
         border-bottom: 1px solid gray;
     }
 
@@ -80,7 +80,7 @@
     appearance: none;
     width: 20px;
     height: 20px;
-    border: 1px solid #4CAF50;
+    border: 1px solid var(--river-600);
     border-radius: 5px;
     position: relative;
     cursor: pointer;
@@ -91,8 +91,8 @@
 
     /* Checked state */
     .parent-checkbox:checked {
-        background-color: #4CAF50;
-        border-color: #4CAF50;
+        background-color: var(--river-600);
+        border-color: var(--river-600);
     }
 
     .child-checkbox {
@@ -128,8 +128,8 @@
 
     /* Partial tick: some of the product's prices are selected (set in the page script) */
     .parent-checkbox:indeterminate {
-        background-color: #4CAF50;
-        border-color: #4CAF50;
+        background-color: var(--river-600);
+        border-color: var(--river-600);
     }
 
     .parent-checkbox:indeterminate::after {

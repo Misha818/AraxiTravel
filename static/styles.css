@@ -223,7 +223,7 @@ body.loaded {
 .middleButtun {
     display: inline-block;
     padding: 10px 20px;
-    background-color: #007bff;
+    background-color: var(--river-600);
     color: white;
     border: none;
     border-radius: 5px;
@@ -471,7 +471,7 @@ button[type="submit"] {
 .top-right-nav a {
     margin-left: 10px;
     padding: 8px 16px;
-    background-color: #007bff;
+    background-color: var(--river-600);
     color: white;
     text-decoration: none;
     border-radius: 4px;
@@ -494,7 +494,7 @@ button[type="submit"] {
     justify-content: flex-start;
     align-items: flex-start;
     padding: 10px 25px 100% 10px;
-    background-color: #f4f5fa;
+    background-color: var(--cream-100);
     border: 1px solid #ddd;
     z-index: 11;
     transition: transform 0.3s ease, width 0.3s ease;
@@ -514,7 +514,7 @@ button[type="submit"] {
 .top-left-nav-a, .top-left-nav button {
     /* margin-bottom: 10px;
     padding: 8px 16px;
-    background-color: #007bff;
+    background-color: var(--river-600);
     color: white;
     border: none;
     border-radius: 4px;
@@ -523,8 +523,8 @@ button[type="submit"] {
     margin-bottom: 10px;
     /* margin-right: 0px; */
     padding: 8px 16px;
-    background-color: #f4f5fa;
-    color: #4a4a4a;
+    background-color: var(--cream-100);
+    color: var(--ink-600);
     border: none;
     border-radius: 5px;
     cursor: pointer;
@@ -554,15 +554,15 @@ button[type="submit"] {
     appearance: none; /* Remove default arrow in certain browsers */
     -webkit-appearance: none;
     -moz-appearance: none;
-    color: #333;
+    color: var(--ink-900);
     /* text-align: center; */
     margin-bottom: 25px;
 }
 
 .styled-select:focus {
-    border-color: #66afe9;
+    border-color: var(--river-400);
     outline: none;
-    box-shadow: 0 0 5px rgba(102, 175, 233, 0.6);
+    box-shadow: 0 0 5px rgba(69, 150, 178, 0.45);
 }
 
 .styled-select option {
@@ -649,7 +649,7 @@ button[type="submit"] {
 .pcButton {
     display: inline-block;
     padding: 10px 20px;
-    background-color: #5856d6;
+    background-color: var(--river-600);
     color: white;
     border: none;
     border-radius: 5px;
@@ -662,7 +662,7 @@ button[type="submit"] {
 .pcButtonS {
     display: inline-block;
     padding: 10px 20px;
-    background-color: #E76F51;
+    background-color: var(--river-600);
     color: white;
     border: none;
     border-radius: 5px;
@@ -674,7 +674,7 @@ button[type="submit"] {
 .pcButtonS1 {
     display: block;
     padding: 10px 20px;
-    background-color: #E76F51;
+    background-color: var(--river-600);
     color: white;
     border: none;
     border-radius: 5px;
@@ -906,7 +906,7 @@ button[type="submit"] {
   transition: .4s;
 }
 .sliderA.checked {
-  background-color: #2196F3;
+  background-color: var(--river-600);
 }
 .sliderA.checked:before {
   -webkit-transform: translateX(26px);
@@ -999,7 +999,7 @@ button[type="submit"] {
 .child-option {
   padding: 5px 0;
   cursor: pointer;
-  color: #333;
+  color: var(--ink-900);
 }
 
 .child-option:hover {
@@ -1035,7 +1035,7 @@ button[type="submit"] {
       appearance: none;
       width: 20px;
       height: 20px;
-      border: 1px solid #4CAF50;
+      border: 1px solid var(--river-600);
       border-radius: 5px;
       position: relative;
       cursor: pointer;
@@ -1046,8 +1046,8 @@ button[type="submit"] {
   
       /* Checked state */
       .parent-checkbox:checked, .select-all-checkbox:checked {
-          background-color: #4CAF50;
-          border-color: #4CAF50;
+          background-color: var(--river-600);
+          border-color: var(--river-600);
       }
   
       .child-checkbox {
@@ -1132,8 +1132,8 @@ button[type="submit"] {
 
 .filter-button, .add-to-store-btn {
   margin-bottom: 7px;
-  color: #2a9d8f;
-  border: 2px solid #2a9d8f;
+  color: var(--navy-700);
+  border: 2px solid var(--navy-700);
   width: 100px;
   text-align: center;
   padding: 5px 10px;
@@ -1144,7 +1144,7 @@ button[type="submit"] {
 .filter-button:hover {
   cursor: pointer;
   /* color: white; */
-  /* background-color: #E76F51; */
+  /* background-color: var(--river-600); */
 }
 
 
@@ -1155,7 +1155,7 @@ button[type="submit"] {
 }
 
 .more-on-quantity {
-  color: #00a6ed;
+  color: var(--river-600);
   border: 1px solid;
   margin: 10% auto;
 }
@@ -1252,7 +1252,7 @@ button[type="submit"] {
     
     /* Action button inside table */
     .pt-quantity-action-btn {
-      background-color: #4CAF50;
+      background-color: var(--river-600);
       color: white;
       padding: 5px 10px;
       text-decoration: none;
@@ -1262,7 +1262,7 @@ button[type="submit"] {
     }
     
     .pt-quantity-action-btn:hover {
-      background-color: #45a049;
+      background-color: var(--navy-700);
     }
     
 
@@ -1987,11 +1987,13 @@ h2 {
 
   width: 100%;
   overflow: hidden;
-  /* background-color: #E76F51; */
-  background-color: #2A9D8F;
+  /* the site header's solid look (site-chrome.css), as on the staff product page */
+  background-color: var(--cream-50);
+  color: var(--navy-900);
   padding: 20px 10px;
   margin-bottom: 20px;
-  border-bottom:  solid #e0e0e0;
+  border-bottom: 0;
+  box-shadow: 0 1px 0 rgba(7, 35, 57, .08);
 }
 
 .header-stuff a {
@@ -2016,7 +2018,7 @@ h2 {
 }
 
 .header-stuff a.active {
-  background-color: dodgerblue;
+  background-color: var(--river-600);
   color: white;
 }
 
@@ -7342,14 +7344,14 @@ h2 {
   padding: 7px 12px;
   font-size: 16px;
   line-height: 1.5;
-  /* border: 1px solid #ccc; */
+  border: 1px solid var(--cream-200);   /* a white pill on the cream header */
   border-radius: 25px;
   background-color: #fff;
   appearance: none;
   /* text-align: center; */
   -webkit-appearance: none;
   -moz-appearance: none;
-  color: #333;
+  color: var(--ink-900);
  }
 
  .rolls:hover {
@@ -7360,14 +7362,14 @@ h2 {
   padding: 7px 12px;
   font-size: 16px;
   line-height: 1.5;
-  /* border: 1px solid #ccc; */
+  border: 1px solid var(--cream-200);
   border-radius: 25px;
   background-color: #fff;
   appearance: none;
   /* text-align: center; */
   -webkit-appearance: none;
   -moz-appearance: none;
-  color: #333;
+  color: var(--ink-900);
  }
 
  .lang-drop-down:hover {
@@ -7479,10 +7481,10 @@ h2 {
 }
 
 .sidebar {
-  background-color: #f4f5fa!important;
+  background-color: var(--cream-100)!important;
   height: 100vh!important;
   padding: 20px!important;
-  color: #4a4a4a!important;
+  color: var(--ink-600)!important;
   border-right: 1px solid #ddd!important;
   position: fixed!important;
   transition: transform 0.5s ease, width 0.5s ease!important;  
@@ -7515,14 +7517,14 @@ h2 {
   border: none;
   cursor: pointer;
   font-size: 18px;
-  color: #4a4a4a;
+  color: var(--ink-600);
   z-index: 1000;
 }
 
 .sidebar-title {
   font-size: 16px;
   font-weight: bold;
-  color: #4a4a4a;
+  color: var(--ink-600);
   margin-bottom: 10px;
   padding: 10px 0;
 }
@@ -7540,7 +7542,7 @@ h2 {
 .sidebar-menu li a {
   text-decoration: none;
   font-size: 16px;
-  color: #4a4a4a;
+  color: var(--ink-600);
   display: flex;
   align-items: center;
   padding: 10px;
@@ -7549,13 +7551,13 @@ h2 {
 }
 
 .sidebar-menu li a:hover {
-  /* background-color: #e4e5fa; */
+  /* background-color: var(--cream-200); */
   filter: brightness(1.1);  
 }
 
 .sidebar-menu li a i {
   margin-right: 10px;
-  color: #E76F51;
+  color: var(--river-600);
   font-size: 18px;
 }
 
@@ -7626,7 +7628,7 @@ th.active .sort-icon {
 }
 .sort-icons i:hover {
   cursor: pointer;
-  /* color: #5856d6; */
+  /* color: var(--river-600); */
 }
 
 tr:nth-child(even) {
@@ -7651,7 +7653,7 @@ tr:nth-child(even) {
 
 
 .status-open {
-  background-color: #E76F51;
+  background-color: var(--navy-700);   /* apart from the light blue of .status-preparing */
 }
 
 .status-closed {
@@ -7690,7 +7692,7 @@ tr:nth-child(even) {
 
 .progress-bar {
   height: 6px;
-  background-color: #4e73df;
+  background-color: var(--river-600);
   border-radius: 3px;
 }
 
@@ -7699,13 +7701,13 @@ tr:nth-child(even) {
   justify-content: center;
   padding: 10px 0;
   font-size: 14px;
-  color: #666;
+  color: var(--ink-600);
 }
 
 .pagination div {
   margin: 0 4px;
   padding: 6px 12px;
-  color: #4e73df;
+  color: var(--river-600);
   border-radius: 4px;
   text-decoration: none;
 }
@@ -7714,7 +7716,7 @@ tr:nth-child(even) {
 .pagination a {
   margin: 0 4px;
   padding: 6px 12px;
-  color: #E76F51;
+  color: var(--river-600);
   border-radius: 4px;
   border: 1px solid #ddd;
   cursor: pointer;
@@ -7722,13 +7724,13 @@ tr:nth-child(even) {
 }
 
 .pagination a:hover {
-  border-color: #E76F51;
-  color: #E76F51;
+  border-color: var(--river-600);
+  color: var(--river-600);
 }
 
 .pagination a.active, div.active {
-  background-color: #E76F51;
-  border-color: #E76F51;
+  background-color: var(--river-600);
+  border-color: var(--river-600);
   color: #fff;
 }
 
@@ -7751,7 +7753,7 @@ tr:nth-child(even) {
 
 .pagination .pagination-gap {
   padding: 6px 4px;
-  color: #666;
+  color: var(--ink-600);
 }
 
 /* .pagination twice: Bootstrap (loaded after this file) also sets .pagination { display: flex } */
@@ -7801,19 +7803,19 @@ tr:nth-child(even) {
 }
 
 .menu-icon {
-  color: #666;
+  color: var(--ink-600);
   font-size: 18px;
   cursor: pointer;
 }
 
 .edit-user {
-  color: #E76F51;
+  color: var(--river-600);
   font-size: 18px;
   text-decoration: none;
 }
 
 .edit-user a {
-  color: #E76F51;
+  color: var(--river-600);
 }
 
 
@@ -8075,7 +8077,7 @@ tr:nth-child(even) {
 
   /* When the checkbox is checked, change the background color */
   .checkbox-container input:checked ~ .checkmark {
-    background-color: #2196F3;
+    background-color: var(--river-600);
   }
 
   /* Create the checkmark/indicator (hidden when not checked) */
@@ -8468,7 +8470,7 @@ tr:nth-child(even) {
 }
 
 .add-pr-category {
-  color: #333;
+  color: var(--ink-900);
   border: 1px solid #ccc;
   padding: 10px;
   width: 100%;
@@ -8501,14 +8503,14 @@ tr:nth-child(even) {
 }
 
 .selectedRole {
-  background-color: #2A9D8F;
-  /* background-color: #E76F51; */
+  background-color: var(--navy-900);
+  /* background-color: var(--river-600); */
     color: #fff !important;
     font-weight: 600;
     text-decoration: none;
     border-radius: 5px;
     border: 3px solid #fff;
-  /* background-color: #fcf5eb;
+  /* background-color: var(--cream-100);
   color: #000;
   text-decoration: none;
   border-radius: 5px;
@@ -8523,15 +8525,15 @@ tr:nth-child(even) {
 
 .popover-body a {
   text-decoration: none!important;
-  color: #E76F51;
+  color: var(--river-600);
   font-size: 1.2em;
   font-weight: 600;
-  border: 1px solid #E76F51;
+  border: 1px solid var(--river-600);
   border-radius: 8px;
   padding: 8px;
 }
 .popover-body a:hover {
-  color: #E76F51;
+  color: var(--river-600);
   opacity: 0.8;
 }
 
@@ -8548,10 +8550,10 @@ tr:nth-child(even) {
 
 .btn-group-urls a {
   /* text-decoration: none!important; */
-  /* color: #E76F51; */
+  /* color: var(--river-600); */
   font-size: 1.2em;
   font-weight: 600;
-  /* border: 1px solid #E76F51; */
+  /* border: 1px solid var(--river-600); */
   border-radius: 8px;
   padding: 8px;
   margin-bottom: 5px;  
@@ -8559,7 +8561,7 @@ tr:nth-child(even) {
 .show-more,
 .show-less {
   font-weight: 600;
-  color: #E76F51;
+  color: var(--river-600);
   cursor: pointer;
   font-family: 'Kurland', cursive, Georgia, 'Times New Roman', Times, serif;
   
@@ -8657,11 +8659,11 @@ tr:nth-child(even) {
 
 .add-spss-btn {
   text-align: center;
-  border: 1px solid #e76f51;
+  border: 1px solid var(--river-600);
   border-radius: 5px;
   text-decoration: none;
   padding: 5px;
-  color: #e76f51;
+  color: var(--river-600);
   margin: 5px auto;
 }
 
@@ -8795,7 +8797,7 @@ tr:nth-child(even) {
 }
 .pm-toggle::after{ /* down chevron */
   content:""; position:absolute; right:10px; top:50%; transform:translateY(-50%);
-  border-width: 6px 5px 0 5px; border-style: solid; border-color:#666 transparent transparent transparent;
+  border-width: 6px 5px 0 5px; border-style: solid; border-color:var(--ink-600) transparent transparent transparent;
 }
 
 .pm-menu{
@@ -8905,12 +8907,12 @@ tr:nth-child(even) {
 .header-stuff-right a:focus-visible,
 .header-stuff-right select:focus-visible,
 .sidebar-menu li a:focus-visible {
-  outline: 2px solid #fff;
+  outline: 2px solid var(--river-600);
   outline-offset: 2px;
 }
 
 .sidebar-menu li a:focus-visible {
-  outline-color: #E76F51;
+  outline-color: var(--river-600);
 }
 
 .header-stuff-right {
@@ -8925,7 +8927,7 @@ tr:nth-child(even) {
 
 /* Current page in the staff sidebar */
 .sidebar-menu li a.active {
-  background-color: #e8e9f3;
+  background-color: var(--sand-200);
   font-weight: 600;
 }
 
@@ -9005,7 +9007,7 @@ tr:nth-child(even) {
   font-size: 1.6rem;
   margin: 0 0 12px 0;
   text-align: center;
-  color: #333;
+  color: var(--ink-900);
 }
 
 .admin-form-card #mistakes {
@@ -9031,7 +9033,7 @@ tr:nth-child(even) {
 
 .admin-form .field-label {
   font-weight: bold;
-  color: #333;
+  color: var(--ink-900);
   margin: 8px 0 2px 0;
 }
 
@@ -9045,9 +9047,9 @@ tr:nth-child(even) {
 }
 
 .admin-form .text-field:focus {
-  border-color: #66afe9;
+  border-color: var(--river-400);
   outline: none;
-  box-shadow: 0 0 5px rgba(102, 175, 233, 0.6);
+  box-shadow: 0 0 5px rgba(69, 150, 178, 0.45);
 }
 
 /* Dropdowns are injected into Bootstrap ".row" wrappers: drop the gutters */
@@ -9084,7 +9086,7 @@ tr:nth-child(even) {
   width: 18px;
   height: 18px;
   margin: 0;
-  accent-color: #E76F51;
+  accent-color: var(--river-600);
   cursor: pointer;
 }
 
@@ -9094,7 +9096,7 @@ tr:nth-child(even) {
 }
 
 .admin-form .pcButtonS.modifiedB:focus-visible {
-  outline: 3px solid #264653;
+  outline: 3px solid var(--navy-900);
   outline-offset: 2px;
 }
 
@@ -9124,7 +9126,7 @@ tr:nth-child(even) {
     font-size: 1.75rem;
     text-align: center;
     margin: 0 0 12px 0;
-    color: #333;
+    color: var(--ink-900);
 }
 
 /* The id carries a global margin/width meant for other forms */
@@ -9139,7 +9141,7 @@ tr:nth-child(even) {
 
 .promo-edit-form .field-label {
     font-weight: bold;
-    color: #333;
+    color: var(--ink-900);
     margin: 8px 0 2px 0;
 }
 
@@ -9163,12 +9165,12 @@ tr:nth-child(even) {
 }
 
 .promo-edit-form .dropdown-label:focus-visible {
-    outline: 3px solid #264653;
+    outline: 3px solid var(--navy-900);
     outline-offset: 2px;
 }
 
 .promo-edit-form .dropdown-label i {
-    color: #E76F51;
+    color: var(--river-600);
     transition: transform 0.2s ease;
 }
 
@@ -9196,7 +9198,7 @@ tr:nth-child(even) {
     padding: 0 12px;
     font: inherit;
     font-size: 15px;
-    color: #333;
+    color: var(--ink-900);
     background-color: #fff;
     border: 1px solid #ccc;
     border-radius: 6px;
@@ -9206,8 +9208,8 @@ tr:nth-child(even) {
 .promo-edit-form .search-select-input:focus,
 .promo-edit-form .services-search-input:focus {
     outline: none;
-    border-color: #2A9D8F;
-    box-shadow: 0 0 0 3px rgba(42, 157, 143, 0.18);
+    border-color: var(--navy-700);
+    box-shadow: 0 0 0 3px rgba(12, 68, 100, 0.18);
 }
 
 /* Services: the search box stays at the top while the list scrolls */
@@ -9251,14 +9253,14 @@ tr:nth-child(even) {
 }
 
 .promo-edit-form .search-select.has-value .search-select-toggle {
-    color: #333;
+    color: var(--ink-900);
 }
 
 .promo-edit-form .search-select-toggle:focus-visible,
 .promo-edit-form .search-select.is-open .search-select-toggle {
     outline: none;
-    border-color: #66afe9;
-    box-shadow: 0 0 5px rgba(102, 175, 233, 0.6);
+    border-color: var(--river-400);
+    box-shadow: 0 0 5px rgba(69, 150, 178, 0.45);
 }
 
 .promo-edit-form .search-select-text {
@@ -9269,7 +9271,7 @@ tr:nth-child(even) {
 
 .promo-edit-form .search-select-toggle i {
     flex-shrink: 0;
-    color: #E76F51;
+    color: var(--river-600);
     transition: transform 0.2s ease;
 }
 
@@ -9300,7 +9302,7 @@ tr:nth-child(even) {
 
 .promo-edit-form .search-select-list li {
     padding: 9px 10px;
-    color: #333;
+    color: var(--ink-900);
     border-radius: 4px;
     cursor: pointer;
     overflow-wrap: anywhere;
@@ -9313,7 +9315,7 @@ tr:nth-child(even) {
 
 .promo-edit-form .search-select-list li[aria-selected="true"] {
     font-weight: 600;
-    color: #264653;
+    color: var(--navy-900);
 }
 
 .promo-fields {
@@ -9346,7 +9348,7 @@ tr:nth-child(even) {
 
 .promo-note {
     margin: 8px 0 0 0;
-    color: #666;
+    color: var(--ink-600);
 }
 
 .promo-edit-form .pcButtonS.modifiedB {
@@ -9355,7 +9357,7 @@ tr:nth-child(even) {
 }
 
 .promo-edit-form .pcButtonS.modifiedB:focus-visible {
-    outline: 3px solid #264653;
+    outline: 3px solid var(--navy-900);
     outline-offset: 2px;
 }
 

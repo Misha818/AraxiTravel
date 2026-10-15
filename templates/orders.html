@@ -20,9 +20,9 @@
 <style>
 #orderStatus {
   background-color: white;
-  color: #333;
+  color: var(--ink-900);
   padding: 10px 20px;
-  border: 1px solid #333;
+  border: 1px solid var(--ink-900);
   cursor: pointer;
   font-size: 16px;
   border-radius: 5px;
@@ -36,16 +36,16 @@
 
 .filter-inputs {
   background-color: white;
-  color: #333;
+  color: var(--ink-900);
   padding: 10px 20px;
-  border: 1px solid #333;
+  border: 1px solid var(--ink-900);
   font-size: 16px;
   border-radius: 5px;
   /* margin-right: 1px; */
 }
 
 .dropbtn, .filter {
-  background-color: #E76F51; 
+  background-color: var(--river-600); 
   color: white; 
   padding: 10px 20px; 
   border: none; 
@@ -99,7 +99,7 @@
 #myTable .row-actions a:focus-visible,
 .pagination [role="button"]:focus-visible,
 .pt-quantity-close:focus-visible {
-  outline: 3px solid #264653;
+  outline: 3px solid var(--navy-900);
   outline-offset: 2px;
 }
 
@@ -123,7 +123,7 @@
 
 #myTable td.row-actions > span:hover,
 #myTable td.row-actions > a:hover {
-  background-color: #fbe9e4;
+  background-color: var(--river-100);
 }
 
 .sort-icons i {
@@ -134,7 +134,7 @@
   text-align: center;
   padding: 24px;
   font-size: 18px;
-  color: #666;
+  color: var(--ink-600);
 }
 
 .pagination {
@@ -457,7 +457,7 @@
         <td data-label="{{ _('Status') }}"><span class="status-label {{ statusStyle }}">{{ status }}</span></td>
 
         <td class="edit-user row-actions" data-label="{{ _('Order Details') }}">
-          <a href="{{ url_for('order_details', pdID=row['ID'], _external=True) }}" target="_blank" title="{{ _('Order Details') }}" aria-label="{{ _('Order Details') }}: {{ row['ID'] }}" style="color:#E76F51">
+          <a href="{{ url_for('order_details', pdID=row['ID'], _external=True) }}" target="_blank" title="{{ _('Order Details') }}" aria-label="{{ _('Order Details') }}: {{ row['ID'] }}" style="color:var(--river-600)">
             <i class="fas fa-eye" aria-hidden="true"></i>
             <!-- <i class="fas fa-pencil"></i> -->
           </a>

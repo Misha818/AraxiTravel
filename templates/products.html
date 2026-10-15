@@ -80,7 +80,7 @@
             appearance: none;
             width: 20px;
             height: 20px;
-            border: 1px solid #4CAF50;
+            border: 1px solid var(--river-600);
             border-radius: 5px;
             position: relative;
             cursor: pointer;
@@ -90,8 +90,8 @@
         }
 
         .checkbox:checked {
-          background-color: #4CAF50;
-          border-color: #4CAF50;
+          background-color: var(--river-600);
+          border-color: var(--river-600);
         }
 
         .checkbox:checked::after {
@@ -179,12 +179,12 @@
 
         .actions a:hover,
         .actions a:focus-visible {
-          background-color: #fbe9e4;
+          background-color: var(--river-100);
         }
 
         .actions a:focus-visible,
         .view-types-btn:focus-visible {
-          outline: 3px solid #264653;
+          outline: 3px solid var(--navy-900);
           outline-offset: 2px;
         }
 
@@ -194,7 +194,7 @@
 
         #myTable td.table-empty {
           text-align: center;
-          color: #666;
+          color: var(--ink-600);
         }
 
         /* Narrow desktops / tablets in landscape: the full table needs ~750px, more than the 70% container */
@@ -434,9 +434,9 @@
       <td data-label="{{ _('Product Category') }}">{{ row['Product_Category_Name'] }}</td>
       <td data-label="{{ _('Status') }}">{{ status }}</td>
       <td class="actions" data-label="{{ _('Actions') }}">
-        <a href="{{ url_for('home', _external=True) + editUrl }}" target="_blank" title="{{ _('Edit') }}" aria-label="{{ _('Edit') }}: {{ row['Title'] }}"><i class="fas fa-pencil" style=" color: #E76F51;" aria-hidden="true"></i></a>
+        <a href="{{ url_for('home', _external=True) + editUrl }}" target="_blank" title="{{ _('Edit') }}" aria-label="{{ _('Edit') }}: {{ row['Title'] }}"><i class="fas fa-pencil" style=" color: var(--river-600);" aria-hidden="true"></i></a>
         {% if row['Product_Status'] == 2 %}
-        <a href="{{ url_for('home', _external=True) + row['Url'] }}" target="_blank" title="{{ _('View') }}" aria-label="{{ _('View') }}: {{ row['Title'] }}"><i class="fas fa-eye" style="font-size: 20px; color: #E76F51; margin-right: 20px;" aria-hidden="true"></i></a>
+        <a href="{{ url_for('home', _external=True) + row['Url'] }}" target="_blank" title="{{ _('View') }}" aria-label="{{ _('View') }}: {{ row['Title'] }}"><i class="fas fa-eye" style="font-size: 20px; color: var(--river-600); margin-right: 20px;" aria-hidden="true"></i></a>
         {% endif %}
       </td>
     </tr>
@@ -501,7 +501,7 @@ function constract_table_rows(data, mainUrl, langUrl, prID, transparent='', drag
                           </label>
                       </div>
                       
-                      <a href="${escapeHtml(editUrl+langUrl)}" target="_BLANK" title="${editTitle}"><i class="fas ${editIconClass}" style=" color: #E76F51;"></i></a>
+                      <a href="${escapeHtml(editUrl+langUrl)}" target="_BLANK" title="${editTitle}"><i class="fas ${editIconClass}" style=" color: var(--river-600);"></i></a>
                   </div>`;
 
       rows = rows + perRow;
@@ -569,9 +569,9 @@ window.addEventListener('load', () => {
                   // console.log(row.P_Ref_Key);
                   let editUrl = 'product/' + row.P_Ref_Key.toString();
                   
-                  let actionBtns = `<a href="{{ url_for('home', _external=True) }}${escapeHtml(editUrl)}&langID={{ languageID }}" target="_blank" title="{{ _('Translate') }}"><i class="fas fa-language" style=" color: #E76F51;"></i></a>`;
+                  let actionBtns = `<a href="{{ url_for('home', _external=True) }}${escapeHtml(editUrl)}&langID={{ languageID }}" target="_blank" title="{{ _('Translate') }}"><i class="fas fa-language" style=" color: var(--river-600);"></i></a>`;
                   if (row['Product_Status'] == 2) {
-                    actionBtns += `<a href="{{ url_for('home', _external=True) }}${escapeHtml(row['Url'])}" target="_blank" title="{{ _('View') }}"><i class="fas fa-eye" style="font-size: 20px; color: #E76F51; margin-right: 20px;"></i></a>`;
+                    actionBtns += `<a href="{{ url_for('home', _external=True) }}${escapeHtml(row['Url'])}" target="_blank" title="{{ _('View') }}"><i class="fas fa-eye" style="font-size: 20px; color: var(--river-600); margin-right: 20px;"></i></a>`;
                   } 
                   
                   let status = `{{ _('Published') }}`;
@@ -1022,7 +1022,7 @@ function rotate(gearElement) {
 
 function myLoader(color) {
   if (color === undefined) {
-    color = 'crimson'
+    color = 'var(--river-600)'
   }
   let loader = document.createElement('div'); // Create a div element for the loader
     loader.id = 'gear';

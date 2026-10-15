@@ -19,13 +19,13 @@
 
 <style>
   body {
-        background-color: #fdf6ec;
+        background-color: var(--cream-50);
     }
 #orderStatus {
   background-color: white;
-  color: #333;
+  color: var(--ink-900);
   padding: 10px 20px;
-  border: 1px solid #333;
+  border: 1px solid var(--ink-900);
   cursor: pointer;
   font-size: 16px;
   border-radius: 5px;
@@ -39,16 +39,16 @@
 
 .filter-inputs {
   background-color: white;
-  color: #333;
+  color: var(--ink-900);
   padding: 10px 20px;
-  border: 1px solid #333;
+  border: 1px solid var(--ink-900);
   font-size: 16px;
   border-radius: 5px;
   /* margin-right: 1px; */
 }
 
 .dropbtn, .filter {
-  background-color: #E76F51; 
+  background-color: var(--river-600); 
   color: white; 
   padding: 10px 20px; 
   border: none; 
@@ -316,7 +316,7 @@
           {% if affID %}
             {% set orderDetailsUrl = url_for('order_details', pdID=row['ID'], _external=True) %}
           {% endif %}
-          <a href="{{ orderDetailsUrl }}" title="{{ _('Order Details') }}" style="color:#E76F51">
+          <a href="{{ orderDetailsUrl }}" title="{{ _('Order Details') }}" style="color:var(--river-600)">
             <i class="fas fa-eye"></i>
             <!-- <i class="fas fa-pencil"></i> -->
           </a>

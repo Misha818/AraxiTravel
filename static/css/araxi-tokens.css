@@ -1,0 +1,41 @@
+/*
+ * Araxi Travel colours and shared design values, taken from the logo (static/images/logo.png).
+ * One definition for every page: the landing page, the product pages (with site-chrome.css) and
+ * the staff pages (base.html, product.html), whose styles.css rules and page styles use them.
+ * The same colours are offered in the text-colour pickers (static/JS/araxi-palette.js).
+ */
+
+:root {
+    --navy-950: #04182a;
+    --navy-900: #072339;
+    --navy-800: #0a3150;
+    --navy-700: #0c4464;   /* logo "A" */
+    --river-600: #15698a;  /* logo river */
+    --river-400: #4596b2;
+    --river-200: #b5d8e3;
+    --river-100: #e8f2f6;  /* hover and selected backgrounds */
+    --sand-300: #ddbf98;   /* logo mountains */
+    --sand-200: #ecdcc4;
+    --ochre-500: #c59054;  /* logo ochre */
+    --ochre-600: #a9733a;
+    --cream-50: #fbf9f4;
+    --cream-100: #f8f5ed;  /* logo snow */
+    --cream-200: #efe8da;
+    --ink-900: #0e2233;
+    --ink-600: #4a5b69;
+    --ink-400: #7b8893;
+    --white: #fff;
+
+    --font-display: "Marcellus", "Noto Serif Armenian", Georgia, "Times New Roman", serif;
+    --font-body: "Inter", "Noto Sans Armenian", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+    --header-h: 76px;
+    --container: 1240px;
+    --gutter: clamp(1.25rem, 4vw, 3rem);
+    --radius: 18px;
+    --radius-sm: 10px;
+    --ease-out: cubic-bezier(.22, .61, .36, 1);
+    --ease-in-out: cubic-bezier(.65, 0, .35, 1);
+    --shadow-card: 0 1px 2px rgba(7, 35, 57, .06), 0 12px 32px -12px rgba(7, 35, 57, .18);
+    --shadow-card-hover: 0 2px 4px rgba(7, 35, 57, .08), 0 28px 50px -18px rgba(7, 35, 57, .32);
+}

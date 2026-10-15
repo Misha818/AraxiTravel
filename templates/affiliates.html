@@ -25,8 +25,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #e3e6f0;
-    color: #333;
+    background-color: var(--cream-200);
+    color: var(--ink-900);
     font-weight: bold;
     font-size: 16pt;
   }
@@ -43,7 +43,7 @@
   }
 
   .team-member .member-email {
-    color: #666;
+    color: var(--ink-600);
     overflow-wrap: anywhere;
   }
 
@@ -66,7 +66,7 @@
 
   #myTable td.row-actions a:hover,
   #myTable td.row-actions a:focus-visible {
-    background-color: #fbe9e4;
+    background-color: var(--river-100);
   }
 
   .sort-icons i {
@@ -82,7 +82,7 @@
     padding: 24px;
     text-align: center;
     font-size: 18px;
-    color: #666;
+    color: var(--ink-600);
   }
 
   @media (max-width: 768px) {
@@ -199,10 +199,10 @@
         <td data-label="{{ _('Status') }}"><span class="status-label {{ statusStyle }}">{{ status }}</span></td>
 
         <td class="edit-user row-actions" data-label="{{ _('Actions') }}">
-          <a href="{{ url_for('affiliate', affID=row['ID']) }}" target="_blank" title="{{ _('Affiliate Details') }}" aria-label="{{ _('Affiliate Details') }}: {{ fullName }}"><i class="fas fa-eye" style="font-size: 20px; color: #E76F51;" aria-hidden="true"></i></a>
+          <a href="{{ url_for('affiliate', affID=row['ID']) }}" target="_blank" title="{{ _('Affiliate Details') }}" aria-label="{{ _('Affiliate Details') }}: {{ fullName }}"><i class="fas fa-eye" style="font-size: 20px; color: var(--river-600);" aria-hidden="true"></i></a>
 
           <a href="{{ url_for('home', _external=True) + editUrl }}" title="{{ _('Edit') }}" aria-label="{{ _('Edit') }}: {{ fullName }}">
-            <i class="fas fa-pencil" style=" color: #E76F51;" aria-hidden="true"></i>
+            <i class="fas fa-pencil" style=" color: var(--river-600);" aria-hidden="true"></i>
           </a>
 
         </td>

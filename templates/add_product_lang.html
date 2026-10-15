@@ -64,9 +64,9 @@
         }
 
         .product-form .form_input:focus {
-            border-color: #66afe9;
+            border-color: var(--river-400);
             outline: none;
-            box-shadow: 0 0 5px rgba(102, 175, 233, 0.6);
+            box-shadow: 0 0 5px rgba(69, 150, 178, 0.45);
         }
 
         .product-form .styled-select {
@@ -84,7 +84,7 @@
 
         .product-form .add-pr-category:focus-visible,
         .product-form .pcButtonS:focus-visible {
-            outline: 3px solid #264653;
+            outline: 3px solid var(--navy-900);
             outline-offset: 2px;
         }
 
@@ -148,7 +148,7 @@
             }
         </style>
         <div class="card" style="cursor:pointer; width: 100%; background-color: #f8f8f8;" id="accordion">
-            <div class="card-header" id="headingId" style="background-color: #e76f51;">
+            <div class="card-header" id="headingId" style="background-color: var(--river-600);">
               <span class="d-block" 
                     data-toggle="collapse-accordion" 
                     data-target="collapseId" 
@@ -219,7 +219,7 @@
             style="                
                 display: block;
                 margin-bottom: unset;
-                background-color: #e76f51;
+                background-color: var(--river-600);
                 color: #fff;
                 margin-bottom: 5px;">
             {{ _('Add Product Category') }}

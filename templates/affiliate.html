@@ -11,7 +11,7 @@
     
   <style>
     body {
-        background-color: #fdf6ec;
+        background-color: var(--cream-50);
     }
 
     .container {
@@ -41,8 +41,8 @@
     #cancelBtn {
       border-radius: 25px;
       background-color: white;
-      border-color: #333;
-      color: #333;
+      border-color: var(--ink-900);
+      color: var(--ink-900);
     }
     /* Stepper container */
     .stepper {
@@ -87,36 +87,36 @@
     }
     /* Completed steps style */
     .step.completed .circle {
-      background-color: #E76F51;
+      background-color: var(--river-600);
     }
     /* active1 (current) step style */
     .step.active1 .circle {
-      background-color: #FCC628!important;
+      background-color: var(--ochre-500)!important;
     }
 
     
     .Voided {
-      border: 5px solid #2a9d8f;
-      /* border: 5px solid #E76F51; */
+      border: 5px solid var(--navy-700);
+      /* border: 5px solid var(--river-600); */
     }
 
     .Pending {
-      border: 5px solid #2a9d8f;
-      /* border: 5px solid #E76F51; */
+      border: 5px solid var(--navy-700);
+      /* border: 5px solid var(--river-600); */
     }
 
     .Approved  {
-      border: 5px solid #2a9d8f;
-      /* border: 5px solid #E76F51; */
+      border: 5px solid var(--navy-700);
+      /* border: 5px solid var(--river-600); */
     }
 
     .Settled {
-      border: 5px solid #2a9d8f;
-      /* border: 5px solid #E76F51; */
+      border: 5px solid var(--navy-700);
+      /* border: 5px solid var(--river-600); */
     }
 
     a {
-      color: #333!important;
+      color: var(--ink-900)!important;
     }
 
 
@@ -172,12 +172,12 @@
 
     a.step:hover,
     a.step:focus-visible {
-      background-color: #fbe9e4;
+      background-color: var(--river-100);
       text-decoration: none;
     }
 
     a.step:focus-visible {
-      outline: 3px solid #264653;
+      outline: 3px solid var(--navy-900);
       outline-offset: 2px;
     }
 
@@ -216,11 +216,11 @@
 
     #myTable td.row-actions a:hover,
     #myTable td.row-actions a:focus-visible {
-      background-color: #fbe9e4;
+      background-color: var(--river-100);
     }
 
     #myTable td.row-actions a:focus-visible {
-      outline: 3px solid #264653;
+      outline: 3px solid var(--navy-900);
       outline-offset: 2px;
     }
 
@@ -389,10 +389,10 @@
                 {% set affiliateOrdersUrl = url_for('home') + 'stuff-affiliate-orders/page=1&status=all&promoCode=' + row['Promo'] + '&affiliate=' + affID %}
               {% endif %}
           {% endif %}
-          <a href="{{ promoDetailsUrl }}" title="{{ _('Details') }}" aria-label="{{ _('Details') }}: {{ row['Promo'] }}"><i class="fas fa-eye" style="font-size: 20px; color: #E76F51;" aria-hidden="true"></i></a>
+          <a href="{{ promoDetailsUrl }}" title="{{ _('Details') }}" aria-label="{{ _('Details') }}: {{ row['Promo'] }}"><i class="fas fa-eye" style="font-size: 20px; color: var(--river-600);" aria-hidden="true"></i></a>
         </td>
         <td class="row-actions" data-label="{{ _('Purchase History') }}">
-          <a href="{{ affiliateOrdersUrl }}" title="{{ _('Purchase History') }}" aria-label="{{ _('Purchase History') }}: {{ row['Promo'] }}"><i class="fas fa-info-circle" style="font-size: 20px; color: #E76F51;" aria-hidden="true"></i></a>
+          <a href="{{ affiliateOrdersUrl }}" title="{{ _('Purchase History') }}" aria-label="{{ _('Purchase History') }}: {{ row['Promo'] }}"><i class="fas fa-info-circle" style="font-size: 20px; color: var(--river-600);" aria-hidden="true"></i></a>
         </td>
       </tr>
       
