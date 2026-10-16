@@ -27,6 +27,8 @@
             <div class="lang-switch" aria-label="{{ _('Language') }}">{% include '_lang_switch.html' %}</div>
         </nav>
 
+        {% include '_cart_link.html' %}
+
         <button class="menu-toggle" type="button" aria-controls="site-nav" aria-expanded="false" data-menu-toggle
                 data-label-open="{{ _('Open menu') }}" data-label-close="{{ _('Close menu') }}">
             <span class="sr-only" data-menu-label>{{ _('Open menu') }}</span>

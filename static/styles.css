@@ -2190,10 +2190,6 @@ h2 {
   align-items: center;
 }
 
-.productType strong {
-  color: #ff7f50!important;
-}
-
 /* Horizontal Thumbnails For Prices */
 .thumbnail-containerX {
   display: flex;
@@ -8265,13 +8261,6 @@ tr:nth-child(even) {
 
 @media screen and (min-width: 200px) and (max-width: 1365px) {  
 
-  .spss-view {
-    display: none!important;
-  }
-  .spss-button {
-    display: block!important;
-  }
-
   .product-details {
     text-align: center;
     margin: 3% auto 0% auto;
@@ -8600,22 +8589,6 @@ tr:nth-child(even) {
   max-height: 1200px!important;        
   opacity: 1!important;
   transform: translateY(0)!important;
-}
-
-.spss-button {
-  font-size: 40px;
-  color: #ff7f50;
-  display: none;
-}
-
-.spss-button:hover {
-  color: #ff7f50;
-  cursor: pointer;
-  opacity: 0.8;
-}
-
-.spss-view {
-  display: block;
 }
 
 .shopping-cart-container .item-info {
@@ -9470,11 +9443,6 @@ tr:nth-child(even) {
   box-sizing: border-box;
 }
 
-/* slideshow.js adds no-spss when the price on show has no specifications: no button to unfold them */
-#slides .spss-button.no-spss {
-  display: none !important;
-}
-
 /* From 960px there's room for the thumbnail column next to the full 750x560 image.
    The ladders above cap the gallery at 65-87% of the row (narrower than the image, which then
    spilled out and pushed the row off centre) and shrink the image to 705px at 1365-1410px */
@@ -9630,17 +9598,6 @@ tr:nth-child(even) {
 
   #slides .productType .spss {
     align-items: center;
-  }
-
-  /* Specifications are folded behind the arrow button here. The older rule for this ends at
-     max-width: 1365px, which a fractional window width (about 1365.2px with display scaling)
-     slipped past */
-  #slides .spss-view {
-    display: none !important;
-  }
-
-  #slides .spss-button {
-    display: block !important;
   }
 
   /* slideshow.html gives the price-thumbnail strip an inline 18px left margin when its scroll

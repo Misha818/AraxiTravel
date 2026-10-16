@@ -1,0 +1,16 @@
+{#- The cart link of the headers (client: _site_header.html, public.html; staff: product.html): a rolling
+    suitcase with the number of bookings in the cart (cart_count, app.py). "Add to cart" on the service page
+    updates the number (static/JS/booking.js, [data-cart-count]). Styles: static/css/cart.css -#}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cart.css') }}">
+<a href="{{ url_for('cart') }}" class="cart-link" data-cart-link
+   aria-label="{{ _('Cart') }}{% if cart_count %} ({{ cart_count }}){% endif %}" title="{{ _('Cart') }}"
+   data-label="{{ _('Cart') }}">
+    <svg class="cart-link__icon" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false">
+        <path d="M6 20a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2"/>
+        <path d="M8 18V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v14"/>
+        <path d="M10 20h4"/>
+        <circle cx="16" cy="20" r="2"/>
+        <circle cx="8" cy="20" r="2"/>
+    </svg>
+    <span class="cart-link__count" data-cart-count{% if not cart_count %} hidden{% endif %}>{{ cart_count }}</span>
+</a>

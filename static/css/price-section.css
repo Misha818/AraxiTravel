@@ -1,0 +1,521 @@
+/* The price section of the product pages (templates/slideshow.html, on the public product_client.html and
+   the staff product.html): the price heading, the price thumbnails and the price card.
+
+   The price card looks the same at every width: the price, who is coming, vehicle and guide, Add to cart
+   and Book Now, then the specifications (always shown) in two columns and the map last.
+     - from 1366px (where the photos and prices sit side by side, styles.css) the page becomes two columns:
+       the gallery with the product text under it on the left, and on the right the price heading, the
+       price thumbnails and the card, running alongside both;
+     - narrower screens stack them: the price column comes under the gallery, at most 640px wide.
+   The page layout only while the gallery with prices is on show: the staff page hides #slides (inline
+   display: none) for the photo uploader and its editors, and then keeps its own layout.
+   styles.css still has the older price-section rules (centred text, orange labels, sizes per screen width);
+   the rules here are more specific or come later, and replace them. */
+
+/* ---- Heading: the title of the price on show (slideshow.js updatePriceTitle). The card's own title is
+   the same text, so it isn't repeated ---- */
+#slides .product-details:has([data-price-title]) .productType > .subproduct {
+    display: none !important;
+}
+
+#slides .product-details .prTitle {
+    font-family: var(--font-display);
+    font-weight: 400;
+    line-height: 1.2;
+    color: var(--navy-900);
+    text-align: left;
+    overflow-wrap: break-word;
+}
+
+/* ---- Price thumbnails: the chosen one framed in ochre. Only the look: slideshow.js scrolls the strip by
+   the thumbnails' widths and margins, which styles.css sets per screen width ---- */
+#slides .product-details .price-thumbnails img {
+    object-fit: cover;
+    border-radius: 10px;
+    opacity: .6;
+    cursor: pointer;
+    transition: opacity .2s, outline-color .2s;
+    outline: 2px solid transparent;
+    outline-offset: -2px;
+}
+
+#slides .product-details .price-thumbnails img:hover {
+    opacity: .9;
+}
+
+#slides .product-details .price-thumbnails img.selectedThumbnail {
+    opacity: 1;
+    outline-color: var(--ochre-500);
+}
+
+#slides .product-details .thumb-prevX,
+#slides .product-details .thumb-nextX {
+    color: var(--navy-900);
+    background-color: transparent;
+    border-radius: 8px;
+}
+
+#slides .product-details .thumb-prevX:hover,
+#slides .product-details .thumb-nextX:hover {
+    color: var(--navy-900);
+    background-color: var(--cream-200);
+}
+
+/* ---- Price card: no scroll box; price, booking, the buttons, specifications in two columns, map last ---- */
+#slides .productType {
+    position: relative;
+    box-sizing: border-box;
+    width: auto;
+    max-width: none;
+    max-height: none;
+    overflow: visible;
+    font-family: var(--font-body);
+    font-size: 1rem;
+    text-align: left;
+    color: var(--navy-900);
+    background-color: #fff;
+    border: 1px solid var(--cream-200);
+    border-radius: 22px;
+    box-shadow: var(--shadow-card);
+}
+
+/* slideshow.js shows the chosen card with an inline display: block, the others with display: none */
+#slides .productType:not([style*="none"]) {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 20px;
+    row-gap: 20px;
+    align-content: start;
+    align-items: start;
+    justify-items: stretch;
+}
+
+#slides .productType > * {
+    grid-column: 1 / -1;
+    min-width: 0;
+    margin: 0 !important;
+    text-align: left;
+}
+
+#slides .productType > .price {
+    order: 1;
+    padding-bottom: 20px;
+    font-family: var(--font-body);
+    font-size: 1.55rem;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -.01em;
+    color: var(--navy-900);
+    border-bottom: 1px solid var(--cream-200);
+}
+
+#slides .productType > .inStock {
+    order: 2;
+    font: 600 13px/1.3 var(--font-body);
+    color: var(--ochre-600);
+}
+
+#slides .productType > .inStock:empty {
+    display: none;
+}
+
+#slides .productType > .booking {
+    order: 3;
+}
+
+#slides .productType > .cart-container {
+    order: 4;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--cream-200);
+}
+
+#slides .productType > .spss {
+    order: 5;
+    grid-column: auto;
+}
+
+#slides .productType > .spss:has(iframe) {
+    order: 6;
+    grid-column: 1 / -1;
+}
+
+/* ---- Who is coming, vehicle and guide (booking.css) ---- */
+#slides .productType .booking {
+    gap: 24px;
+    margin: 0;
+}
+
+#slides .productType .bk-choice > legend {
+    margin: 0 0 12px 0;
+    font: 700 11.5px/1.2 var(--font-body);
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    text-align: left;
+    color: var(--river-600);
+}
+
+#slides .productType .bk-age-row {
+    padding: 10px 0;
+    border-top: 1px solid var(--cream-200);
+}
+
+#slides .productType .bk-age-row:first-of-type {
+    padding-top: 0;
+    border-top: 0;
+}
+
+#slides .productType .bk-age-name {
+    text-align: left;
+}
+
+#slides .productType .bk-age-name strong {
+    font: 600 15px/1.3 var(--font-body);
+    color: var(--navy-900) !important;
+}
+
+#slides .productType .bk-age-name small {
+    font: 400 12.5px/1.3 var(--font-body);
+    color: var(--ink-600);
+}
+
+#slides .productType .bk-stepper {
+    gap: 2px;
+    padding: 3px;
+    background-color: var(--cream-100);
+    border-radius: 999px;
+}
+
+#slides .productType .bk-stepper button {
+    width: 32px;
+    height: 32px;
+    font: 500 18px/1 var(--font-body);
+    color: var(--navy-900);
+    background-color: #fff;
+    border: 0;
+    box-shadow: 0 1px 2px rgba(7, 35, 57, .16);
+    transition: background-color .15s, color .15s;
+}
+
+#slides .productType .bk-stepper button:hover:not(:disabled) {
+    color: #fff;
+    background-color: var(--navy-900);
+}
+
+#slides .productType .bk-stepper button:disabled {
+    color: var(--ink-400);
+    background-color: transparent;
+    border: 0;
+    box-shadow: none;
+    opacity: .55;
+}
+
+#slides .productType .bk-stepper output {
+    min-width: 28px;
+    font: 700 15px/1 var(--font-body);
+}
+
+#slides .productType .bk-age-total {
+    margin: 10px 0 0 0;
+    padding-top: 12px;
+    font: 600 13px/1 var(--font-body);
+    text-align: right;
+    color: var(--ink-600);
+    border-top: 1px solid var(--cream-200);
+}
+
+#slides .productType .bk-pills {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 8px;
+}
+
+#slides .productType .bk-pill {
+    display: block;
+}
+
+#slides .productType .bk-pill span {
+    box-sizing: border-box;
+    height: 100%;
+    min-width: 0;
+    padding: 10px 12px;
+    background-color: #fff;
+    border: 1px solid var(--cream-200);
+    border-radius: 12px;
+    transition: border-color .15s, box-shadow .15s, background-color .15s;
+}
+
+#slides .productType .bk-pill:hover span {
+    border-color: var(--river-400);
+}
+
+#slides .productType .bk-pill strong {
+    font: 600 14px/1.25 var(--font-body);
+}
+
+#slides .productType .bk-pill small {
+    font: 400 12px/1.35 var(--font-body);
+    opacity: .8;
+}
+
+#slides .productType .bk-pill input:checked + span {
+    color: #fff;
+    background-color: var(--navy-900);
+    border-color: var(--navy-900);
+    box-shadow: 0 10px 20px -12px rgba(7, 35, 57, .7);
+}
+
+#slides .productType .bk-message {
+    font: 500 14px/1.4 var(--font-body);
+    text-align: left;
+}
+
+/* ---- Add to cart and Book Now (booking.css .bk-btn): side by side, the whole width of the card ---- */
+#slides .productType .cart-container {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: stretch;
+    gap: 12px;
+    padding-top: 0;
+}
+
+#slides .productType .cart-container > * {
+    margin: 0 !important;
+}
+
+#slides .productType .cart-container .bk-btn {
+    flex: 1 1 0;
+    min-width: 0;
+    height: 54px;
+    font-size: 16px;
+}
+
+/* ---- Specifications: a small label over the value ---- */
+#slides .productType .spss {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    text-align: left;
+}
+
+#slides .productType .spss strong {
+    display: block;
+    margin: 0 0 5px 0;
+    font: 700 11px/1.3 var(--font-body);
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-600) !important;
+}
+
+#slides .productType .spss span {
+    font: 500 15px/1.5 var(--font-body);
+    color: var(--navy-900);
+    overflow-wrap: anywhere;
+}
+
+#slides .productType .spss iframe {
+    display: block;
+    width: 100%;
+    height: 190px;
+    margin-top: 10px;
+    border: 1px solid var(--cream-200);
+    border-radius: 14px;
+}
+
+/* ================= Up to 1365px: the price column under the gallery ================= */
+@media screen and (max-width: 1365.98px) {
+
+    /* the column itself has no card of its own (the price card is the card), centred at most 640px wide */
+    #slides .product-details {
+        box-sizing: border-box;
+        width: 100%;
+        max-width: 640px;
+        margin: 28px auto 0 auto;
+        padding: 0;
+        text-align: left;
+        background: transparent;
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+    #slides .product-details .prTitle {
+        margin: 0 0 12px 0;
+        font-size: clamp(1.45rem, 5vw, 1.9rem);
+    }
+
+    /* the thumbnails start at the left edge, under the heading */
+    #slides .product-details .thumbnail-containerX {
+        justify-content: flex-start;
+        margin: 0 0 16px 0;
+    }
+
+    #slides .product-details .price-thumbnails.centered {
+        justify-content: flex-start;
+    }
+
+    #slides .productType {
+        width: 100%;
+        max-width: none;
+        margin: 0 !important;
+        padding: 24px;
+    }
+}
+
+/* phones: a little less padding, the price a little smaller, and the button labels fit side by side */
+@media screen and (max-width: 520px) {
+
+    #slides .product-details {
+        margin-top: 20px;
+    }
+
+    #slides .productType {
+        padding: 18px 16px;
+        border-radius: 18px;
+    }
+
+    #slides .productType:not([style*="none"]) {
+        column-gap: 14px;
+        row-gap: 18px;
+    }
+
+    #slides .productType > .price {
+        padding-bottom: 16px;
+        font-size: 1.35rem;
+    }
+
+    #slides .productType > .cart-container {
+        padding-bottom: 18px;
+    }
+
+    #slides .productType .bk-pills {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    }
+
+    #slides .productType .cart-container {
+        gap: 10px;
+    }
+
+    #slides .productType .cart-container .bk-btn {
+        height: 50px;
+        padding: 0 12px;
+        font-size: 15px;
+    }
+}
+
+/* very narrow phones: the specifications in one column */
+@media screen and (max-width: 360px) {
+
+    #slides .productType > .spss {
+        grid-column: 1 / -1;
+    }
+}
+
+/* ================= From 1366px: the "booking column" layout ================= */
+@media screen and (min-width: 1366px) {
+
+    /* ---- Page: two columns, the right one running from the gallery down past the product text ---- */
+    .containerZ:has(> #slides:not(.no-price):not([style*="none"])) {
+        display: grid;
+        grid-template-columns:
+            [full-start] minmax(24px, 1fr)
+            [main-start] minmax(0, 820px)
+            [side-start] 420px
+            [main-end] minmax(24px, 1fr)
+            [full-end];
+        column-gap: 0;
+        row-gap: 0;
+        align-items: start;
+    }
+
+    /* everything else (header, footer, hidden inputs...) keeps the full width, in its order */
+    .containerZ:has(> #slides:not(.no-price):not([style*="none"])) > * {
+        grid-column: full-start / full-end;
+    }
+
+    .containerZ:has(> #slides:not(.no-price):not([style*="none"])) > .pr-hero {
+        grid-row: 1;
+    }
+
+    /* the gallery and the price column become cells of the page grid */
+    .containerZ > #slides:not(.no-price):not([style*="none"]) {
+        display: contents !important;
+    }
+
+    #slides:not(.no-price) > .pg {
+        grid-column: main-start / side-start;
+        grid-row: 2;
+        flex: none;
+        width: auto;
+        min-width: 0;
+        margin: 64px 48px 0 0;
+    }
+
+    #slides:not(.no-price) > .product-details {
+        grid-column: side-start / main-end;
+        grid-row: 2 / span 3;
+        align-self: stretch;
+        flex: none;
+        width: auto;
+        height: auto;
+        min-width: 0;
+        margin: 64px 0 72px 0;
+        padding: 0;
+        background: transparent;
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+    /* the product text (public page and staff view) and the staff text editor: under the gallery */
+    #slides:not(.no-price) ~ #editorContentParent {
+        grid-column: main-start / side-start;
+        grid-row: 3;
+        width: auto;
+        min-width: 0;
+        margin: 32px 48px 72px 0 !important;
+        padding: 0;
+    }
+
+    #slides:not(.no-price) ~ #editorContentParent #editorContent {
+        max-width: none;
+    }
+
+    #slides:not(.no-price) ~ #myReachTextEditor {
+        grid-column: main-start / side-start;
+        grid-row: 4;
+        width: auto;
+        min-width: 0;
+        margin: 32px 48px 72px 0;
+        padding: 0;
+    }
+
+    /* ---- Price column: heading and thumbnails ---- */
+    #slides .product-details .prTitle {
+        margin: 0;
+        font-size: 1.9rem;
+    }
+
+    #slides .product-details .thumbnail-containerX {
+        width: auto !important;
+        margin: 16px 0 0 0;
+        justify-content: flex-start;
+    }
+
+    #slides .product-details .price-thumbnails-wrapper {
+        margin-left: 0 !important;
+    }
+
+    #slides .product-details .price-thumbnails {
+        gap: 8px;
+    }
+
+    #slides .product-details .price-thumbnails img {
+        width: 78px;
+        height: 58px;
+        margin: 0;
+    }
+
+    #slides .productType {
+        margin: 22px 0 0 0;
+        padding: 30px;
+    }
+}

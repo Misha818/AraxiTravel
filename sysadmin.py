@@ -876,7 +876,7 @@ def supported_langs():
     arr = [
             {'Language_ID': 1, 'Language': 'Հայերեն', 'Prefix':	'hy', 'Flag': 'am.svg'},
             {'Language_ID': 2, 'Language': 'English', 'Prefix':	'en', 'Flag': 'gb.svg'},
-            {'Language_ID': 8, 'Language': 'Русский', 'Prefix':	'ru', 'Flag': 'ru.svg'}
+            {'Language_ID': 3, 'Language': 'Русский', 'Prefix':	'ru', 'Flag': 'ru.svg'}
           ]
     return arr
 
@@ -1162,7 +1162,8 @@ def calculate_price(products):
     return {'status': "1", 'answer': totalPrice}
 
 
-def insertIntoBuffer(data, pdID, smthWrong, languageID, paymentMethod, priceState):
+# priceOverrides: {ptRefKey: price of one unit} instead of product_type.Price (a booking's price, booking.py)
+def insertIntoBuffer(data, pdID, smthWrong, languageID, paymentMethod, priceState, priceOverrides=None):
     # IMPORTANT
     # Do not forget to take into consideration the max quantity as well
         
@@ -1258,10 +1259,11 @@ def insertIntoBuffer(data, pdID, smthWrong, languageID, paymentMethod, priceStat
             
             if row['ptID'] == r['ptID']:
                 take = min(r['Quantity'], QUANTITY)
+                unitPrice = (priceOverrides or {}).get(r['ptID'], r['Price'])
                 if r['discount'] is not None:
-                    totalPrice = totalPrice + r['Price'] * take - r['Price'] * take * r['discount'] / 100
+                    totalPrice = totalPrice + unitPrice * take - unitPrice * take * r['discount'] / 100
                 else:
-                    totalPrice = totalPrice + r['Price'] * take
+                    totalPrice = totalPrice + unitPrice * take
 
                 bufferQuantities.append(
                     {
@@ -1270,8 +1272,8 @@ def insertIntoBuffer(data, pdID, smthWrong, languageID, paymentMethod, priceStat
                         'promo_code_id': r['promoID'], 
                         'promo_code': r['Promo'], 
                         'discount': r['discount'], 
-                        'affiliateID': r['affiliateID'], 
-                        'price': r['Price'], 
+                        'affiliateID': r['affiliateID'],
+                        'price': unitPrice, 
                         'ptID': r['ptID'],
                         'payment_details_id': pdID
                     })

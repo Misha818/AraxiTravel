@@ -189,6 +189,52 @@
                 </span>
             </div>
 
+            {#- what the client booked (booking.py: get_booking) #}
+            {% if booking %}
+            <div class="text-start" style="margin-top: 30px;">
+                <h5 class="mb-3">{{ _('Booking') }}</h5>
+                <table class="table table-bordered">
+                    <tbody>
+                        {% if booking['vehicleType'] %}
+                        <tr>
+                            <th scope="row">{{ _('Vehicle') }}</th>
+                            <td>{{ booking['vehicleType'] }} · {{ ngettext('%(num)s seat', '%(num)s seats', booking['vehicleSeats'] or 0) }}</td>
+                            <td>{{ mainCurrency }} {{ '{:,}'.format(booking['vehiclePrice'] or 0) }}</td>
+                        </tr>
+                        {% endif %}
+                        {% for age in booking['ages'] %}
+                        <tr>
+                            <th scope="row">{{ age['ageGroup'] }}</th>
+                            <td>× {{ age['people'] }}</td>
+                            <td>{{ (mainCurrency ~ ' ' ~ '{:,}'.format(age['price'] * age['people'])) if age['price'] is not none else '—' }}</td>
+                        </tr>
+                        {% endfor %}
+                        <tr>
+                            <th scope="row">{{ _('Guide') }}</th>
+                            <td>{{ booking['guideLanguage'] or _('No guide') }}</td>
+                            <td>{{ mainCurrency }} {{ '{:,}'.format(booking['guidePrice'] or 0) }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">{{ _('People') }}</th>
+                            <td colspan="2">{{ booking['people'] }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">{{ _('Total') }}</th>
+                            <td colspan="2">{{ mainCurrency }} {{ '{:,.0f}'.format(booking['total'] or 0) }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">{{ _('Additional notes') }}</th>
+                            <td colspan="2" style="white-space: pre-wrap;">{{ booking['notes'] or '—' }}</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">{{ _('Terms and conditions') }}</th>
+                            <td colspan="2">{{ _('Agreed') if booking['termsAccepted'] else '—' }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+
             <h5 class="mb-3 text-start" style="margin-top: 30px;">{{ _('Client Information') }}</h5>
             <div class="text-start" id="tickets" style="margin-top: 30px;">
                 

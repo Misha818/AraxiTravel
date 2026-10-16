@@ -69,6 +69,17 @@
       <div class="flex avatar-stuff" style="gap: 10px;">
         <img src="{{ url_for('static', filename='images/stuff-tools.png') }}" data-onclick='["toggleSidebar"]' alt="{{ _('Tools') }}" title="{{ _('Tools') }}" class="avatar" role="button" tabindex="0" aria-controls="sidebar" aria-expanded="false" style="cursor: pointer; width: 70px; height: 70px;">
         <span style="font-size: 20px; font-weight: bold; color: var(--navy-900);"> {{ role + ' | ' + actionName }}</span>
+        {#- headerProduct: the product a page works on ({'title', 'url'}), e.g. on Add Price / Edit Price #}
+        {%- if headerProduct %}
+        <span class="header-product">
+          <span class="header-product__sep" aria-hidden="true">&mdash;</span>
+          {%- if headerProduct.url %}
+          <a href="{{ headerProduct.url }}" class="header-product__name" title="{{ headerProduct.title }}">{{ headerProduct.title }}</a>
+          {%- else %}
+          <span class="header-product__name" title="{{ headerProduct.title }}">{{ headerProduct.title }}</span>
+          {%- endif %}
+        </span>
+        {%- endif %}
       </div>
         <!-- <img src="{{ url_for('static', filename='images/stuff-tools.png') }}" data-onclick='["toggleSidebar"]' alt="{{ _('Tools') }}" style="cursor: pointer; width: 70px; height: 70px;" > -->
       {% else %}
@@ -133,7 +144,8 @@
 
         {% endif %}
 
-        {% if supportedLangsData | length > 1 %}     
+        {#- pages can hide the language switch: {% set hideLangSwitch = true %} (Add / Edit Price) #}
+        {% if supportedLangsData | length > 1 and not hideLangSwitch %}
         <select data-onchange='["navigate", "/setlang?lang=", "$value"]' class="lang-drop-down">
           {% for lang in supportedLangsData %}
           <option value="{{ lang['Prefix'] }}" {{ 'selected' if get_locale() ==  lang['Prefix']  else '' }}>{{ lang['Language'] }}</option>

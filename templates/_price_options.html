@@ -1,0 +1,208 @@
+{#- Add Price / Edit Price: how the price is set and its options (static/JS/price-options.js,
+    static/css/price-options.css). options: price_options_view() in app.py; currency: MAIN_CURRENCY;
+    price: the fixed price (Edit Price).
+    Import with context (for _ and ngettext):
+    {% from '_price_options.html' import price_basis, guide_prices, notes_settings, price_options_text with context %} -#}
+
+{#- the names of the age groups (age.ageGroups) -#}
+{% macro age_label(name) -%}
+{%- set labels = {'Infant': _('Infant'), 'Child': _('Child'), 'Teen': _('Teen'), 'Adult': _('Adult'), 'Senior': _('Senior')} -%}
+{{ labels.get(name, name) }}
+{%- endmacro %}
+
+{#- A row of tabs, one per option, each with its own price field (name: <prefix><ID>).
+    items: [{'id', 'label', 'sub'}]; prices: {ID: price}. An empty field = not offered -#}
+{% macro option_tabs(prefix, ariaLabel, items, prices, currency) -%}
+<div class="po-tabs" data-tabs>
+    <div class="po-tablist" role="tablist" aria-label="{{ ariaLabel }}">
+        {%- for item in items %}
+        {%- set price = prices.get(item.id) %}
+        <button type="button" class="po-tab" role="tab" id="{{ prefix }}tab{{ item.id }}" aria-controls="{{ prefix }}panel{{ item.id }}"
+                aria-selected="{{ 'true' if loop.first else 'false' }}" tabindex="{{ 0 if loop.first else -1 }}">
+            <span class="po-tab__label">{{ item.label }}</span>
+            {%- if item.sub %}<span class="po-tab__sub">{{ item.sub }}</span>{% endif %}
+            <span class="po-tab__price{{ ' is-empty' if price is none }}" data-tab-price>
+                {%- if price is none %}{{ _('Not offered') }}{% elif price == 0 %}{{ _('Free') }}{% else %}{{ currency }} {{ '{:,}'.format(price) }}{% endif -%}
+            </span>
+        </button>
+        {%- endfor %}
+    </div>
+    {%- for item in items %}
+    {%- set price = prices.get(item.id) %}
+    <div class="po-tabpanel" role="tabpanel" id="{{ prefix }}panel{{ item.id }}" aria-labelledby="{{ prefix }}tab{{ item.id }}"{% if not loop.first %} hidden{% endif %}>
+        <label for="{{ prefix }}{{ item.id }}" class="po-price-label">{{ _('Price: %(option)s', option=item.label ~ (' · ' ~ item.sub if item.sub else '')) }}</label>
+        <div class="input-group price-group">
+            <input type="number" class="imageInput po-price" id="{{ prefix }}{{ item.id }}" name="{{ prefix }}{{ item.id }}"
+                   min="0" step="1" inputmode="numeric" value="{{ price if price is not none else '' }}" placeholder="{{ _('Not offered') }}">
+            <span aria-hidden="true">{{ currency }}</span>
+        </div>
+    </div>
+    {%- endfor %}
+</div>
+{%- endmacro %}
+
+
+{#- How the price is set: fixed / by vehicle / by age group, and the prices of the chosen way -#}
+{% macro price_basis(options, currency, price='') -%}
+<fieldset class="po-section" id="priceOptions">
+    <legend class="field-label">{{ _('How is the price set?') }}</legend>
+    <div class="po-basis" role="radiogroup">
+        {%- for value, label in [(0, _('Fixed price')), (1, _('By vehicle')), (2, _('By age group'))] %}
+        <label class="po-basis__option">
+            <input type="radio" name="pricingBasis" value="{{ value }}"{% if options.basis == value %} checked{% endif %}>
+            <span>{{ label }}</span>
+        </label>
+        {%- endfor %}
+    </div>
+
+    {# fixed: the price field the form always had #}
+    <div class="po-basis-panel" data-basis-panel="0"{% if options.basis != 0 %} hidden{% endif %}>
+        <label for="price" class="field-label">{{ _('Price') }}</label>
+        <div class="input-group price-group">
+            <input type="number" name="price" id="price" placeholder="{{ _('Add Product Type Price') }}" class="imageInput" inputmode="decimal" min="0" value="{{ price }}">
+            <span aria-hidden="true">{{ currency }}</span>
+        </div>
+    </div>
+
+    <div class="po-basis-panel" data-basis-panel="1"{% if options.basis != 1 %} hidden{% endif %}>
+        <p class="po-hint">{{ _('Price per vehicle. Leave a vehicle empty if it is not offered; 0 means free.') }}</p>
+        {%- set items = [] %}
+        {%- for v in options.vehicles %}
+            {%- set sub = ngettext('%(num)s seat', '%(num)s seats', v['Seats']) ~ ('' if v['Status'] == 1 else ' · ' ~ _('Disabled')) %}
+            {%- set _added = items.append({'id': v['ID'], 'label': v['Type'], 'sub': sub}) %}
+        {%- endfor %}
+        {% if items %}
+        {{ option_tabs('vprice_', _('Vehicles'), items, options.vehiclePrices, currency) }}
+        {% else %}
+        <p class="po-empty">{{ _('There are no vehicles in this language yet.') }} <a href="{{ url_for('add_vehicle_view') }}" target="_blank">{{ _('Add Vehicle') }}</a></p>
+        {% endif %}
+        {% if options.untranslatedVehicles %}
+        <p class="po-hint">{{ ngettext('%(num)s vehicle is not translated into this language yet.', '%(num)s vehicles are not translated into this language yet.', options.untranslatedVehicles) }}
+            <a href="{{ url_for('vehicles') }}" target="_blank">{{ _('Vehicles') }}</a></p>
+        {% endif %}
+    </div>
+
+    <div class="po-basis-panel" data-basis-panel="2"{% if options.basis != 2 %} hidden{% endif %}>
+        <p class="po-hint">{{ _('Price per person. Leave an age group empty if it can not join; 0 means free.') }}</p>
+        {%- set items = [] %}
+        {%- for a in options.ages %}
+            {%- set _added = items.append({'id': a['ID'], 'label': age_label(a['ageGroups']), 'sub': a['ageRange'] | replace('-', '–')}) %}
+        {%- endfor %}
+        {{ option_tabs('ageprice_', _('Age groups'), items, options.agePrices, currency) }}
+    </div>
+
+    {# who can join: chosen here with fixed / vehicle pricing; with age group pricing the priced groups can #}
+    <fieldset class="po-ages" data-basis-show="0 1"{% if options.basis == 2 %} hidden{% endif %}>
+        <legend class="field-label">{{ _('Who can join') }}</legend>
+        <div class="po-age-checks">
+            {%- for a in options.ages %}
+            <label class="po-check">
+                <input type="checkbox" name="allowedAge" value="{{ a['ID'] }}"{% if a['ID'] in options.allowedAges %} checked{% endif %}{% if a['ageGroups'] in ('Adult', 'Senior') %} data-adult{% endif %}>
+                <span>{{ age_label(a['ageGroups']) }} <small>{{ a['ageRange'] | replace('-', '–') }}</small></span>
+            </label>
+            {%- endfor %}
+        </div>
+        <p class="po-hint">{{ _('Everyone counts, infants too: with a fixed price everyone pays it, with a vehicle everyone takes a seat.') }}</p>
+    </fieldset>
+
+    <label class="po-switch po-adult">
+        <input type="checkbox" role="switch" id="adultRequired"{% if options.adultRequired %} checked{% endif %}>
+        <span class="po-switch__track" aria-hidden="true"></span>
+        <span>{{ _('At least one adult (16+) required') }}</span>
+    </label>
+</fieldset>
+{%- endmacro %}
+
+
+{#- Guide: "No guide" (free; offered unless a guide is required) and a price per guide language (`languages`), per group -#}
+{% macro guide_prices(options, currency) -%}
+<fieldset class="po-section">
+    <legend class="field-label">{{ _('Guide') }}</legend>
+    <p class="po-hint">{{ _('Price per group, added to the price when the client chooses a guide. Leave a language empty if there is no guide for it; 0 means free.') }}</p>
+    <div class="po-tabs" data-tabs>
+        <div class="po-tablist" role="tablist" aria-label="{{ _('Guide') }}">
+            <button type="button" class="po-tab" role="tab" id="guidetab0" aria-controls="guidepanel0" aria-selected="true" tabindex="0">
+                <span class="po-tab__label">{{ _('No guide') }}</span>
+                <span class="po-tab__price{{ ' is-empty' if options.guideRequired }}" id="noGuidePrice">
+                    {{- _('Not offered') if options.guideRequired else _('Free') -}}
+                </span>
+            </button>
+            {%- for lang in options.guideLanguages %}
+            {%- set price = options.guidePrices.get(lang['Language_ID']) %}
+            <button type="button" class="po-tab" role="tab" id="guideprice_tab{{ lang['Language_ID'] }}" aria-controls="guideprice_panel{{ lang['Language_ID'] }}" aria-selected="false" tabindex="-1">
+                <span class="po-tab__label">{{ lang['Language'] }}</span>
+                <span class="po-tab__price{{ ' is-empty' if price is none }}" data-tab-price>
+                    {%- if price is none %}{{ _('Not offered') }}{% elif price == 0 %}{{ _('Free') }}{% else %}{{ currency }} {{ '{:,}'.format(price) }}{% endif -%}
+                </span>
+            </button>
+            {%- endfor %}
+        </div>
+        <div class="po-tabpanel" role="tabpanel" id="guidepanel0" aria-labelledby="guidetab0">
+            {# off: the experience requires a guide, clients choose one of the guide languages #}
+            <label class="po-switch">
+                <input type="checkbox" role="switch" id="noGuideOffered"{% if not options.guideRequired %} checked{% endif %}>
+                <span class="po-switch__track" aria-hidden="true"></span>
+                <span>{{ _('Offer "No guide" (free)') }}</span>
+            </label>
+            <p class="po-hint">{{ _('Turn it off when the experience requires a guide: clients must then choose one of the guide languages.') }}</p>
+        </div>
+        {%- for lang in options.guideLanguages %}
+        {%- set price = options.guidePrices.get(lang['Language_ID']) %}
+        <div class="po-tabpanel" role="tabpanel" id="guideprice_panel{{ lang['Language_ID'] }}" aria-labelledby="guideprice_tab{{ lang['Language_ID'] }}" hidden>
+            <label for="guideprice_{{ lang['Language_ID'] }}" class="po-price-label">{{ _('Price: %(option)s', option=_('Guide') ~ ' · ' ~ lang['Language']) }}</label>
+            <div class="input-group price-group">
+                <input type="number" class="imageInput po-price" id="guideprice_{{ lang['Language_ID'] }}" name="guideprice_{{ lang['Language_ID'] }}"
+                       min="0" step="1" inputmode="numeric" value="{{ price if price is not none else '' }}" placeholder="{{ _('Not offered') }}">
+                <span aria-hidden="true">{{ currency }}</span>
+            </div>
+        </div>
+        {%- endfor %}
+    </div>
+</fieldset>
+{%- endmacro %}
+
+
+{#- Additional notes on the client's booking: allowed (default) and, if so, optional or required -#}
+{% macro notes_settings(options) -%}
+<fieldset class="po-section po-notes">
+    <legend class="field-label">{{ _('Additional notes') }}</legend>
+    <label class="po-check">
+        <input type="checkbox" id="notesEnabled"{% if options.notesEnabled %} checked{% endif %}>
+        <span>{{ _('Clients can write additional notes') }}</span>
+    </label>
+    <label class="po-switch" id="notesRequiredRow"{% if not options.notesEnabled %} hidden{% endif %}>
+        <input type="checkbox" role="switch" id="notesRequired"{% if options.notesRequired %} checked{% endif %}>
+        <span class="po-switch__track" aria-hidden="true"></span>
+        <span>{{ _('Notes are required') }}</span>
+    </label>
+</fieldset>
+{%- endmacro %}
+
+
+{#- Texts for price-options.js -#}
+{% macro price_options_text(currency) -%}
+<script type="application/json" id="priceOptionsText">{{ {
+    'currency': currency,
+    'free': _('Free'),
+    'notOffered': _('Not offered'),
+    'specifyPrice': _('Please specify Price'),
+    'wholeNumbers': _('Prices must be whole numbers, 0 or higher!'),
+    'oneVehicle': _('Please specify the price of at least one vehicle!'),
+    'oneAge': _('Please specify the price of at least one age group!'),
+    'oneGuide': _('A guide is required: please specify the price of at least one guide language!'),
+    'oneAgeAllowed': _('Please choose who can join: at least one age group!'),
+    'adultCanJoin': _('An adult is required, so adults (Adult or Senior) must be able to join!'),
+    'yes': _('Yes'),
+    'no': _('No'),
+    'choose': _('Choose'),
+    'locationPlaceholder': _('Address, or a Google Maps link or "Embed a map" code'),
+    'locationHint': _('Google Maps: Share › Embed a map › Copy HTML, then paste it here. An address works too.'),
+    'locationBad': _('Please enter an address or a Google Maps link.'),
+    'locationShort': _('Short links (maps.app.goo.gl) can not be shown as a map. In Google Maps choose Share › Embed a map › Copy HTML and paste that, or write the address.'),
+    'mapTitle': _('Map'),
+    'number': _('"%(name)s" must be a number.', name='{name}'),
+    'date': _('"%(name)s" must be a date.', name='{name}'),
+    'dateTime': _('"%(name)s" must be a date and time.', name='{name}'),
+    'improve': _('Please improve all red fields!')
+} | tojson }}</script>
+{%- endmacro %}

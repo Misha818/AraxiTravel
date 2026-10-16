@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+{% block title %}
+{{ _('Vehicles') }}
+{% endblock %}
+
+
+{% block head %}
+<style>
+  .container.vehicles-page {
+    width: 70%;
+    padding-top: unset;
+  }
+
+  /* the button keeps a gap from the card's right edge */
+  .vehicles-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    margin: 40px 0 15px 0;
+    padding: 0 20px;
+  }
+
+  /* an outline button: border and name only, a light background on hover */
+  .vehicles-toolbar .pcButtonS {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: auto;
+    margin: 0;
+    padding: 9px 18px;
+    color: var(--river-600);
+    background-color: transparent;
+    border: 1px solid var(--river-600);
+    text-decoration: none;
+    transition: background-color .15s ease;
+  }
+
+  .vehicles-toolbar .pcButtonS:hover,
+  .vehicles-toolbar .pcButtonS:focus-visible {
+    color: var(--river-600);
+    background-color: var(--river-100);
+  }
+
+  /* not translated into the page's language yet: shown in another language */
+  #myTable tr.untranslated-row td {
+    opacity: 0.6;
+  }
+
+  #myTable tr.untranslated-row td.row-actions {
+    opacity: 1;
+  }
+
+  #myTable td.row-actions {
+    width: 1%;
+    white-space: nowrap;
+    text-align: center;
+  }
+
+  #myTable td.row-actions a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    min-height: 40px;
+    border-radius: 6px;
+    text-decoration: none;
+  }
+
+  #myTable td.row-actions a:hover,
+  #myTable td.row-actions a:focus-visible {
+    background-color: var(--river-100);
+  }
+
+  #myTable td.row-actions a:focus-visible,
+  .vehicles-toolbar .pcButtonS:focus-visible {
+    outline: 3px solid var(--navy-900);
+    outline-offset: 2px;
+  }
+
+  #myTable td.table-empty {
+    text-align: center;
+    color: var(--ink-600);
+  }
+
+  @media (max-width: 768px) {
+    .container.vehicles-page {
+      width: 92%;
+    }
+
+    .vehicles-toolbar {
+      margin-top: 16px;
+    }
+
+    #tableDaddy {
+      margin-left: 0 !important;
+    }
+
+    #myTable td {
+      align-items: center;
+      gap: 12px;
+      text-align: right;
+    }
+
+    #myTable td.row-actions {
+      width: auto;
+    }
+
+    #myTable td.table-empty::before {
+      display: none;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{{ sideBar | safe }}
+
+<div class="container vehicles-page">
+<div class="table-container toRight" id="tableDaddy">
+  <div class="vehicles-toolbar">
+    <a class="pcButtonS" href="{{ url_for('add_vehicle_view') }}"><i class="fas fa-plus" aria-hidden="true"></i>{{ _('Add Vehicle') }}</a>
+  </div>
+
+  <table id="myTable">
+    <thead>
+      <tr>
+        <th>{{ _('Vehicle type') }}</th>
+        <th>{{ _('Seats') }}</th>
+        <th>{{ _('Display order') }}</th>
+        <th>{{ _('Status') }}</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for row in vehicles %}
+      {% set status = _('Active') if row['Status'] == 1 else _('Disabled') %}
+      {% set statusStyle = 'status-open' if row['Status'] == 1 else 'status-on-hold' %}
+      <tr{% if not row['Translated'] %} class="untranslated-row"{% endif %}>
+        <td data-label="{{ _('Vehicle type') }}">{{ row['Type'] }}</td>
+        <td data-label="{{ _('Seats') }}">{{ row['Seats'] }}</td>
+        <td data-label="{{ _('Display order') }}">{{ row['Order'] }}</td>
+        <td data-label="{{ _('Status') }}"><span class="status-label {{ statusStyle }}">{{ status }}</span></td>
+        <td class="row-actions" data-label="{{ _('Edit') if row['Translated'] else _('Translate') }}">
+          {% if row['Translated'] %}
+          <a href="{{ url_for('edit_vehicle_view', refKey=row['Ref_Key']) }}" title="{{ _('Edit') }}" aria-label="{{ _('Edit') }}: {{ row['Type'] }}">
+            <i class="fas fa-pencil" aria-hidden="true"></i>
+          </a>
+          {% else %}
+          <a href="{{ url_for('add_vehicle_view', refKey=row['Ref_Key']) }}" title="{{ _('Translate') }}" aria-label="{{ _('Translate') }}: {{ row['Type'] }}">
+            <i class="fas fa-language" aria-hidden="true"></i>
+          </a>
+          {% endif %}
+        </td>
+      </tr>
+    {% else %}
+      <tr><td class="table-empty" colspan="5">{{ _('No data to show!') }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+</div>
+
+<script nonce="{{ csp_nonce() }}">
+window.addEventListener('load', () => {
+  document.querySelector('body').classList.add('loaded');
+});
+</script>
+
+{% endblock %}

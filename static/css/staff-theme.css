@@ -57,3 +57,57 @@ a:hover {
     background-color: var(--river-600);
     border-color: var(--river-600);
 }
+
+/* Staff header: the product a page works on, next to "Add Price" / "Edit Price" (templates/base.html) */
+.header-stuff .avatar-stuff {
+    min-width: 0;
+}
+
+.header-product {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 10px;
+    min-width: 0;
+    font-size: 20px;
+    color: var(--navy-900);
+}
+
+.header-product__sep {
+    color: var(--ink-400);
+}
+
+.header-product__name {
+    min-width: 0;
+    max-width: 42vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 600;
+    color: var(--river-600);
+}
+
+/* undo the generic header link look (styles.css: .header-stuff a) */
+.header-stuff a.header-product__name {
+    float: none;
+    padding: 0;
+    font-size: inherit;
+    line-height: inherit;
+    text-align: left;
+    color: var(--river-600);
+}
+
+.header-stuff a.header-product__name:hover,
+.header-stuff a.header-product__name:focus-visible {
+    color: var(--navy-900);
+    text-decoration: underline !important;
+}
+
+@media (max-width: 768px) {
+    .header-product {
+        font-size: 16px;
+    }
+
+    .header-product__name {
+        max-width: 30vw;
+    }
+}

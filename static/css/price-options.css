@@ -1,0 +1,313 @@
+/* Add Price / Edit Price: pricing basis, option tabs, guide prices, notes settings
+   (templates/_price_options.html) and the specification fields by category (static/JS/price-options.js) */
+
+.price-form .po-section {
+    min-width: 0;
+    margin: 10px 0 0 0;
+    padding: 12px 14px 14px 14px;
+    border: 1px solid var(--cream-200, #e8e1d4);
+    border-radius: 8px;
+}
+
+.price-form .po-section > legend {
+    float: none;
+    width: auto;
+    margin: 0;
+    padding: 0 6px;
+    font-size: 16px;
+}
+
+.price-form .po-hint,
+.price-form .po-empty {
+    margin: 4px 0 8px 0;
+    font-size: 14px;
+    color: var(--ink-600);
+}
+
+.price-form .po-hint a,
+.price-form .po-empty a {
+    color: var(--river-600);
+}
+
+/* ---- How the price is set: a segmented control ---- */
+.price-form .po-basis {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 4px 0 6px 0;
+}
+
+.price-form .po-basis__option {
+    position: relative;
+    flex: 1 1 140px;
+    margin: 0;
+    cursor: pointer;
+}
+
+.price-form .po-basis__option input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.price-form .po-basis__option span {
+    display: block;
+    padding: 10px 12px;
+    text-align: center;
+    font-weight: 600;
+    color: var(--navy-900);
+    background-color: #fff;
+    border: 1px solid var(--river-600);
+    border-radius: 6px;
+    transition: background-color .15s ease, color .15s ease;
+}
+
+.price-form .po-basis__option input:checked + span {
+    color: #fff;
+    background-color: var(--river-600);
+}
+
+.price-form .po-basis__option input:focus-visible + span {
+    outline: 3px solid var(--navy-900);
+    outline-offset: 2px;
+}
+
+/* ---- Option tabs ---- */
+.price-form .po-tablist {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.price-form .po-tab {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    min-width: 110px;
+    margin: 0;
+    padding: 8px 12px;
+    font: inherit;
+    text-align: left;
+    color: var(--navy-900);
+    background-color: var(--cream-50, #fbf8f2);
+    border: 1px solid var(--cream-200, #e8e1d4);
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.price-form .po-tab:hover {
+    border-color: var(--river-600);
+}
+
+.price-form .po-tab[aria-selected="true"] {
+    color: #fff;
+    background-color: var(--river-600);
+    border-color: var(--river-600);
+}
+
+.price-form .po-tab:focus-visible {
+    outline: 3px solid var(--navy-900);
+    outline-offset: 2px;
+}
+
+.price-form .po-tab.invalid {
+    border-color: red;
+}
+
+.price-form .po-tab__label {
+    font-weight: 600;
+}
+
+.price-form .po-tab__sub,
+.price-form .po-tab__price {
+    font-size: 13px;
+}
+
+.price-form .po-tab__price.is-empty {
+    opacity: .7;
+    font-style: italic;
+}
+
+.price-form .po-price-label {
+    display: block;
+    margin: 0 0 4px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink-900);
+}
+
+.price-form input.invalid,
+.price-form select.invalid {
+    border-color: red !important;
+}
+
+/* ---- Additional notes ---- */
+.price-form .po-check,
+.price-form .po-switch {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 6px 0;
+    cursor: pointer;
+}
+
+.price-form .po-check[hidden],
+.price-form .po-switch[hidden] {
+    display: none;
+}
+
+.price-form .po-check input {
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    accent-color: var(--river-600);
+}
+
+.price-form .po-switch input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+}
+
+.price-form .po-switch__track {
+    position: relative;
+    flex: 0 0 auto;
+    width: 42px;
+    height: 24px;
+    background-color: var(--ink-400);
+    border-radius: 12px;
+    transition: background-color .15s ease;
+}
+
+.price-form .po-switch__track::after {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 18px;
+    height: 18px;
+    background-color: #fff;
+    border-radius: 50%;
+    transition: transform .15s ease;
+}
+
+.price-form .po-switch input:checked + .po-switch__track {
+    background-color: var(--river-600);
+}
+
+.price-form .po-switch input:checked + .po-switch__track::after {
+    transform: translateX(18px);
+}
+
+.price-form .po-switch input:focus-visible + .po-switch__track {
+    outline: 3px solid var(--navy-900);
+    outline-offset: 2px;
+}
+
+/* ---- Specification fields by category ---- */
+/* each field is a .spec-field (name above its value), not a cell of the old two-column grid */
+.price-form .specifications {
+    display: block;
+}
+
+.price-form .specifications .spec-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 8px;
+}
+
+.price-form .specifications .spec-field label {
+    font-weight: 600;
+    color: var(--ink-900);
+}
+
+.price-form .specifications select.spec-value {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 16px;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.price-form .specifications .spec-hint {
+    margin: 0;
+    font-size: 13px;
+    color: var(--ink-600);
+}
+
+.price-form .specifications .spec-error {
+    margin: 0;
+    font-size: 14px;
+    color: red;
+}
+
+.price-form .specifications .spec-map {
+    width: 100%;
+    height: 220px;
+    border: 0;
+    border-radius: 6px;
+}
+
+@media (max-width: 480px) {
+    .price-form .po-section {
+        padding: 10px;
+    }
+
+    .price-form .po-tab {
+        flex: 1 1 calc(50% - 6px);
+        min-width: 0;
+    }
+}
+
+/* System messages (#mistakes): the app's blue instead of the red of styles.css' #mistakes, #response */
+.price-form-card #mistakes {
+    color: var(--river-600);
+    background-color: var(--river-100);
+    border: 1px solid var(--river-600);
+}
+
+/* ---- Who can join (fixed / vehicle pricing) and the adult rule ---- */
+.price-form .po-ages {
+    min-width: 0;
+    margin: 12px 0 0 0;
+    padding: 0;
+    border: 0;
+}
+
+.price-form .po-ages[hidden] {
+    display: none;
+}
+
+.price-form .po-ages > legend {
+    float: none;
+    width: auto;
+    margin: 0 0 4px 0;
+    padding: 0;
+    font-size: inherit;
+}
+
+.price-form .po-age-checks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 18px;
+}
+
+.price-form .po-age-checks small {
+    color: var(--ink-600);
+}
+
+.price-form .po-ages.invalid .po-age-checks {
+    outline: 1px solid red;
+    outline-offset: 4px;
+    border-radius: 4px;
+}
+
+.price-form .po-adult {
+    margin-top: 12px;
+}

@@ -46,6 +46,11 @@ CREATE TABLE `product_type` (
     -- `Slides` TEXT,
     -- `Language_ID` INT,
     `Status` INT,
+    `PricingBasis` INT NOT NULL DEFAULT 0, -- 0 => fixed price (`Price`), 1 => by vehicle (`v_price`), 2 => by age group (`age_price`)
+    `NotesEnabled` INT NOT NULL DEFAULT 1, -- 1 => the client can write additional notes
+    `NotesRequired` INT NOT NULL DEFAULT 0, -- 1 => additional notes are required (only when `NotesEnabled` = 1)
+    `GuideRequired` INT NOT NULL DEFAULT 0, -- 1 => a guide is required: "No guide" is not offered
+    `AdultRequired` INT NOT NULL DEFAULT 0, -- 1 => a booking needs at least one adult (Adult or Senior)
     PRIMARY KEY (`ID`)
 ) ENGINE=InnoDB;
 ALTER TABLE `product_type` AUTO_INCREMENT = 1;
@@ -251,7 +256,7 @@ ALTER TABLE `spss_category` AUTO_INCREMENT = 1;
 DROP TABLE IF EXISTS `product_type_details`;
 CREATE TABLE `product_type_details` (
     `ID` INT AUTO_INCREMENT,
-    `Text` VARCHAR(255),
+    `Text` TEXT, -- the value; Location fields keep an address or a Google Maps embed link
     `spssID` INT,
     `productTypeID` INT,
     -- `Status` INT,
@@ -283,6 +288,125 @@ CREATE TABLE `spss_relatives` (
     PRIMARY KEY (`ID`)
 ) ENGINE=InnoDB;
 ALTER TABLE `spss_relatives` AUTO_INCREMENT = 1;
+
+-- Vehicles a price can be set for (Add / Edit Price, pricing by vehicle). One row per language,
+-- linked by `vehicle_relatives`.`Ref_Key` like the other translated content
+DROP TABLE IF EXISTS `vehicle`;
+CREATE TABLE `vehicle` (
+    `ID` INT AUTO_INCREMENT,
+    `Type` VARCHAR(255), -- e.g. Sedan, Jeep
+    `Seats` INT, -- passengers; the group size limit on the client side
+    `Order` INT,
+    `Status` INT,
+    PRIMARY KEY (`ID`)
+) ENGINE=InnoDB;
+ALTER TABLE `vehicle` AUTO_INCREMENT = 1;
+
+DROP TABLE IF EXISTS `vehicle_relatives`;
+CREATE TABLE `vehicle_relatives` (
+    `ID` INT AUTO_INCREMENT,
+    `Ref_Key` INT,
+    `Vehicle_ID` INT,
+    `Language_ID` INT,
+    `User_ID` INT,
+    `Status` INT,
+    PRIMARY KEY (`ID`)
+) ENGINE=InnoDB;
+ALTER TABLE `vehicle_relatives` AUTO_INCREMENT = 1;
+
+-- Price of a product type per vehicle (per vehicle, not per person). No row => the vehicle is not offered
+DROP TABLE IF EXISTS `v_price`;
+CREATE TABLE `v_price` (
+    `ID` INT AUTO_INCREMENT,
+    `Price` INT,
+    `vehicleID` INT,
+    `productTypeID` INT,
+    PRIMARY KEY (`ID`)
+) ENGINE=InnoDB;
+ALTER TABLE `v_price` AUTO_INCREMENT = 1;
+
+-- Age groups a price can be set for (pricing by age group). The names are translated in the .po files
+DROP TABLE IF EXISTS `age`;
+CREATE TABLE `age` (
+    `ID` INT AUTO_INCREMENT,
+    `ageGroups` VARCHAR(255),
+    `ageRange` VARCHAR(255),
+    `Order` INT,
+    PRIMARY KEY (`ID`)
+) ENGINE=InnoDB;
+ALTER TABLE `age` AUTO_INCREMENT = 1;
+
+-- Who can join a product type priced fixed or by vehicle: one row per allowed age group (all of
+-- them by default). With age group pricing the groups that have a price (`age_price`) can join
+DROP TABLE IF EXISTS `pt_age`;
+CREATE TABLE `pt_age` (
+    `ID` INT AUTO_INCREMENT,
+    `ageID` INT,
+    `productTypeID` INT,
+    PRIMARY KEY (`ID`)
+) ENGINE=InnoDB;
+ALTER TABLE `pt_age` AUTO_INCREMENT = 1;
+
+-- Price of a product type per age group (per person). No row => the age group is not offered
+DROP TABLE IF EXISTS `age_price`;
+CREATE TABLE `age_price` (
+    `ID` INT AUTO_INCREMENT,
+    `Price` INT,
+    `ageID` INT,
+    `productTypeID` INT,
+    PRIMARY KEY (`ID`)
+) ENGINE=InnoDB;
+ALTER TABLE `age_price` AUTO_INCREMENT = 1;
+
+-- Price of a guide speaking `languages`.`Language_ID` for a product type (per group). No row => no guide
+-- in that language; "No guide" is not stored, it is always offered at 0
+DROP TABLE IF EXISTS `guide_price`;
+CREATE TABLE `guide_price` (
+    `ID` INT AUTO_INCREMENT,
+    `Price` INT,
+    `languageID` INT,
+    `productTypeID` INT,
+    PRIMARY KEY (`ID`)
+) ENGINE=InnoDB;
+ALTER TABLE `guide_price` AUTO_INCREMENT = 1;
+
+-- What a client booked with an order (payment_details), copied when the order is placed: the
+-- vehicle / guide / people / total of the booking, the client's notes and the terms agreement
+DROP TABLE IF EXISTS `booking_details`;
+CREATE TABLE `booking_details` (
+    `ID` INT AUTO_INCREMENT,
+    `payment_details_id` INT,
+    `ptRefKey` INT,
+    `productTypeID` INT,
+    `PricingBasis` INT, -- product_type.PricingBasis when booked
+    `vehicleID` INT, -- vehicle pricing: the vehicle, its name, seats and price when booked
+    `vehicleType` VARCHAR(255),
+    `vehicleSeats` INT,
+    `vehiclePrice` INT,
+    `guideLanguageID` INT, -- `languages`.`Language_ID`; 0 => no guide
+    `guideLanguage` VARCHAR(100),
+    `guidePrice` INT,
+    `people` INT,
+    `total` FLOAT,
+    `notes` TEXT, -- the client's additional notes
+    `termsAccepted` INT,
+    `created` DATETIME,
+    PRIMARY KEY (`ID`)
+) ENGINE=InnoDB;
+ALTER TABLE `booking_details` AUTO_INCREMENT = 1;
+
+-- How many people of each age group a booking is for
+DROP TABLE IF EXISTS `booking_ages`;
+CREATE TABLE `booking_ages` (
+    `ID` INT AUTO_INCREMENT,
+    `bookingID` INT, -- booking_details.ID
+    `ageID` INT,
+    `ageGroup` VARCHAR(255),
+    `people` INT,
+    `price` INT, -- per person (age group pricing); NULL with fixed and vehicle pricing
+    PRIMARY KEY (`ID`)
+) ENGINE=InnoDB;
+ALTER TABLE `booking_ages` AUTO_INCREMENT = 1;
 
 DROP TABLE IF EXISTS `quantity`;
 CREATE TABLE `quantity` (
@@ -604,7 +728,7 @@ VALUES
 INSERT INTO `rol` (`Rol`, `ActionIDs`, `Status`)
 VALUES 
     ('Affiliate', '33,74,75,76,77,78,81', 1),
-    ('Editor', '33,1,2,3,4,5,6,7,8,9,10,11,12,13,14,21,22,23,24,25,34,35,36,37,38,39,41,42,43,44,45,46,81,82,84,85,86,87', 1),
+    ('Editor', '33,1,2,3,4,5,6,7,8,9,10,11,12,13,14,21,22,23,24,25,34,35,36,37,38,39,41,42,43,44,45,46,81,82,84,85,86,87,89,90,91,92,93', 1),
     ('Manager', '33,15,16,17,18,19,20,40,59,60,61,62,66,67,81,82,88', 1),
     ('Sales AND Marketing', '47,48,49,50,51,52,53,54,55,56,57,58,59,62,81,82,83', 1),
     ('HR', '26,27,28,29,63,69,64,65,68,70,71,72,73,81,82', 1),
@@ -720,7 +844,13 @@ VALUES
     ('add_slide', 'add-slide', 'Add Slide', 0, 1, 'fas fa-plus'),    
     ('add_slide_post', 'add_slide', 'Add Slide', 0, 2, 'fas fa-shopping-basket'),    
     ('edit_slide', 'edit-slide/', 'Edit Slide', 0, 2, 'fas fa-plus'),    
-    ('ticket', 'ticket/', 'Ticket', 0, 2, 'fas fa-ticket')
+    ('ticket', 'ticket/', 'Ticket', 0, 2, 'fas fa-ticket'),
+
+    ('vehicles', 'vehicles', 'Vehicles', 20, 1, 'fas fa-car'),
+    ('add_vehicle_view', 'add-vehicle', 'Add Vehicle', 20, 1, 'fas fa-plus'),
+    ('add_vehicle', 'add_vehicle', 'Add Vehicle', 20, 2, ''),
+    ('edit_vehicle_view', 'edit-vehicle/', 'Edit Vehicle', 20, 2, ''),
+    ('edit_vehicle', 'edit_vehicle', 'Edit Vehicle', 20, 2, '')
     ;
 
     INSERT INTO `position` (`Position`, `rolIDs`, `Status`)
@@ -767,9 +897,9 @@ INSERT INTO `product_c_relatives` (`PC_Ref_Key`, `PC_ID`, `Language_ID`, `User_I
 INSERT INTO `languages` (`Language`, `Prefix`) VALUES
 ('Հայերեն', 'hy'),
 ('English', 'en'),
+('Русский', 'ru'),
 ('Español', 'es'),
-('Português', 'pt'),
-('Русский', 'ru')
+('Português', 'pt')
 ;
 
 INSERT INTO `spss_category` (`Category`)
@@ -780,6 +910,14 @@ VALUES
     ('Date'),
     ('DateTime'),
     ('Location'); -- embed a google map or wright down an address
+
+INSERT INTO `age` (`ageGroups`, `ageRange`, `Order`)
+VALUES
+    ('Infant', '0-2', 0),
+    ('Child', '3-11', 1),
+    ('Teen', '12-15', 2),
+    ('Adult', '16-64', 3),
+    ('Senior', '65+', 4);
 
 INSERT INTO `payment_methods` (`method`, `Status`) VALUES
 ('Credit/Debit card', 1),

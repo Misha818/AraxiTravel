@@ -71,7 +71,7 @@ CSP_POLICY = "; ".join([
     "img-src 'self' data: blob: https:",
     "connect-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://fonts.googleapis.com "
     "https://fonts.gstatic.com https://challenges.cloudflare.com",
-    "frame-src https://challenges.cloudflare.com",
+    "frame-src https://challenges.cloudflare.com https://www.google.com https://maps.google.com",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
@@ -175,6 +175,8 @@ MAIN_CURRENCY = os.getenv('MAIN_CURRENCY')
 
 # MAX_ALLOWED_QUANTITY (from .env) is defined in sysadmin.py, which the checkout code there also uses
 from sysadmin import MAX_ALLOWED_QUANTITY
+from booking import get_booking, booking_options, booking_quote, booking_choices_error, save_booking, client_options, NO_GUIDE
+from cart import read_cart, write_cart, cart_count, cart_view, new_cart_item, same_booking, parse_age_counts, MAX_CART_ITEMS
 
 SMAIL_API_KEY = os.getenv('SMAIL_API_KEY')
 SMAIL_API = os.getenv('SMAIL_API')
@@ -541,6 +543,11 @@ def inject_locale():
 
 def contact_urls():
     return {'TG': os.getenv('TG_URL'), 'FB': os.getenv('FB_URL'), 'INS': os.getenv('INS_URL'), 'IN': os.getenv('IN_URL')}
+
+@app.context_processor
+def inject_cart_count():
+    # The badge of the header's cart link (templates/_cart_link.html)
+    return {'cart_count': cart_count(request)}
 
 @app.context_processor
 def inject_site_contacts():
@@ -1232,7 +1239,37 @@ def buy_now(surl):
     if payment_methods['length'] == 0:
         payment_methods = get_payment_methods('`ID`, `method`')
 
-    return render_template('buy-now.html', prDataGlobal=prDataGlobal, paymentMethods=payment_methods, mainCurrency=mainCurrency, newCSRFtoken=newCSRFtoken, current_locale=get_locale())
+    # What can be booked with this price and what was chosen on the service page
+    bookingData = None
+    options = booking_options(int(key), getLangID())
+    if options is not None:
+        bookingData = client_options(options, session.get('lang', ''))
+        vehicleIDs = [v['ID'] for v in bookingData['vehicles']]
+        vehicle = request.args.get('vehicle', '')
+        bookingData['vehicle'] = int(vehicle) if vehicle.isdigit() and int(vehicle) in vehicleIDs else (vehicleIDs[0] if len(vehicleIDs) == 1 else None)
+        guideIDs = [g['ID'] for g in bookingData['guides']]
+        guide = request.args.get('guide', '')
+        # "No guide" only when the price offers it
+        allowedGuides = guideIDs if bookingData['guideRequired'] else guideIDs + [NO_GUIDE]
+        bookingData['guide'] = int(guide) if guide.isdigit() and int(guide) in allowedGuides else bookingData['defaultGuide']
+        # who comes (?ages=<age ID>:<count>,...), as many as the tickets; else all of them in the first adult
+        # group that can join (the first group when no adult can)
+        ageIDs = [a['ID'] for a in bookingData['ages']]
+        ageCounts = {}
+        for part in request.args.get('ages', '').split(','):
+            ageID, count = part.partition(':')[::2]
+            if ageID.isdigit() and count.isdigit() and int(ageID) in ageIDs and int(count) > 0:
+                ageCounts[int(ageID)] = ageCounts.get(int(ageID), 0) + int(count)
+        if sum(ageCounts.values()) != prDataGlobal['quantity'] and ageIDs:
+            first = next((a['ID'] for a in bookingData['ages'] if a['Adult']), ageIDs[0])
+            ageCounts = {first: prDataGlobal['quantity']}
+        bookingData['ageCounts'] = ageCounts
+
+    # booked from the cart (?cart=<item id>): the item leaves the cart once the order is placed
+    cartItem = request.args.get('cart', '')
+    cartItem = cartItem if cartItem.isalnum() and len(cartItem) <= 16 else ''
+
+    return render_template('buy-now.html', prDataGlobal=prDataGlobal, bookingData=bookingData, cartItem=cartItem, paymentMethods=payment_methods, mainCurrency=mainCurrency, newCSRFtoken=newCSRFtoken, current_locale=get_locale())
     
 
 @app.route('/checkout', methods=['GET', 'POST'])
@@ -1320,7 +1357,7 @@ def checkout():
         for key, value in data.items():
             if key == "payment_method" and value in allowedPaymentMethods:
                 paymentMethod = value
-            if key != 'email' and key != 'promo' and key != 'ptData' and list != type(value) != bool and value.strip() == '':
+            if key not in ('email', 'promo', 'ptData', 'booking') and list != type(value) != bool and value.strip() == '':
                 answer = gettext('Invalid value for ') + key
                 return jsonify({'status': "0", 'answer': answer, 'newCSRFtoken': newCSRFtoken})    
 
@@ -1330,6 +1367,28 @@ def checkout():
         
         # End of checking payment availbility and methods
         # End of Validation
+
+        # The booking (buy-now page): vehicle, guide, the age group of each person, notes, terms.
+        # Its quote is the price of the order; a bookable price can't be bought without it
+        booking = data.get('booking')
+        bookingOptions, bookingQuote, priceOverrides = None, None, None
+        if booking is not None or len(data['ptData']) == 1:
+            bookingOptions = booking_options(data['ptData'][0]['ptID'], languageID)
+        if booking is not None:
+            if not isinstance(booking, dict) or bookingOptions is None or len(data['ptData']) != 1:
+                return jsonify({'status': "0", 'answer': gettext('Something went wrong. Please try again!'), 'newCSRFtoken': newCSRFtoken})
+            answer = booking_choices_error(bookingOptions, booking.get('notes'), booking.get('terms') is True)
+            if answer is None:
+                bookingQuote = booking_quote(bookingOptions, len(data['contact_list']), booking.get('vehicle'),
+                                             booking.get('guide', NO_GUIDE), booking.get('ages'))
+                answer = None if bookingQuote['ok'] else bookingQuote['error']
+            if answer:
+                return jsonify({'status': "0", 'answer': answer, 'newCSRFtoken': newCSRFtoken})
+            # one unit (person) of the order costs total / people
+            priceOverrides = {bookingOptions['ptRefKey']: bookingQuote['total'] / bookingQuote['people']}
+        elif bookingOptions is not None:
+            # every bookable price needs its booking (who comes, from the groups that can join)
+            return jsonify({'status': "0", 'answer': gettext('Something went wrong. Please try again!'), 'newCSRFtoken': newCSRFtoken})
 
         # client detection || registration by phone number
         # returns {'clientID': clientID, 'contactID': contactID}
@@ -1383,7 +1442,7 @@ def checkout():
         
         # insert data into table buffer
         # This also checks if specified amount of product exists
-        buffer = insertIntoBuffer(data, pdID, gettext('Something went wrong. Please try again!'), languageID, paymentMethod, priceState)
+        buffer = insertIntoBuffer(data, pdID, gettext('Something went wrong. Please try again!'), languageID, paymentMethod, priceState, priceOverrides)
         if buffer['status'] != "1":
             # Nothing was reserved (insertIntoBuffer takes stock all or nothing): the order
             # created above is cancelled instead of being left "waiting for payment"
@@ -1399,6 +1458,10 @@ def checkout():
             return jsonify({'status': "0", 'answer': buffer['answer'], 'newCSRFtoken': newCSRFtoken})
         
         amount = buffer['totalPrice']
+
+        # what was booked, kept with the order (a failure here doesn't stop the order: it is logged)
+        if bookingQuote is not None and save_booking(pdID, bookingOptions, bookingQuote, booking.get('notes'), True) is None:
+            app.logger.error("Order %s: the booking details could not be saved", pdID)
         
         # Send data to bank api
         # recive answer from api 
@@ -2013,7 +2076,7 @@ def order_details(pdID):
         return render_template('error.html')
     
     sideBar = side_bar_stuff()
-    return render_template('order-details.html', sideBar=sideBar, result=result['data'], mainCurrency = MAIN_CURRENCY, newCSRFtoken=newCSRFtoken,  current_locale=get_locale())
+    return render_template('order-details.html', sideBar=sideBar, result=result['data'], booking=get_booking(pdID), mainCurrency = MAIN_CURRENCY, newCSRFtoken=newCSRFtoken,  current_locale=get_locale())
     
 
 @app.route('/affiliate-order-details/<pdID>', methods=['GET'])
@@ -2466,6 +2529,280 @@ def get_slides():
     return result
 
 
+# ---- Add / Edit Price: pricing basis, vehicle / age group / guide prices, notes settings ----
+# product_type.PricingBasis: how a price is priced. Fixed => product_type.Price; by vehicle => v_price
+# (per vehicle); by age group => age_price (per person). Guide prices (guide_price, per group) are
+# offered with any basis; "No guide" is not stored and is free, offered unless product_type.GuideRequired
+# is 1 (experiences that need a guide: then at least one guide language is priced). In every price table an option
+# without a row is not offered, and 0 means free. The rows belong to one language's product_type.
+# Who can join: with fixed / vehicle pricing the allowed age groups (pt_age, all of them by default); with age
+# group pricing the groups that have a price. product_type.AdultRequired: a booking needs an Adult or a Senior.
+PRICING_FIXED, PRICING_VEHICLE, PRICING_AGE = 0, 1, 2
+ADULT_AGE_GROUPS = ('Adult', 'Senior')   # age.ageGroups that count as adults
+MAX_OPTION_PRICE = 2000000000   # the price columns are INT
+
+
+# Age groups (age), in their order
+def get_ages():
+    return sqlSelect("SELECT `ID`, `ageGroups`, `ageRange`, `Order` FROM `age` ORDER BY `Order`, `ID`;", (), True)['data']
+
+
+# Languages a guide can speak: every row of `languages`, not only the app's languages
+def get_guide_languages():
+    return sqlSelect("SELECT `Language_ID`, `Language`, `Prefix` FROM `languages` ORDER BY `Language_ID`;", (), True)['data']
+
+
+# Vehicles a price can be set for in languageID: the active ones translated into it, plus (ptID) the
+# ones that already have a price for it although they were disabled since ('Status' 0)
+def get_price_vehicles(languageID, ptID=None):
+    sqlQuery = """
+                SELECT `vehicle`.`ID`, `vehicle`.`Type`, `vehicle`.`Seats`, `vehicle`.`Status`
+                FROM `vehicle`
+                    LEFT JOIN `vehicle_relatives` ON `vehicle_relatives`.`Vehicle_ID` = `vehicle`.`ID`
+                WHERE `vehicle_relatives`.`Language_ID` = %s
+                    AND (`vehicle`.`Status` = 1 OR `vehicle`.`ID` IN (SELECT `vehicleID` FROM `v_price` WHERE `productTypeID` = %s))
+                ORDER BY `vehicle`.`Order`, `vehicle_relatives`.`Ref_Key`;
+                """
+    return sqlSelect(sqlQuery, (languageID, -1 if ptID is None else ptID), True)['data']
+
+
+# How many active vehicles are not translated into languageID yet (they can't get a price in it)
+def count_untranslated_vehicles(languageID):
+    sqlQuery = """
+                SELECT COUNT(DISTINCT `vehicle_relatives`.`Ref_Key`) AS `n`
+                FROM `vehicle_relatives`
+                    LEFT JOIN `vehicle` ON `vehicle`.`ID` = `vehicle_relatives`.`Vehicle_ID`
+                WHERE `vehicle`.`Status` = 1
+                    AND `vehicle_relatives`.`Ref_Key` NOT IN (SELECT `Ref_Key` FROM `vehicle_relatives` WHERE `Language_ID` = %s);
+                """
+    return sqlSelect(sqlQuery, (languageID,), True)['data'][0]['n']
+
+
+# Everything the price options part of Add / Edit Price shows (templates/_price_options.html).
+# ptID: the price being edited, None on Add Price
+def price_options_view(languageID, ptID=None):
+    options = {
+        'basis': PRICING_FIXED,
+        'notesEnabled': 1,
+        'notesRequired': 0,
+        'guideRequired': 0,
+        'adultRequired': 1,   # a new price requires an adult unless unchecked
+        'vehicles': get_price_vehicles(languageID, ptID),
+        'untranslatedVehicles': count_untranslated_vehicles(languageID),
+        'ages': get_ages(),
+        'guideLanguages': get_guide_languages(),
+        'vehiclePrices': {},
+        'agePrices': {},
+        'guidePrices': {},
+    }
+    # who can join (fixed / vehicle pricing): every age group on Add Price
+    options['allowedAges'] = {row['ID'] for row in options['ages']}
+    if ptID is None:
+        return options
+
+    result = sqlSelect("SELECT `PricingBasis`, `NotesEnabled`, `NotesRequired`, `GuideRequired`, `AdultRequired` FROM `product_type` WHERE `ID` = %s;", (ptID,), True)
+    if result['length'] > 0:
+        row = result['data'][0]
+        options['basis'] = row['PricingBasis'] or PRICING_FIXED
+        options['notesEnabled'] = row['NotesEnabled']
+        options['notesRequired'] = row['NotesRequired']
+        options['guideRequired'] = row['GuideRequired']
+        options['adultRequired'] = row['AdultRequired']
+
+    for table, column, key in [('v_price', 'vehicleID', 'vehiclePrices'), ('age_price', 'ageID', 'agePrices'), ('guide_price', 'languageID', 'guidePrices')]:
+        result = sqlSelect(f"SELECT `{column}` AS `optionID`, `Price` FROM `{table}` WHERE `productTypeID` = %s;", (ptID,), True)
+        options[key] = {row['optionID']: row['Price'] for row in result['data']}
+
+    # a price saved before "who can join" existed, or priced by age group: every age group is checked
+    result = sqlSelect("SELECT `ageID` FROM `pt_age` WHERE `productTypeID` = %s;", (ptID,), True)
+    if result['length'] > 0:
+        options['allowedAges'] = {row['ageID'] for row in result['data']}
+    return options
+
+
+# The prices of one kind of option in the form (<prefix><ID> = price; empty = not offered):
+# ({ID: price}, error message)
+def option_prices_from_form(prefix, validIDs):
+    prices = {}
+    for key, value in request.form.items():
+        if not key.startswith(prefix):
+            continue
+        value = value.strip()
+        if value == '':
+            continue
+        optionID = key[len(prefix):]
+        if not optionID.isdigit() or int(optionID) not in validIDs:
+            return None, gettext('Something went wrong. Please try again!')
+        if not value.isdigit() or int(value) > MAX_OPTION_PRICE:
+            return None, gettext('Prices must be whole numbers, 0 or higher!')
+        prices[int(optionID)] = int(value)
+    return prices, None
+
+
+# The price options of the Add / Edit Price form: (options, error message). ptID: the price being edited
+def price_options_from_form(languageID, ptID=None):
+    basis = request.form.get('pricingBasis', str(PRICING_FIXED))
+    if basis not in (str(PRICING_FIXED), str(PRICING_VEHICLE), str(PRICING_AGE)):
+        return None, gettext('Please choose how the price is set!')
+    basis = int(basis)
+
+    options = {'basis': basis, 'price': None, 'vehiclePrices': {}, 'agePrices': {}}
+    if basis == PRICING_FIXED:
+        price = (request.form.get('price') or '').strip()
+        if not price:
+            return None, gettext('Please specify price!')
+        try:
+            options['price'] = float(price)
+        except ValueError:
+            return None, gettext('Please specify price!')
+        if options['price'] < 0:
+            return None, gettext('The price should be 0 or higher!')
+    elif basis == PRICING_VEHICLE:
+        validIDs = {row['ID'] for row in get_price_vehicles(languageID, ptID)}
+        options['vehiclePrices'], error = option_prices_from_form('vprice_', validIDs)
+        if error:
+            return None, error
+        if not options['vehiclePrices']:
+            return None, gettext('Please specify the price of at least one vehicle!')
+    else:
+        validIDs = {row['ID'] for row in get_ages()}
+        options['agePrices'], error = option_prices_from_form('ageprice_', validIDs)
+        if error:
+            return None, error
+        if not options['agePrices']:
+            return None, gettext('Please specify the price of at least one age group!')
+
+    validIDs = {row['Language_ID'] for row in get_guide_languages()}
+    options['guidePrices'], error = option_prices_from_form('guideprice_', validIDs)
+    if error:
+        return None, error
+    # a required guide: "No guide" is not offered, so some guide language must be
+    options['guideRequired'] = 1 if request.form.get('guideRequired') == '1' else 0
+    if options['guideRequired'] and not options['guidePrices']:
+        return None, gettext('A guide is required: please specify the price of at least one guide language!')
+
+    # who can join: the checked age groups (fixed / vehicle pricing), the priced ones (age group pricing)
+    ages = get_ages()
+    if basis == PRICING_AGE:
+        options['allowedAges'] = set(options['agePrices'])
+    else:
+        validIDs = {row['ID'] for row in ages}
+        chosen = [a for a in (request.form.get('allowedAges') or '').split(',') if a != '']
+        if any(not a.isdigit() or int(a) not in validIDs for a in chosen):
+            return None, gettext('Something went wrong. Please try again!')
+        options['allowedAges'] = {int(a) for a in chosen}
+        if not options['allowedAges']:
+            return None, gettext('Please choose who can join: at least one age group!')
+    options['adultRequired'] = 1 if request.form.get('adultRequired') == '1' else 0
+    adultIDs = {row['ID'] for row in ages if row['ageGroups'] in ADULT_AGE_GROUPS}
+    if options['adultRequired'] and not options['allowedAges'] & adultIDs:
+        return None, gettext('An adult is required, so adults (Adult or Senior) must be able to join!')
+
+    options['notesEnabled'] = 1 if request.form.get('notesEnabled', '1') == '1' else 0
+    options['notesRequired'] = 1 if options['notesEnabled'] == 1 and request.form.get('notesRequired') == '1' else 0
+
+    # product_type.Price: the fixed price, else the lowest non-zero option price (0 when all are free).
+    # With vehicle / age pricing it is not the final price: that is worked out from the options
+    if basis != PRICING_FIXED:
+        prices = list(options['vehiclePrices'].values()) + list(options['agePrices'].values())
+        nonZero = [p for p in prices if p > 0]
+        options['price'] = min(nonZero) if nonZero else 0
+    return options, None
+
+
+# Saves the options of the price ptID (after its product_type row is saved): replaces its option prices
+# and who can join, and sets its basis, notes, guide and adult settings. Returns False if something failed
+def save_price_options(ptID, options):
+    result = sqlUpdate("UPDATE `product_type` SET `PricingBasis` = %s, `NotesEnabled` = %s, `NotesRequired` = %s, `GuideRequired` = %s, `AdultRequired` = %s WHERE `ID` = %s;",
+                       (options['basis'], options['notesEnabled'], options['notesRequired'], options['guideRequired'], options['adultRequired'], ptID))
+    if result['status'] == '-1':
+        return False
+
+    # who can join: rows with fixed / vehicle pricing; with age group pricing the priced groups (none here)
+    if sqlDelete("DELETE FROM `pt_age` WHERE `productTypeID` = %s;", (ptID,))['status'] == '-1':
+        return False
+    if options['basis'] != PRICING_AGE:
+        for ageID in sorted(options['allowedAges']):
+            if sqlInsert("INSERT INTO `pt_age` (`ageID`, `productTypeID`) VALUES (%s, %s);", (ageID, ptID))['status'] == 0:
+                return False
+
+    for table, column, key in [('v_price', 'vehicleID', 'vehiclePrices'), ('age_price', 'ageID', 'agePrices'), ('guide_price', 'languageID', 'guidePrices')]:
+        if sqlDelete(f"DELETE FROM `{table}` WHERE `productTypeID` = %s;", (ptID,))['status'] == '-1':
+            return False
+        for optionID, price in options[key].items():
+            result = sqlInsert(f"INSERT INTO `{table}` (`Price`, `{column}`, `productTypeID`) VALUES (%s, %s, %s);", (price, optionID, ptID))
+            if result['status'] == 0:
+                return False
+    return True
+
+
+# ---- Specification values by category (spss_category: 1 Text, 2 Num, 3 Bool, 4 Date, 5 DateTime, 6 Location) ----
+SPSS_TEXT, SPSS_NUM, SPSS_BOOL, SPSS_DATE, SPSS_DATETIME, SPSS_LOCATION = 1, 2, 3, 4, 5, 6
+MAX_SPSS_TEXT = 255
+MAX_SPSS_MAP_LINK = 2000
+# A Location value is an address, or a Google Maps link that can be shown in a frame
+GOOGLE_MAP_EMBED = re.compile(r'^https://(www\.)?google\.com/maps(/embed\?|\?)\S*$')
+
+
+# A specification value's error message for its category, or None. Empty values are not saved and fine
+def spss_value_error(name, categoryID, value):
+    if value == '':
+        return None
+
+    if categoryID == SPSS_LOCATION and value.lower().startswith(('http://', 'https://')):
+        if len(value) > MAX_SPSS_MAP_LINK or not GOOGLE_MAP_EMBED.match(value) or \
+                ('/maps/embed?' not in value and 'output=embed' not in value):
+            return gettext('"%(name)s": please enter an address or a Google Maps link.', name=name)
+        return None
+
+    if len(value) > MAX_SPSS_TEXT:
+        return gettext('Text is too long for field ') + name + '. ' + gettext('Max allowed characters are 255.')
+
+    if categoryID == SPSS_NUM:
+        try:
+            float(value)
+        except ValueError:
+            return gettext('"%(name)s" must be a number.', name=name)
+    elif categoryID == SPSS_BOOL and value not in ('0', '1'):
+        return gettext('"%(name)s" must be Yes or No.', name=name)
+    elif categoryID in (SPSS_DATE, SPSS_DATETIME):
+        try:
+            datetime.strptime(value, '%Y-%m-%d' if categoryID == SPSS_DATE else '%Y-%m-%d %H:%M')
+        except ValueError:
+            return gettext('"%(name)s" must be a date.', name=name) if categoryID == SPSS_DATE else \
+                   gettext('"%(name)s" must be a date and time.', name=name)
+    return None
+
+
+# The product shown in the staff header next to "Add Price" / "Edit Price" (templates/base.html):
+# its title in the page's language and a link to its staff page. None when it can't be found.
+# Give either the product's ID or the ID of one of its prices (product_type).
+def price_header_product(prID=None, ptID=None):
+    if ptID is not None:
+        sqlQuery = """SELECT `product`.`Title`, `product_relatives`.`P_Ref_Key`
+                        FROM `product_type`
+                            LEFT JOIN `product` ON `product`.`ID` = `product_type`.`Product_ID`
+                            LEFT JOIN `product_relatives` ON `product_relatives`.`P_ID` = `product`.`ID`
+                        WHERE `product_type`.`ID` = %s
+                        LIMIT 1;"""
+        sqlValTuple = (ptID,)
+    else:
+        sqlQuery = """SELECT `product`.`Title`, `product_relatives`.`P_Ref_Key`
+                        FROM `product`
+                            LEFT JOIN `product_relatives` ON `product_relatives`.`P_ID` = `product`.`ID`
+                        WHERE `product`.`ID` = %s
+                        LIMIT 1;"""
+        sqlValTuple = (prID,)
+
+    result = sqlSelect(sqlQuery, sqlValTuple, True)
+    if result['length'] == 0 or not result['data'][0]['Title']:
+        return None
+
+    row = result['data'][0]
+    url = url_for('pd', RefKey=row['P_Ref_Key']) if row['P_Ref_Key'] is not None else None
+    return {'title': row['Title'], 'url': url}
+
+
 @app.route('/add-price/<prID_RefKey>', methods=["GET"])
 @login_required
 @validate_request
@@ -2516,7 +2853,8 @@ def add_price(prID_RefKey):
                     `sub_product_specification`.`Status`,
                     `sub_product_specifications`.`ID` AS `SPSS_ID`,
                     `sub_product_specifications`.`Name` AS `Text`,
-                    `sub_product_specifications`.`Order` AS `spsOrder`
+                    `sub_product_specifications`.`Order` AS `spsOrder`,
+                    `sub_product_specifications`.`spssCategoryID`
                 FROM `sub_product_specifications`
                 LEFT JOIN `sub_product_specification` 
                     ON `sub_product_specifications`.`spsID` = `sub_product_specification`.`ID`
@@ -2541,8 +2879,11 @@ def add_price(prID_RefKey):
     
     payment_methods = get_payment_methods('`ID`, `method`')
 
+    if resultSPS['length'] == 0:
+        return render_template('error.html')
+
     sideBar = side_bar_stuff()
-    return render_template('add-price.html', prData=prData, paymentMethods=payment_methods, sps=resultSPS, specifications=resultSpecifications, PT_Ref_Key=PT_Ref_Key, sideBar=sideBar, mainCurrency=mainCurrency, current_locale=get_locale())
+    return render_template('add-price.html', prData=prData, paymentMethods=payment_methods, sps=resultSPS, specifications=resultSpecifications, PT_Ref_Key=PT_Ref_Key, sideBar=sideBar, mainCurrency=mainCurrency, headerProduct=price_header_product(prID=prID), priceOptions=price_options_view(languageID), priceImageMaxMB=PRICE_IMAGE_MAX_MB, current_locale=get_locale())
 
 
 # Edit price view
@@ -2650,12 +2991,14 @@ def edit_price(ptID):
                             `product_type_details`.`ID` AS `ptdID`,
                             `product_type_details`.`Text` AS `Value`,
                             `product_type_details`.`spssID` AS `product_type_details_spssID`,
-                            `product_type_details`.`productTypeID`
-                        FROM 
+                            `product_type_details`.`productTypeID`,
+                            `sub_product_specifications`.`spssCategoryID`
+                        FROM
                             `sub_product_specifications`
-                        LEFT JOIN `product_type_details` ON `sub_product_specifications`.`ID` = `product_type_details`.`spssID` 
+                        LEFT JOIN `product_type_details` ON `sub_product_specifications`.`ID` = `product_type_details`.`spssID`
                             AND `product_type_details`.`productTypeID` = %s
-                        WHERE `sub_product_specifications`.`spsID` = %s; 
+                        WHERE `sub_product_specifications`.`spsID` = %s
+                        ORDER BY `sub_product_specifications`.`Order`; 
                         """
     sqlValTupleSPSS = (ptID, mainResult['data'][0]['spsID'])
     resultSPSS = sqlSelect(sqlQuerySpss, sqlValTupleSPSS, True)
@@ -2676,7 +3019,24 @@ def edit_price(ptID):
     active_methods = []
     if mainResult['data'][0]['payment_methods'] != '':
         active_methods = mainResult['data'][0]['payment_methods'].split(',')
-    return render_template('edit-price.html', sideBar=sideBar, mainResult=mainResult, sps=spsResult, resultSPSS=resultSPSS, paymentMethods=payment_methods, activeMethods=active_methods, languageID=languageID, newCSRFtoken=newCSRFtoken, current_locale=get_locale())
+    return render_template('edit-price.html', sideBar=sideBar, mainResult=mainResult, sps=spsResult, resultSPSS=resultSPSS, paymentMethods=payment_methods, activeMethods=active_methods, languageID=languageID, newCSRFtoken=newCSRFtoken, headerProduct=price_header_product(ptID=ptID), priceOptions=price_options_view(languageID, ptID), mainCurrency=MAIN_CURRENCY, priceImageMaxMB=PRICE_IMAGE_MAX_MB, current_locale=get_locale())
+
+
+# Price photos (/upload_slides, /editprice): the largest image that is stored. The pages send each
+# cropped photo as a JPEG (templates/add-price.html, edit-price.html), so a photo of the size shown
+# under its thumbnail is the size checked here.
+PRICE_IMAGE_MAX_MB = 3
+
+
+# The error for a photo above PRICE_IMAGE_MAX_MB, or None
+def price_image_size_error(file):
+    file.seek(0, os.SEEK_END)
+    size = file.tell()
+    file.seek(0)
+    if size <= PRICE_IMAGE_MAX_MB * 1024 * 1024:
+        return None
+    return gettext('"%(name)s" is %(size)s MB: an image can be at most %(max)s MB.',
+                   name=secure_filename(file.filename), size=round(size / (1024 * 1024), 1), max=PRICE_IMAGE_MAX_MB)
 
 
 # Edit price action
@@ -2715,13 +3075,11 @@ def editprice():
 
 
 
-    if not request.form.get('price'):
-        answer = gettext('Please specify the price!')
-        return jsonify({'status': '0', 'answer': answer, 'newCSRFtoken': newCSRFtoken}) 
-  
-    if float(request.form.get('price')) < 0:
-        answer = gettext('The price should be 0 or higher!')
-        return jsonify({'status': '0', 'answer': answer, 'newCSRFtoken': newCSRFtoken}) 
+    # fixed price, or prices by vehicle / age group; guide prices; notes settings
+    languageID = getLangID()
+    priceOptions, answer = price_options_from_form(languageID, ptID)
+    if answer:
+        return jsonify({'status': '0', 'answer': answer, 'newCSRFtoken': newCSRFtoken})
   
     if request.form.get('fileStatus') == '0':
         answer = gettext('At least one image should be uploaded')
@@ -2739,7 +3097,8 @@ def editprice():
             `sub_product_specification`.`Name`,
             `sub_product_specifications`.`Name` AS `Text`,
             `sub_product_specifications`.`ID` AS `spssID`,
-            `sub_product_specifications`.`Status` AS `spssStatus`
+            `sub_product_specifications`.`Status` AS `spssStatus`,
+            `sub_product_specifications`.`spssCategoryID`
         FROM `sub_product_specification`
             LEFT JOIN `sps_relatives` ON `sps_relatives`.`SPS_ID` = `sub_product_specification`.`ID` 
             LEFT JOIN `sub_product_specifications` ON `sub_product_specifications`.`spsID` = `sub_product_specification`.`ID`
@@ -2749,22 +3108,25 @@ def editprice():
         sqlValTupleSPS = (languageID, spsID)
         resultSPS = sqlSelect(sqlQuerySPS, sqlValTupleSPS, True)
 
+        # each value as its field's category requires (number, date, address or map link...)
+        spssFields = {row['spssID']: row for row in resultSPS['data']}
         i = 0
         while True:
             if not request.form.get('spss_' + str(i)):
                 break
             spss = request.form.get('spss_' + str(i))
             arr = spss.split(',', 1)
-            Text = arr[1]
-            
-
-            if len(Text) > 255:
+            if len(arr) < 2 or not arr[0].isdigit() or int(arr[0]) not in spssFields:
+                answer = gettext('Something went wrong. Please try again!')
+                return jsonify({'status': '0', 'answer': answer, 'newCSRFtoken': newCSRFtoken})
+            field = spssFields[int(arr[0])]
+            error = spss_value_error(field['Text'], field['spssCategoryID'], arr[1].strip())
+            if error:
                 longData = 1
-                spssAnswer = spssAnswer + gettext('Text is too long for field ') + resultSPS['data'][i]['Text'] + '.<br/>'
+                spssAnswer = spssAnswer + error + '<br/>'
             i += 1
-        
+
         if longData == 1:
-            spssAnswer += gettext('Max allowed characters are 255.')
             return jsonify({'status': '0', 'answer': spssAnswer, 'newCSRFtoken': newCSRFtoken})
     
     # Handle image upload
@@ -2789,30 +3151,24 @@ def editprice():
     # dataChecker = copy.deepcopy(mainResult['data'])  
     shortKeys = {}
     for row in mainResult['data']:
+        if row['sliderID'] is None:   # a price without photos: the LEFT JOIN's empty row
+            continue
         shortKeys[row['sliderID']] = [row['Name'], row['SliderOrder'], row['AltText']]
 
     i = 0
     imgDir = 'images/sub_product_slider'
     sqlUpdateSlide = "UPDATE `slider` SET `AltText` = %s, `Order` = %s WHERE `ID` = %s"  
     sqlInsertSlide = "INSERT INTO `slider`  (`Name`, `AltText`, `Order`, `ProductID`, `Type`) VALUES (%s, %s, %s, %s, %s);"
-    max_file_size = 3 * 1024 * 1024  # 5MB in bytes
 
     while True:
         if not request.form.get('upload_status_' + str(i)):
             break
 
-        # Check image size and return an error if file is too big
-        if request.files.get('file_' + str(i)):
-            file = request.files.get('file_' + str(i))
-            file_size = len(file.read())  # Get the file size in bytes
-            file.seek(0)  # Reset the file pointer to the beginning after reading
-            filename = secure_filename(file.filename)
-
-            if file_size > max_file_size:
-                answer = '"' +filename + '" ' + gettext('image size is more than 5MB')
-                return jsonify({'status': '0', 'answer': answer, 'newCSRFtoken': newCSRFtoken}) 
-        
-        # End of checking the image size
+        # a new (cropped) photo is stored: check its size. Photos already stored (status 1) are only reordered.
+        if request.form.get('upload_status_' + str(i)) == '0' and request.files.get('file_' + str(i)):
+            answer = price_image_size_error(request.files.get('file_' + str(i)))
+            if answer:
+                return jsonify({'status': '0', 'answer': answer, 'newCSRFtoken': newCSRFtoken})
 
         altText = request.form.get('alt_text_' + str(i))
 
@@ -2864,7 +3220,7 @@ def editprice():
     sqlValTuplePT = (ptID,)
     resultPT = sqlSelect(sqlQueryPT, sqlValTuplePT, True)
     title = request.form.get('title')
-    price = float(request.form.get('price'))
+    price = priceOptions['price']
     if not request.form.get('spsID'):
         spsID = 0
     else:
@@ -2897,14 +3253,18 @@ def editprice():
             spss = request.form.get('spss_' + str(i))        
             arr = spss.split(',', 1)
             if len(arr[1].strip()) > 0:
-                sqlValTupleSpss = (ptID, int(arr[0]), arr[1])
+                sqlValTupleSpss = (ptID, int(arr[0]), arr[1].strip())
                 resultInsert = sqlInsert(sqlInsertPtDetails, sqlValTupleSpss)
                 if resultInsert['status'] == 0:
                     answer = gettext('Something went wrong. Please try again!')
                     return jsonify({'status': '0', 'answer': answer, 'newCSRFtoken': newCSRFtoken}) 
 
             i += 1
-        
+
+    # vehicle / age group / guide prices and the notes settings
+    if not save_price_options(ptID, priceOptions):
+        answer = gettext('Something went wrong. Please try again!')
+        return jsonify({'status': '0', 'answer': answer, 'newCSRFtoken': newCSRFtoken})
 
     answer = gettext('Done!')
     return jsonify({'status': '1', 'answer': answer, 'newCSRFtoken': newCSRFtoken})
@@ -3081,41 +3441,31 @@ def upload_slides():
             answer = '"' + resultCheck['data'][0]['Title'] + '" ' +gettext('Product Type Title Already Exists!') 
             return jsonify({'status': '0', 'answer': answer, 'newCSRFtoken': newCSRFtoken})    
     
-        if not request.form.get('price'):
-            answer = gettext('Please specify price!')
+        # fixed price, or prices by vehicle / age group; guide prices; notes settings
+        priceOptions, answer = price_options_from_form(languageID)
+        if answer:
             return jsonify({'status': '0', 'answer': answer, 'newCSRFtoken': newCSRFtoken})
-        
+
         if request.form.get('fileStatus') == '0':
             answer = gettext('At least one image should be uploaded')
             return jsonify({'status': '0', 'answer': answer, 'newCSRFtoken': newCSRFtoken})
 
-        if float(request.form.get('price')) < 0:
-            answer = gettext('The price should be 0 or higher!')
-            return jsonify({'status': '0', 'answer': answer, 'newCSRFtoken': newCSRFtoken}) 
         
         if request.form.get('fileStatus') is not None:
             i = 0
             fileName = 'file_' + str(i)
-            max_file_size = 3 * 1024 * 1024  # 3MB in bytes
 
             # Check image size and return an error if file is too big
             while request.files.get(fileName):
-                file = request.files.get(fileName)
-
-                file_size = len(file.read())  # Get the file size in bytes
-                file.seek(0)  # Reset the file pointer to the beginning after reading
-                        
-                filename = secure_filename(file.filename)
-
-                if file_size > max_file_size:
-                    answer = '<<' +filename + '>>' + gettext('image size is more than 5MB')
-                    return jsonify({'status': '0', 'answer': answer, 'newCSRFtoken': newCSRFtoken}) 
+                answer = price_image_size_error(request.files.get(fileName))
+                if answer:
+                    return jsonify({'status': '0', 'answer': answer, 'newCSRFtoken': newCSRFtoken})
                 i = i + 1
                 fileName = 'file_' + str(i)
             # End of checking the image size
 
         title = request.form.get('title')
-        price = float(request.form.get('price'))
+        price = priceOptions['price']
         spsID = 0
         
         if request.form.get('spsID'):
@@ -3130,7 +3480,8 @@ def upload_slides():
                 `sub_product_specification`.`Name`,
                 `sub_product_specifications`.`Name` AS `Text`,
                 `sub_product_specifications`.`ID` AS `spssID`,
-                `sub_product_specifications`.`Status` AS `spssStatus`
+                `sub_product_specifications`.`Status` AS `spssStatus`,
+                `sub_product_specifications`.`spssCategoryID`
             FROM `sub_product_specification`
                 LEFT JOIN `sps_relatives` ON `sps_relatives`.`SPS_ID` = `sub_product_specification`.`ID` 
                 LEFT JOIN `sub_product_specifications` ON `sub_product_specifications`.`spsID` = `sub_product_specification`.`ID`
@@ -3140,16 +3491,16 @@ def upload_slides():
             sqlValTupleSPS = (languageID, spsID)
             resultSPS = sqlSelect(sqlQuerySPS, sqlValTupleSPS, True)
 
+            # each value as its field's category requires (number, date, address or map link...)
             for row in resultSPS['data']:
                 if request.form.get(str(row['spssID'])):
-                    Text = request.form.get(str(row['spssID']))
-                    
-                    if len(Text) > 255:
+                    Text = request.form.get(str(row['spssID'])).strip()
+                    error = spss_value_error(row['Text'], row['spssCategoryID'], Text)
+                    if error:
                         longData = 1
-                        spssAnswer = spssAnswer + gettext('Text is too long for field ') + row['Text'] + '.<br/>'
-            
+                        spssAnswer = spssAnswer + error + '<br/>'
+
             if longData == 1:
-                spssAnswer += gettext('Max allowed characters are 255.')
                 return jsonify({'status': '0', 'answer': spssAnswer, 'newCSRFtoken': newCSRFtoken})
 
         sqlQuery = "SELECT `Order` FROM `product_type` WHERE `Product_ID` = %s AND `Status` = 1 ORDER BY `Order` DESC"
@@ -3189,13 +3540,18 @@ def upload_slides():
             if request.form.get('spsID'):
                 sqlP_T_DetailsInsert = "INSERT INTO `product_type_details` (`productTypeID`, `spssID`, `Text`) VALUES (%s, %s, %s)"
                 for row in resultSPS['data']:
-                    if request.form.get(str(row['spssID'])):
-                        Text = request.form.get(str(row['spssID']))
+                    if request.form.get(str(row['spssID'])) and request.form.get(str(row['spssID'])).strip():
+                        Text = request.form.get(str(row['spssID'])).strip()
                         sqlValTuplePTD = (ProductID, row['spssID'], Text)
                         resultInsertPTD = sqlInsert(sqlP_T_DetailsInsert, sqlValTuplePTD)
                         if resultInsertPTD['status'] == 0:
                             answer = gettext('Something went wrong. Please try again!')
                             return jsonify({'status': '0', 'answer': resultInsertPTD['answer'], 'newCSRFtoken': newCSRFtoken})
+
+            # vehicle / age group / guide prices and the notes settings of the new price
+            if not save_price_options(ProductID, priceOptions):
+                answer = gettext('Something went wrong. Please try again!')
+                return jsonify({'status': '0', 'answer': answer, 'newCSRFtoken': newCSRFtoken})
 
 
         else: 
@@ -3219,7 +3575,6 @@ def upload_slides():
     if request.form.get('fileStatus') is not None:
         i = 0
         fileName = 'file_' + str(i)
-        max_file_size = 3 * 1024 * 1024  # 5MB in bytes
         sqlUpdateSlide = "UPDATE `slider` SET `AltText` = %s, `Order` = %s WHERE `ID` = %s"  
         sqlInsertSlide = "INSERT INTO `slider`  (`Name`, `AltText`, `Order`, `ProductID`, `Type`) VALUES (%s, %s, %s, %s, %s);"
 
@@ -5605,6 +5960,277 @@ def add_sps_view(spsRefKey=None):
     return render_template('sp-specifications.html', spsRefKey=spsRefKey, data=data, num=num, sourceLanguages=sourceLanguages, spssCategories=get_spss_categories(), sideBar=sideBar, current_locale=get_locale())
 
 
+# Vehicles: what a price can be set for when it is priced by vehicle (Add / Edit Price).
+# One `vehicle` row per language, linked by `vehicle_relatives`.`Ref_Key` like the other translated
+# content. The name (`Type`) is per language; Seats, Order and Status are the same in every language.
+MAX_VEHICLE_SEATS = 100
+
+
+# Every vehicle (one row per Ref_Key) in the language languageID; a vehicle that is not translated yet
+# is given in the default language (or the first one it has), with 'Translated' False
+def get_vehicles(languageID, activeOnly=False):
+    sqlQuery = f"""
+                SELECT
+                    `vehicle_relatives`.`Ref_Key`,
+                    `vehicle_relatives`.`Language_ID`,
+                    `vehicle`.`ID`,
+                    `vehicle`.`Type`,
+                    `vehicle`.`Seats`,
+                    `vehicle`.`Order`,
+                    `vehicle`.`Status`
+                FROM `vehicle_relatives`
+                    LEFT JOIN `vehicle` ON `vehicle`.`ID` = `vehicle_relatives`.`Vehicle_ID`
+                WHERE `vehicle`.`ID` IS NOT NULL {'AND `vehicle`.`Status` = 1' if activeOnly else ''}
+                ORDER BY `vehicle`.`Order`, `vehicle_relatives`.`Ref_Key`, `vehicle_relatives`.`Language_ID`;
+                """
+    result = sqlSelect(sqlQuery, (), True)
+
+    defLangID = getDefLang()['id']
+    vehicles = {}
+    for row in result['data']:
+        current = vehicles.get(row['Ref_Key'])
+        rank = 0 if row['Language_ID'] == int(languageID) else (1 if row['Language_ID'] == defLangID else 2)
+        if current is None or rank < current['rank']:
+            vehicles[row['Ref_Key']] = dict(row, rank=rank, Translated=(rank == 0))
+
+    return sorted(vehicles.values(), key=lambda row: (row['Order'] if row['Order'] is not None else 0, row['Ref_Key']))
+
+
+# The vehicle Ref_Key in every language: {Language_ID: row}
+def get_vehicle_languages(refKey):
+    sqlQuery = """
+                SELECT
+                    `vehicle_relatives`.`Language_ID`,
+                    `vehicle`.`ID`,
+                    `vehicle`.`Type`,
+                    `vehicle`.`Seats`,
+                    `vehicle`.`Order`,
+                    `vehicle`.`Status`
+                FROM `vehicle_relatives`
+                    LEFT JOIN `vehicle` ON `vehicle`.`ID` = `vehicle_relatives`.`Vehicle_ID`
+                WHERE `vehicle_relatives`.`Ref_Key` = %s AND `vehicle`.`ID` IS NOT NULL;
+                """
+    result = sqlSelect(sqlQuery, (refKey,), True)
+    return {row['Language_ID']: row for row in result['data']}
+
+
+# The vehicle form's values (/add_vehicle, /edit_vehicle): (values, error message)
+def vehicle_from_form():
+    vehicleType = (request.form.get('type') or '').strip()
+    if not vehicleType:
+        return None, gettext('Please specify the vehicle type!')
+    if len(vehicleType) > 255:
+        return None, gettext('The text is too long.')
+
+    seats = (request.form.get('seats') or '').strip()
+    if not seats.isdigit() or not 1 <= int(seats) <= MAX_VEHICLE_SEATS:
+        return None, gettext('Please specify the number of seats (1 to %(max)s)!', max=MAX_VEHICLE_SEATS)
+
+    order = (request.form.get('order') or '').strip()
+    if not order.isdigit():
+        return None, gettext('Please choose the display order from the list!')
+
+    status = 1 if request.form.get('status') == '1' else 0
+    return {'Type': vehicleType, 'Seats': int(seats), 'Order': int(order), 'Status': status}, None
+
+
+# Another vehicle in the same language with the same name and seats
+def vehicle_exists(vehicleType, seats, languageID, exceptRefKey=None):
+    sqlQuery = """
+                SELECT `vehicle`.`ID`
+                FROM `vehicle`
+                    LEFT JOIN `vehicle_relatives` ON `vehicle_relatives`.`Vehicle_ID` = `vehicle`.`ID`
+                WHERE `vehicle`.`Type` = %s AND `vehicle`.`Seats` = %s AND `vehicle_relatives`.`Language_ID` = %s
+                    AND `vehicle_relatives`.`Ref_Key` != %s;
+                """
+    result = sqlSelect(sqlQuery, (vehicleType, seats, languageID, -1 if exceptRefKey is None else exceptRefKey), True)
+    return result['length'] > 0
+
+
+# The display order dropdown of the vehicle form: one option per position (0 = first), named after the vehicle
+# that is there now. A new vehicle gets one more position, at the end.
+def vehicle_order_options(languageID, newVehicle=False):
+    options = [{'Order': position, 'Type': row['Type']} for position, row in enumerate(get_vehicles(languageID))]
+    if newVehicle:
+        options.append({'Order': len(options), 'Type': None})
+    return options
+
+
+# Put a vehicle at a display position (0 = first) and renumber the vehicles 0, 1, 2… in every language:
+# the ones between its old and new position move one place up or down
+def move_vehicle(refKey, position):
+    refKeys = [row['Ref_Key'] for row in get_vehicles(getDefLang()['id']) if row['Ref_Key'] != refKey]
+    refKeys.insert(min(max(position, 0), len(refKeys)), refKey)
+    sqlQuery = """
+                UPDATE `vehicle`
+                    JOIN `vehicle_relatives` ON `vehicle_relatives`.`Vehicle_ID` = `vehicle`.`ID`
+                SET `vehicle`.`Order` = %s
+                WHERE `vehicle_relatives`.`Ref_Key` = %s AND NOT (`vehicle`.`Order` <=> %s);
+                """
+    for order, key in enumerate(refKeys):
+        if sqlUpdate(sqlQuery, (order, key, order))['status'] == '-1':
+            return False
+    return True
+
+
+@app.route("/vehicles", methods=['GET'])
+@login_required
+@validate_request
+def vehicles():
+    languageID = getLangID()
+    sideBar = side_bar_stuff()
+    return render_template('vehicles.html', vehicles=get_vehicles(languageID), sideBar=sideBar, current_locale=get_locale())
+
+
+# Add a vehicle, or (with refKey) translate one into the current language
+@app.route("/add-vehicle/<refKey>", methods=['GET'])
+@app.route("/add-vehicle", methods=['GET'])
+@login_required
+@validate_request
+def add_vehicle_view(refKey=None):
+    languageID = getLangID()
+    translations = {}
+    if refKey is not None:
+        if not refKey.isdigit():
+            return render_template('error.html', current_locale=get_locale())
+        translations = get_vehicle_languages(refKey)
+        if len(translations) == 0:
+            return render_template('error.html', current_locale=get_locale())
+        if languageID in translations:
+            return redirect(url_for('edit_vehicle_view', refKey=refKey))
+
+    # the existing languages of a vehicle being translated, in supported_langs() order
+    sourceLanguages = [dict(translations[lang['Language_ID']], Language=lang['Language'])
+                       for lang in supported_langs() if lang['Language_ID'] in translations]
+    # a new vehicle comes after the existing ones by default: the last option (0 when there are none)
+    orderOptions = vehicle_order_options(languageID, newVehicle=True)
+    sideBar = side_bar_stuff()
+    return render_template('vehicle.html', mode='translate' if refKey is not None else 'add', refKey=refKey,
+                           orderOptions=orderOptions, orderSelected=orderOptions[-1]['Order'],
+                           vehicle=sourceLanguages[0] if sourceLanguages else None, sourceLanguages=sourceLanguages,
+                           maxSeats=MAX_VEHICLE_SEATS, sideBar=sideBar, current_locale=get_locale())
+
+
+@app.route("/add_vehicle", methods=['POST'])
+@login_required
+@validate_request
+def add_vehicle():
+    newCSRFtoken = generate_csrf()
+    languageID = getLangID()
+    userID = session['user_id']
+    refKey = (request.form.get('refKey') or '').strip()
+
+    if refKey:
+        # a translation: only the name is new, the rest comes from the vehicle
+        if not refKey.isdigit():
+            return jsonify({'status': '0', 'answer': gettext('Something went wrong. Please try again!'), 'newCSRFtoken': newCSRFtoken})
+        translations = get_vehicle_languages(refKey)
+        if len(translations) == 0 or languageID in translations:
+            return jsonify({'status': '0', 'answer': gettext('Something went wrong. Please try again!'), 'newCSRFtoken': newCSRFtoken})
+        source = next(iter(translations.values()))
+        vehicleType = (request.form.get('type') or '').strip()
+        if not vehicleType:
+            return jsonify({'status': '0', 'answer': gettext('Please specify the vehicle type!'), 'newCSRFtoken': newCSRFtoken})
+        if len(vehicleType) > 255:
+            return jsonify({'status': '0', 'answer': gettext('The text is too long.'), 'newCSRFtoken': newCSRFtoken})
+        values = {'Type': vehicleType, 'Seats': source['Seats'], 'Order': source['Order'], 'Status': source['Status']}
+        refKey = int(refKey)
+    else:
+        values, error = vehicle_from_form()
+        if error:
+            return jsonify({'status': '0', 'answer': error, 'newCSRFtoken': newCSRFtoken})
+        if values['Order'] > len(get_vehicles(languageID)):
+            return jsonify({'status': '0', 'answer': gettext('Please choose the display order from the list!'), 'newCSRFtoken': newCSRFtoken})
+        # a new Ref_Key, unique across all languages
+        result = sqlSelect("SELECT IFNULL(MAX(`Ref_Key`), -1) + 1 AS `RefKey` FROM `vehicle_relatives`;", (), True)
+        refKey = result['data'][0]['RefKey']
+
+    if vehicle_exists(values['Type'], values['Seats'], languageID, refKey):
+        answer = gettext('This vehicle already exists!') + ' "' + values['Type'] + '"'
+        return jsonify({'status': '0', 'answer': answer, 'newCSRFtoken': newCSRFtoken})
+
+    sqlQuery = "INSERT INTO `vehicle` (`Type`, `Seats`, `Order`, `Status`) VALUES (%s, %s, %s, %s);"
+    result = sqlInsert(sqlQuery, (values['Type'], values['Seats'], values['Order'], values['Status']))
+    if result['status'] == 0:
+        return jsonify({'status': '0', 'answer': gettext('Something went wrong. Please try again!'), 'newCSRFtoken': newCSRFtoken})
+
+    sqlQuery = "INSERT INTO `vehicle_relatives` (`Ref_Key`, `Vehicle_ID`, `Language_ID`, `User_ID`, `Status`) VALUES (%s, %s, %s, %s, %s);"
+    resultRel = sqlInsert(sqlQuery, (refKey, result['inserted_id'], languageID, userID, 1))
+    if resultRel['status'] == 0:
+        sqlDelete("DELETE FROM `vehicle` WHERE `ID` = %s;", (result['inserted_id'],))
+        return jsonify({'status': '0', 'answer': gettext('Something went wrong. Please try again!'), 'newCSRFtoken': newCSRFtoken})
+
+    # a new vehicle takes its position, the ones from there on move one place down (a translation keeps the order)
+    if not request.form.get('refKey') and not move_vehicle(refKey, values['Order']):
+        return jsonify({'status': '0', 'answer': gettext('Something went wrong. Please try again!'), 'newCSRFtoken': newCSRFtoken})
+
+    return jsonify({'status': '1', 'answer': gettext('Done!'), 'newCSRFtoken': newCSRFtoken})
+
+
+@app.route("/edit-vehicle/<refKey>", methods=['GET'])
+@login_required
+@validate_request
+def edit_vehicle_view(refKey):
+    if not refKey.isdigit():
+        return render_template('error.html', current_locale=get_locale())
+    languageID = getLangID()
+    translations = get_vehicle_languages(refKey)
+    if len(translations) == 0:
+        return render_template('error.html', current_locale=get_locale())
+    if languageID not in translations:
+        return redirect(url_for('add_vehicle_view', refKey=refKey))
+
+    orderOptions = vehicle_order_options(languageID)
+    orderSelected = next(position for position, row in enumerate(get_vehicles(languageID)) if row['Ref_Key'] == int(refKey))
+    sideBar = side_bar_stuff()
+    return render_template('vehicle.html', mode='edit', refKey=refKey, vehicle=translations[languageID], sourceLanguages=[],
+                           orderOptions=orderOptions, orderSelected=orderSelected,
+                           maxSeats=MAX_VEHICLE_SEATS, sideBar=sideBar, current_locale=get_locale())
+
+
+@app.route("/edit_vehicle", methods=['POST'])
+@login_required
+@validate_request
+def edit_vehicle():
+    newCSRFtoken = generate_csrf()
+    languageID = getLangID()
+    refKey = (request.form.get('refKey') or '').strip()
+    if not refKey.isdigit():
+        return jsonify({'status': '0', 'answer': gettext('Something went wrong. Please try again!'), 'newCSRFtoken': newCSRFtoken})
+
+    translations = get_vehicle_languages(refKey)
+    if languageID not in translations:
+        return jsonify({'status': '0', 'answer': gettext('Something went wrong. Please try again!'), 'newCSRFtoken': newCSRFtoken})
+
+    values, error = vehicle_from_form()
+    if error:
+        return jsonify({'status': '0', 'answer': error, 'newCSRFtoken': newCSRFtoken})
+    if values['Order'] >= len(get_vehicles(languageID)):
+        return jsonify({'status': '0', 'answer': gettext('Please choose the display order from the list!'), 'newCSRFtoken': newCSRFtoken})
+
+    if vehicle_exists(values['Type'], values['Seats'], languageID, int(refKey)):
+        answer = gettext('This vehicle already exists!') + ' "' + values['Type'] + '"'
+        return jsonify({'status': '0', 'answer': answer, 'newCSRFtoken': newCSRFtoken})
+
+    # the name in this language
+    result = sqlUpdate("UPDATE `vehicle` SET `Type` = %s WHERE `ID` = %s;", (values['Type'], translations[languageID]['ID']))
+    if result['status'] == '-1':
+        return jsonify({'status': '0', 'answer': gettext('Something went wrong. Please try again!'), 'newCSRFtoken': newCSRFtoken})
+
+    # seats and status in every language
+    for row in translations.values():
+        result = sqlUpdate("UPDATE `vehicle` SET `Seats` = %s, `Status` = %s WHERE `ID` = %s;",
+                           (values['Seats'], values['Status'], row['ID']))
+        if result['status'] == '-1':
+            return jsonify({'status': '0', 'answer': gettext('Something went wrong. Please try again!'), 'newCSRFtoken': newCSRFtoken})
+
+    # the order too: the vehicles between its old and new position move one place up or down
+    if not move_vehicle(int(refKey), values['Order']):
+        return jsonify({'status': '0', 'answer': gettext('Something went wrong. Please try again!'), 'newCSRFtoken': newCSRFtoken})
+
+    return jsonify({'status': '1', 'answer': gettext('Done!'), 'newCSRFtoken': newCSRFtoken})
+
+
 @app.route("/emails/<filters>", methods=['GET'])
 @login_required
 @validate_request
@@ -6281,6 +6907,7 @@ def getSlides(PrID, languageID):
                     SELECT 
                         `sub_product_specifications`.`ID` AS `spssID`,
                         `sub_product_specifications`.`Name` AS `Title`,
+                        `sub_product_specifications`.`spssCategoryID`,
                         `product_type_details`.`Text`,
                         `product_type`.`Title` AS `ptTitle`,
                         `product_type`.`Price`,
@@ -6303,7 +6930,37 @@ def getSlides(PrID, languageID):
     sqlValTupleSpss = (PrID, PrID, languageID)
     resultSpss = sqlSelect(sqlQuerySpss, sqlValTupleSpss, True)
 
-    return render_template('slideshow.html', result=result, resultSubPr=resultSubPr, resultSpss=resultSpss, subProducts=subProducts, Title = resultTitle['data'][0]['Title'], mainCurrency=MAIN_CURRENCY, current_locale=get_locale())
+    # What can be booked with each price: vehicles, age groups, guides (booking.py, static/JS/booking.js)
+    langPrefix = (getLangdatabyID(languageID) or {}).get('Prefix', '')
+    bookingData = {}
+    for row in resultSpss['data']:
+        if row['ptID'] is not None and row['ptID'] not in bookingData:
+            options = booking_options(row['ptID'], languageID)
+            if options is not None:
+                bookingData[row['ptID']] = client_options(options, langPrefix)
+
+    return render_template('slideshow.html', result=result, resultSubPr=resultSubPr, resultSpss=resultSpss, subProducts=subProducts, Title = resultTitle['data'][0]['Title'], bookingData=bookingData, mainCurrency=MAIN_CURRENCY, current_locale=get_locale())
+
+
+# What a booking costs (service page and buy-now page): ptID (PT_Ref_Key), people, vehicle, guide,
+# ages (the age group of each person, comma separated)
+@app.route("/booking-quote", methods=["POST"])
+@validate_request
+def booking_quote_view():
+    newCSRFtoken = generate_csrf()
+    languageID = getLangID()
+    if request.form.get('languageID', '').isdigit() and int(request.form.get('languageID')) in getSupportedLangIDs():
+        languageID = int(request.form.get('languageID'))
+
+    options = booking_options(request.form.get('ptID', ''), languageID)
+    if options is None:
+        return jsonify({'status': '0', 'answer': gettext('Something went wrong. Please try again!'), 'newCSRFtoken': newCSRFtoken})
+
+    ages = [a for a in request.form.get('ages', '').split(',') if a != '']
+    quote = booking_quote(options, request.form.get('people'), request.form.get('vehicle'), request.form.get('guide', NO_GUIDE), ages)
+    if not quote['ok']:
+        return jsonify({'status': '0', 'answer': quote['error'], 'newCSRFtoken': newCSRFtoken})
+    return jsonify({'status': '1', 'total': quote['total'], 'lines': quote['lines'], 'newCSRFtoken': newCSRFtoken})
 
 
 @app.route("/get-spacifications", methods=["POST"])
@@ -6320,9 +6977,10 @@ def get_specifications():
     spsID = request.form.get('spsID')
 
     sqlQuery = f"""
-                    SELECT 
+                    SELECT
                         `sub_product_specifications`.`ID`,
-                        `sub_product_specifications`.`Name` AS `Text`
+                        `sub_product_specifications`.`Name` AS `Text`,
+                        `sub_product_specifications`.`spssCategoryID`
                     FROM `sub_product_specification`
                     LEFT JOIN `sps_relatives` ON `sps_relatives`.`SPS_ID` = `sub_product_specification`.`ID` 
                     LEFT JOIN `sub_product_specifications` ON `sub_product_specifications`.`spsID` = `sub_product_specification`.`ID`
@@ -6507,16 +7165,14 @@ def cart(productTypesQuantity=None):
     if request.method == "GET":
         if session.get('lang') == None:
             setlang()
-        cartData = productTypesQuantity
-
-        content = analyse_cart_data(cartData)
-        result = content['result']
-        ptIdQuantity = content['ptIdQuantity']
-        cartMessage = content['cartMessage']
-
-        return render_template('cart.html', result=result, ptIdQuantity=ptIdQuantity, MAIN_CURRENCY=MAIN_CURRENCY, cartMessage=cartMessage, current_locale=get_locale())
+        # the cart of bookings (cart.py); the old /cart/<ptID-quantity> links open it too
+        if productTypesQuantity is not None:
+            return redirect(url_for('cart'))
+        items = cart_view(read_cart(request), getLangID())
+        return render_template('cart.html', items=items, MAIN_CURRENCY=MAIN_CURRENCY, current_locale=get_locale())
 
     else:
+        # the price and stock of ptID-quantity pairs (the buy-now page's order summary)
         if request.form.get('cart-data'):
             cartData = request.form.get('cart-data')
             content = analyse_cart_data(cartData)
@@ -6524,7 +7180,38 @@ def cart(productTypesQuantity=None):
             return jsonify({'content': content, 'status': "1", 'newCSRFtoken': generate_csrf()})
 
 
-def analyse_cart_data(cartData):    
+# "Add to cart" on the service page: a booking with what was chosen (ptID = PT_Ref_Key, vehicle,
+# guide, ages = '<age ID>:<count>,...'), checked like a booking; answers the cart's new size
+@app.route("/cart/add", methods=["POST"])
+@validate_request
+def cart_add():
+    newCSRFtoken = generate_csrf()
+    item, answer = new_cart_item(request.form.get('ptID', ''), request.form.get('vehicle'), request.form.get('guide', NO_GUIDE),
+                                 parse_age_counts(request.form.get('ages')), getLangID())
+    if item is None:
+        return jsonify({'status': '0', 'answer': answer, 'newCSRFtoken': newCSRFtoken})
+
+    items = read_cart(request)
+    if any(same_booking(item, old) for old in items):
+        return jsonify({'status': '2', 'answer': gettext('This booking is already in your cart.'), 'count': len(items), 'newCSRFtoken': newCSRFtoken})
+    if len(items) >= MAX_CART_ITEMS:
+        return jsonify({'status': '0', 'answer': gettext('Your cart is full. Please book or remove something first.'), 'newCSRFtoken': newCSRFtoken})
+
+    items.append(item)
+    response = jsonify({'status': '1', 'answer': gettext('Added to your cart'), 'count': len(items), 'newCSRFtoken': newCSRFtoken})
+    return write_cart(response, items)
+
+
+# Removes the cart item `id` (the cart page, and the buy-now page once the item is booked)
+@app.route("/cart/remove", methods=["POST"])
+@validate_request
+def cart_remove():
+    items = [item for item in read_cart(request) if item['id'] != request.form.get('id', '')]
+    response = jsonify({'status': '1', 'count': len(items), 'newCSRFtoken': generate_csrf()})
+    return write_cart(response, items)
+
+
+def analyse_cart_data(cartData):
     languageID = getLangID() 
     result = {'length': 0}
     findInSetPtIDs = ''
@@ -7418,14 +8105,29 @@ def get_promo_discounts():
         answer = gettext('Invalid Promo Code')
         return jsonify({'status': "0", 'answer': answer, 'newCSRFtoken': newCSRFtoken})
 
+    # The booking's price (buy-now page) instead of Price x quantity: {ptID: price of the line}
+    linePrices = {}
+    if request.form.get('booking'):
+        try:
+            booking = json.loads(request.form.get('booking'))
+        except json.JSONDecodeError:
+            booking = None
+        if isinstance(booking, dict) and len(products) == 1:
+            options = booking_options(products[0]['ptID'], languageID)
+            if options is not None:
+                quote = booking_quote(options, products[0]['quantity'], booking.get('vehicle'), booking.get('guide', NO_GUIDE), booking.get('ages'))
+                if quote['ok']:
+                    linePrices[options['ptRefKey']] = quote['total']
+
     # Deside prices with discount
     discountPrice = 0
     totalPrice = 0
     for row in result['data']:
         for r in products:
             if row['ptID'] == r['ptID']:
-                discountPrice = discountPrice + (row['Price'] * int(r['quantity']) * row['discount'] / 100)
-            totalPrice = totalPrice + row['Price'] * int(r['quantity'])
+                linePrice = linePrices.get(row['ptID'], row['Price'] * int(r['quantity']))
+                discountPrice = discountPrice + (linePrice * row['discount'] / 100)
+                totalPrice = totalPrice + linePrice
           
     return jsonify({'status': "1", 'data': result['data'], 'discountPrice': discountPrice, 'totalPrice': totalPrice, 'newCSRFtoken': newCSRFtoken})
 

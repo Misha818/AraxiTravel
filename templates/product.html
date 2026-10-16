@@ -599,10 +599,11 @@ document.addEventListener('DOMContentLoaded', function(){
             <i class="fa-solid fa-screwdriver-wrench" style="font-size: 30px;"></i>
           </button>
     </div>
-    <div style="position: relative; display: inline-block;">
+    <div style="position: relative; display: flex; align-items: center; gap: 14px;">
         <nav>
             <a href="{{ url_for('home', _external=True) }}stuff" class="site-nav__link">{{ _('Dashboard') }}</a>
         </nav>
+        {% include '_cart_link.html' %}
     </div>
 </header>
 

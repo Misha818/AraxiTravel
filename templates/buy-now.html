@@ -7,6 +7,7 @@
 
 {% block head %}
 <meta name="robots" content="noindex, nofollow" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/booking.css') }}">
 <!-- jQuery -->
 <script nonce="{{ csp_nonce() }}" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
 
@@ -94,6 +95,10 @@ body {
                         box-shadow: 1px 3px 6px rgba(0, 0, 0, 0.3);"
                 ></span>
               </h4> -->
+              {% if bookingData %}
+              {# the price of the booking: its lines and total (static/JS/booking.js) #}
+              <ul class="list-group mb-3" id="booking-summary" aria-live="polite"></ul>
+              {% endif %}
               <ul class="list-group mb-3" id="checkout-basket" style="max-height: 78vh; overflow-y: auto;">
                 <!-- <li class="list-group-item d-flex justify-content-between lh-sm">
                   <div>
@@ -141,6 +146,10 @@ body {
             </div>
           <div class="col-md-7 col-lg-8" id="fill-data-container">
             <div id="mistakes"></div>
+            {% if bookingData %}
+            {# vehicle and guide of the booking (static/JS/booking.js) #}
+            <div id="bookingCard"></div>
+            {% endif %}
             <form class="needs-validation" novalidate>
               <span class="client-contacts">
                   
@@ -158,6 +167,22 @@ body {
 
                   </div>
                   <hr class="my-4">
+                  {% if bookingData and bookingData.notesEnabled %}
+                  <div class="mb-3 bk-notes">
+                    <label for="bookingNotes" class="form-label">{{ _('Additional notes') }}{{ ' *' if bookingData.notesRequired }}</label>
+                    <textarea class="form-control" id="bookingNotes" maxlength="2000"{{ ' required' if bookingData.notesRequired }}
+                              placeholder="{{ _('Anything we should know, e.g. where to pick you up or special needs') }}"></textarea>
+                    <div class="invalid-feedback">{{ _('Please write the additional notes.') }}</div>
+                  </div>
+                  {% endif %}
+                  {% if bookingData %}
+                  {% set termsLink %}<a href="/terms" target="_blank" rel="noopener">{{ _('terms and conditions') }}</a>{% endset %}
+                  <div class="form-check mb-3 bk-terms">
+                    <input class="form-check-input" type="checkbox" id="bookingTerms" required>
+                    <label class="form-check-label" for="bookingTerms">{{ (_('I agree to the %(terms)s.', terms='{terms}') | e | string) | replace('{terms}', termsLink | string) | safe }}</label>
+                    <div class="invalid-feedback">{{ _('Please agree to the terms and conditions.') }}</div>
+                  </div>
+                  {% endif %}
                   <div  class="w-100 btn btn-primary btn-lg" 
                         style="background-color: white;
                         color: #fc2828ba;
@@ -179,6 +204,12 @@ body {
   </main>
 </div>
 <script nonce="{{ csp_nonce() }}" src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+{% if bookingData %}
+{% from '_booking_text.html' import booking_text with context %}
+<script type="application/json" id="bookingData">{{ bookingData | tojson }}</script>
+{{ booking_text(mainCurrency) }}
+<script nonce="{{ csp_nonce() }}" src="{{ url_for('static', filename='JS/booking.js') }}"></script>
+{% endif %}
 <script nonce="{{ csp_nonce() }}">
 
 let prDataGlobal = JSON.parse('{{ prDataGlobal | tojson | safe }}');
@@ -330,6 +361,9 @@ function submit_promo() {
 
     const formData = new FormData();
     formData.append('products', JSON.stringify([prDataGlobal]));
+    if (window.BookingPage) {
+      formData.append('booking', JSON.stringify(BookingPage.collect()));
+    }
     formData.append('promo', promo.value);
 
     const xhr = new XMLHttpRequest();
@@ -898,6 +932,9 @@ async function get_pt_quantity(ptID, quantity) {
                 // insert before the first child
                 container.insertBefore(h1, container.firstChild);
                 
+                if (window.BookingPage) {
+                  BookingPage.refresh();
+                }
                 if (payMethod == false) {
                 // Remove redundant elements
                 // document.getElementById('promo-container').remove();
@@ -1784,8 +1821,12 @@ document.querySelector('.btn-primary').addEventListener('click', function(event)
     loaderBtn.classList.toggle('hidden');    
     rotate(gearElement);
 
-  let flag = true;  
+  let flag = true;
   flag = contacts_validation(flag);
+  // vehicle, age groups, notes and terms of the booking (static/JS/booking.js)
+  if (window.BookingPage && !BookingPage.validate()) {
+    flag = false;
+  }
     data['ptData'] = [prDataGlobal];
     let promo = '';
     if (document.querySelector('#promo')) {
@@ -1815,13 +1856,18 @@ document.querySelector('.btn-primary').addEventListener('click', function(event)
     }
 
     data['contact_list'] = contactList;
+    if (window.BookingPage) {
+      data['booking'] = BookingPage.collect();
+    }
     
     
     console.log(totalPriceGlobal)
     console.log(typeof totalPriceGlobal)    
 
     function pay_or_not() {
-      if (ptQuantity.Price > 0 && totalPriceGlobal > 0) {
+      // the booking's price when there is one (a guide can cost something even if the price is free)
+      const bookingTotal = window.BookingPage ? BookingPage.total() : null;
+      if ((bookingTotal !== null ? bookingTotal : ptQuantity.Price) > 0 && totalPriceGlobal > 0) {
         console.log('PAYMENT NEEDED')
         paymentMethod = document.getElementById('payment_methods');
         if (paymentMethod.value) {
@@ -1957,6 +2003,14 @@ document.querySelector('.btn-primary').addEventListener('click', function(event)
             let Cart = cookie.get('Cart', false);
             
             cookie.remove('Cart', { path: '/' });
+
+            // booked from the cart: the item leaves it (keepalive: the request outlives the redirect)
+            {% if cartItem %}
+            const cartForm = new FormData();
+            cartForm.append('id', {{ cartItem | tojson }});
+            fetch('/cart/remove', { method: 'POST', keepalive: true, headers: { 'X-CSRFToken': response.newCSRFtoken || csrfToken }, body: cartForm })
+              .catch(error => console.error(error));
+            {% endif %}
 
             if (!response.pdID) {
               // Paid and recorded, but the order page couldn't be created: show what happened and

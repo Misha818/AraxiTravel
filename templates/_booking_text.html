@@ -1,0 +1,32 @@
+{#- Texts of static/JS/booking.js (service page and buy-now page). currency: MAIN_CURRENCY.
+    Import with context: {% from '_booking_text.html' import booking_text with context %} -#}
+{% macro booking_text(currency) -%}
+<script type="application/json" id="bookingText">{{ {
+    'currency': currency,
+    'csrf': csrf_token(),
+    'free': _('Free'),
+    'noGuide': _('No guide'),
+    'guide': _('Guide'),
+    'vehicle': _('Vehicle'),
+    'fromPrice': _('From %(price)s', price='{price}'),
+    'perPerson': _('%(price)s per person', price='{price}'),
+    'participationFree': _('Participation is free'),
+    'chooseVehicle': _('Please choose a vehicle!'),
+    'whoComes': _('Who is coming?'),
+    'chooseWho': _('Please choose who is coming.'),
+    'onePerson': _('1 person'),
+    'people': _('%(num)s people', num='{num}'),
+    'fewer': _('Fewer'),
+    'more': _('More'),
+    'ageGroup': _('Age group'),
+    'adultRequired': _('At least one adult (16+) is required.'),
+    'maxPeople': _('At most %(num)s people can book at once.', num='{num}'),
+    'seatsMax': _('%(vehicle)s takes at most %(seats)s people.', vehicle='{vehicle}', seats='{seats}'),
+    'chooseOptions': _('Choose your options to see the price.'),
+    'total': _('Total'),
+    'cart': _('Cart'),
+    'added': _('Added'),
+    'viewCart': _('View cart'),
+    'tryAgain': _('Something went wrong. Please try again!')
+} | tojson }}</script>
+{%- endmacro %}

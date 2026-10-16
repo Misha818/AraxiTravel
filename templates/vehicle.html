@@ -1,0 +1,302 @@
+{% extends "base.html" %}
+{#- Add a vehicle (mode 'add'), translate one into the page's language ('translate') or edit it ('edit').
+    vehicle: the vehicle (edit), or its first existing language (translate); sourceLanguages: the
+    vehicle in every language it exists in (translate) -#}
+
+{% if mode == 'edit' %}
+    {% set title = _('Edit Vehicle') %}
+{% elif mode == 'translate' %}
+    {% set title = _('Translate Vehicle') %}
+{% else %}
+    {% set title = _('Add Vehicle') %}
+{% endif %}
+
+{% block title %}
+    {{ title }}
+{% endblock %}
+
+{% block head %}
+<style>
+    .vehicle-card {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        width: 100%;
+        max-width: 560px;
+        margin: 0 auto 30px auto;
+        padding: 20px;
+        box-sizing: border-box;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .vehicle-card h1 {
+        margin: 0 0 12px 0;
+        font-size: 1.6rem;
+        text-align: center;
+        color: var(--ink-900);
+    }
+
+    .vehicle-card .field-label {
+        margin: 8px 0 2px 0;
+        font-weight: bold;
+        color: var(--ink-900);
+    }
+
+    .vehicle-card .field-hint {
+        margin: 0;
+        font-size: 14px;
+        color: var(--ink-600);
+    }
+
+    .vehicle-card #response {
+        color: red;
+    }
+
+    .vehicle-card #response:empty {
+        display: none;
+    }
+
+    .vehicle-card input[type="text"],
+    .vehicle-card input[type="number"],
+    .vehicle-card select {
+        width: 100%;
+        padding: 10px 12px;
+        font-size: 16px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+    }
+
+    /* lined up with the inputs, which get a 10px margin from styles.css */
+    .vehicle-card select {
+        height: 40px;
+        margin: 10px 0;
+        padding: 0 12px;
+        background-color: #fff;
+        cursor: pointer;
+    }
+
+    .vehicle-card input.invalid {
+        border-color: red;
+    }
+
+    .vehicle-card input:focus-visible,
+    .vehicle-card select:focus-visible,
+    .vehicle-card .pcButtonS:focus-visible {
+        outline: 3px solid var(--navy-900);
+        outline-offset: 2px;
+    }
+
+    .vehicle-card .two-cols {
+        display: flex;
+        gap: 12px;
+    }
+
+    .vehicle-card .two-cols > div {
+        display: flex;
+        flex: 1 1 0;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .vehicle-card .status-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 12px;
+        cursor: pointer;
+    }
+
+    .vehicle-card .status-row input {
+        width: 20px;
+        height: 20px;
+        accent-color: var(--river-600);
+    }
+
+    /* translate page: the vehicle in its existing languages */
+    .vehicle-card .source-list {
+        margin: 0 0 6px 0;
+        padding: 10px 14px;
+        list-style: none;
+        background-color: var(--cream-50);
+        border-radius: 6px;
+    }
+
+    .vehicle-card .source-list li {
+        padding: 3px 0;
+    }
+
+    .vehicle-card .source-list .lang {
+        font-weight: bold;
+        color: var(--ink-600);
+    }
+
+    .vehicle-card .pcButtonS {
+        width: 100%;
+        margin: 16px 0 0 0;
+        padding: 15px;
+        font-size: 20px;
+        box-sizing: border-box;
+    }
+
+    @media (max-width: 768px) {
+        .container.vehicle-page {
+            width: 92% !important;
+        }
+
+        #tableDaddy.vehicle-page {
+            margin-left: 0 !important;
+        }
+    }
+
+    @media (max-width: 420px) {
+        .vehicle-card .two-cols {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{{ sideBar | safe }}
+
+<div class="container toRight vehicle-page" id="tableDaddy" style="width: 70%;">
+<form class="vehicle-card" id="vehicleForm" novalidate>
+    <h1>{{ title }}</h1>
+    <div id="response" role="alert" aria-live="polite"></div>
+    <input type="hidden" name="refKey" value="{{ refKey if refKey is not none else '' }}">
+
+    {% if mode == 'translate' %}
+    <span class="field-label">{{ _('Translate from') }}</span>
+    <ul class="source-list">
+        {% for row in sourceLanguages %}
+        <li><span class="lang">{{ row['Language'] }}:</span> {{ row['Type'] }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <label for="type" class="field-label">{{ _('Vehicle type') }}</label>
+    <input type="text" id="type" name="type" maxlength="255" autocomplete="off" autofocus required
+           value="{{ vehicle['Type'] if mode == 'edit' else '' }}"
+           placeholder="{{ (_('The field name to be translated:') + ' ' + vehicle['Type']) if mode == 'translate' else _('e.g. Sedan, Jeep, Minibus') }}">
+
+    {% if mode == 'translate' %}
+    {# seats, order and status come from the vehicle: they are the same in every language #}
+    <p class="field-hint">{{ _('Seats') }}: {{ vehicle['Seats'] }} · {{ _('Seats, order and status are the same in every language.') }}</p>
+    {% else %}
+    <div class="two-cols">
+        <div>
+            <label for="seats" class="field-label">{{ _('Seats') }}</label>
+            <input type="number" id="seats" name="seats" min="1" max="{{ maxSeats }}" step="1" inputmode="numeric" required
+                   value="{{ vehicle['Seats'] if mode == 'edit' else '' }}">
+        </div>
+        <div>
+            <label for="order" class="field-label">{{ _('Display order') }}</label>
+            {# one option per position, named after the vehicle there now; the new vehicle's own position is the last one #}
+            <select id="order" name="order">
+                {% for option in orderOptions %}
+                <option value="{{ option['Order'] }}"{% if option['Order'] == orderSelected %} selected{% endif %}>
+                    {{ option['Order'] }}{% if option['Type'] is not none %} · {{ option['Type'] }}{% endif %}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    <p class="field-hint">{{ _("Seats: how many passengers the vehicle takes. Clients can't book a bigger group for it.") }}</p>
+    <p class="field-hint">{{ _('Display order: the other vehicles move one place up or down to make room.') }}</p>
+
+    <label class="status-row">
+        <input type="checkbox" id="status" name="status" value="1"{% if mode != 'edit' or vehicle['Status'] == 1 %} checked{% endif %}>
+        {{ _('Active') }}
+    </label>
+    {% if mode == 'edit' %}
+    <p class="field-hint">{{ _('Seats, order and status are the same in every language.') }}</p>
+    {% endif %}
+    {% endif %}
+
+    <div class="pcButtonS" id="submit" role="button" tabindex="0">{{ _('Submit') }}</div>
+    <div class="pcButtonS hidden" id="saving" aria-live="polite">{{ _('Saving...') }}</div>
+</form>
+</div>
+
+<script nonce="{{ csp_nonce() }}">
+    (function () {
+        let csrfToken = "{{ csrf_token() }}";
+        const form = document.getElementById('vehicleForm');
+        const response = document.getElementById('response');
+        const submitBtn = document.getElementById('submit');
+        const savingBtn = document.getElementById('saving');
+        const maxSeats = {{ maxSeats | tojson }};
+
+        function showError(message) {
+            response.textContent = message;
+            submitBtn.classList.remove('hidden');
+            savingBtn.classList.add('hidden');
+        }
+
+        function submit() {
+            response.textContent = '';
+            let invalid = false;
+            const typeInput = document.getElementById('type');
+            typeInput.classList.toggle('invalid', typeInput.value.trim() === '');
+            invalid = invalid || typeInput.value.trim() === '';
+
+            const seatsInput = document.getElementById('seats');
+            if (seatsInput) {
+                const seats = Number(seatsInput.value);
+                const badSeats = !Number.isInteger(seats) || seats < 1 || seats > maxSeats;
+                seatsInput.classList.toggle('invalid', badSeats);
+                invalid = invalid || badSeats;
+            }
+            if (invalid) {
+                response.textContent = "{{ _('Please improve all red fields!') }}";
+                return;
+            }
+
+            submitBtn.classList.add('hidden');
+            savingBtn.classList.remove('hidden');
+
+            const formData = new FormData(form);
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', {{ (url_for('edit_vehicle') if mode == 'edit' else url_for('add_vehicle')) | tojson }});
+            xhr.setRequestHeader('X-CSRFToken', csrfToken);
+            xhr.onload = function () {
+                if (xhr.status !== 200) {
+                    showError("{{ _('Something went wrong. Please try again!') }}");
+                    return;
+                }
+                const answer = JSON.parse(xhr.responseText);
+                if (answer.newCSRFtoken) {
+                    csrfToken = answer.newCSRFtoken;
+                }
+                if (answer.status === '1') {
+                    location.href = {{ url_for('vehicles') | tojson }};
+                } else {
+                    showError(answer.answer);
+                }
+            };
+            xhr.onerror = function () {
+                showError("{{ _('Something went wrong. Please try again!') }}");
+            };
+            xhr.send(formData);
+        }
+
+        submitBtn.addEventListener('click', submit);
+        submitBtn.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                submit();
+            }
+        });
+        // Enter in a field submits too
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+            submit();
+        });
+    })();
+</script>
+
+{% endblock %}

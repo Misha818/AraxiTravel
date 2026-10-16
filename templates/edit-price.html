@@ -1,4 +1,7 @@
 {% extends 'base.html' %}
+{% from '_price_options.html' import price_basis, guide_prices, notes_settings, price_options_text with context %}
+{#- no language switch in the header: the price is edited in one language #}
+{% set hideLangSwitch = true %}
 {% block title %}
     {{ _('Edit Price') }}
 {% endblock %}
@@ -9,6 +12,10 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='cropper.min.css') }}">  
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
+<!-- calendars of the Date / Date and time specification fields -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='calendar.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/price-options.css') }}">
 
 
 <style>
@@ -27,8 +34,9 @@
     }
 
     /* ---- Form layout (card styles come from .admin-form-card in styles.css) ---- */
+    /* wide enough for the option tabs and "Who can join" in one row; narrow screens keep the full width */
     .containerS.price-form-card {
-        max-width: 640px;
+        max-width: 900px;
     }
 
     /* The id carries a global 20px margin meant for other forms */
@@ -203,11 +211,8 @@
     <label for="title" class="field-label">{{ _('Title') }}</label>
     <input type="text" name="title" id="title" placeholder="{{ _('Edit Product Type Title') + ' | ' + _('Max allowed number of chars is 20') }}" class="imageInput" value="{{ mainResult['data'][0]['Title'] }}" autocomplete="off">
 
-    <label for="price" class="field-label">{{ _('Price') }}</label>
-    <div class="input-group price-group">
-        <input type="number" name="price" id="price" placeholder="{{ _('Edit Product Type Price') }}" class="imageInput" value="{{ mainResult['data'][0]['Price']|int }}" inputmode="decimal" min="0">
-        <span aria-hidden="true">{{ mainCurrency }}</span>
-    </div>
+    {{ price_basis(priceOptions, mainCurrency, mainResult['data'][0]['Price']|int) }}
+    {{ guide_prices(priceOptions, mainCurrency) }}
 
     <div class="dropzone" id="myDropzone">
         <div class="dz-message dz-button">{{ _('Click here to upload files') }}</div>
@@ -265,20 +270,15 @@
             {% endif %}
         {% endfor %}
     </select>
-    <div class="specifications">
+    {# the fields are added by SpecFields (static/JS/price-options.js), each as its category requires #}
+    <div class="specifications"></div>
     {% if resultSPSS.length > 0 %}
-        {% for val in resultSPSS.data %}
-            {% set Value = val['Value'] %}
-            {% if Value is none %}
-                {% set Value = ' ' %}
-            {% endif %}
-            <label for="{{ val['spssID'] }}">{{ val['Key'] }}</label>
-            <input type="text" id="{{ val['spssID'] }}" name="{{ val['spssID'] }}" value="{{ Value }}">
-        {% endfor %}
-
+    <script type="application/json" id="specFieldsData">[
+        {%- for val in resultSPSS.data -%}
+        {{ {'ID': val['spssID'], 'Text': val['Key'], 'spssCategoryID': val['spssCategoryID'], 'Value': val['Value'] or ''} | tojson }}{{ ',' if not loop.last }}
+        {%- endfor -%}
+    ]</script>
     {% endif %}
-    
-    </div>
             
 
     
@@ -301,6 +301,8 @@
         <a href="{{ url_for('home') }}add-sps">{{ _('Add Product Type Specifications') }}</a>
 
     {% endif %}     
+    {{ notes_settings(priceOptions) }}
+
     <!-- Sarqum em spasificationneri fielder@ -->
     <div id="saveButton" class="pcButtonS" style="width:100%;" role="button" tabindex="0">{{ _('Submit') }}</div>
     <div id="saving" class="pcButtonS" style="width:100%; display: none;" aria-live="polite">{{ _('Saving...') }}</div>
@@ -316,6 +318,16 @@
 <script nonce="{{ csp_nonce() }}" src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.js"></script>
 <script nonce="{{ csp_nonce() }}" src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
 <script nonce="{{ csp_nonce() }}" src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+<script nonce="{{ csp_nonce() }}" src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script nonce="{{ csp_nonce() }}" src="{{ url_for('static', filename='JS/price-options.js') }}"></script>
+{{ price_options_text(mainCurrency) }}
+<script nonce="{{ csp_nonce() }}">
+    // How the price is set, its options and the specification fields (static/JS/price-options.js)
+    PriceOptions.init();
+    if (document.getElementById('specFieldsData')) {
+        SpecFields.render(document.querySelector('.specifications'), JSON.parse(document.getElementById('specFieldsData').textContent));
+    }
+</script>
 <script nonce="{{ csp_nonce() }}">
     // Submit is a div: let Enter/Space press it too
     document.getElementById('saveButton').addEventListener('keydown', function (event) {
@@ -328,7 +340,6 @@
 <script nonce="{{ csp_nonce() }}">
     let csrfToken = "{{ csrf_token() }}";
     let cropperState = 0;
-    let fileCount = parseInt("{{ mainResult.length }}");
     let imgAlt = '';
     let slider_id = '';
     let imageURL = '';
@@ -344,6 +355,7 @@
         addRemoveLinks: false,
         previewsContainer: "#myDropzone",
         clickable: true,
+        filesizeBase: 1024,     // sizes in the same MB as the server's limit and its message
         init: function () {
             let dz = this;
     
@@ -358,15 +370,16 @@
     
                 if (fileIndex === -1) return; // File not found in Dropzone
     
-                // Create a completely new File object with the edited image data
-                let editedFile = new File([editedImageBlob], file.name, { type: file.type });
-    
+                // Create a completely new File object with the edited image data (a JPEG, see croppedImageBlob)
+                let editedFile = new File([editedImageBlob], jpegName(file.name), { type: 'image/jpeg' });
+
                 // Replace the file in Dropzone's file list
                 myDropzone.files[fileIndex] = editedFile;
-    
+
                 // Preserve Dropzone's references and update the preview
                 editedFile.previewElement = file.previewElement;
-    
+                showUploadSize(editedFile);
+
                 // Update the preview with the cropped image
                 let updatePreviewReader = new FileReader();
                 updatePreviewReader.onload = function (e) {
@@ -376,7 +389,6 @@
                     editedFile.previewElement.querySelector('.dz-image').style.height = '120px';
                 };
                 updatePreviewReader.readAsDataURL(editedImageBlob);
-                fileCount = fileCount + 1;
             });
         };
         reader.readAsDataURL(file);
@@ -386,8 +398,8 @@
         removeButton.addEventListener("click", function (e) {
             e.preventDefault();
             e.stopPropagation();
-            dz.removeFile(file);
-            fileCount = fileCount - 1;
+            // after a crop, myDropzone.files holds the cropped copy, not the file that was added
+            dz.removeFile(myDropzone.files.find(f => f && f.previewElement === file.previewElement) || file);
         });
         file.previewElement.appendChild(removeButton);
     
@@ -422,8 +434,8 @@
             targetedInput = previewElement;
     
             if (previewElement) {
-                let fileName = previewElement.querySelector('[data-dz-name]').textContent;
-                let fileIndex = myDropzone.files.findIndex(f => f.name === fileName);
+                // by its preview: a cropped copy is renamed to .jpg
+                let fileIndex = myDropzone.files.findIndex(f => f && f.previewElement === previewElement);
                 let existingFile = myDropzone.files[fileIndex];
     
                 if (existingFile) {
@@ -433,14 +445,15 @@
     
                         openImageEditorModal(imageUrl, false, function (editedImageBlob) {
                             // Create a completely new file object
-                            let editedFile = new File([editedImageBlob], existingFile.name, { type: existingFile.type });
-    
+                            let editedFile = new File([editedImageBlob], jpegName(existingFile.name), { type: 'image/jpeg' });
+
                             // Replace the file in myDropzone.files to ensure it’s the new cropped version
                             myDropzone.files[fileIndex] = editedFile;
-    
+
                             // Manually set the preview element to the new file, preserving Dropzone's reference
                             editedFile.previewElement = previewElement;
-    
+                            showUploadSize(editedFile);
+
                             // Update the preview with the cropped image
                             let updatePreviewReader = new FileReader();
                             updatePreviewReader.onload = function (e) {
@@ -496,7 +509,31 @@
     
     // Image Editor Modal Logic
     let cropper;
-    
+
+    // The server keeps photos up to PRICE_IMAGE_MAX_MB (app.py). The cropped photo is what is uploaded, as a JPEG:
+    // canvas.toBlob() without a type makes a PNG, about ten times the size of the original photo.
+    const PRICE_IMAGE_MAX_SIZE = {{ priceImageMaxMB }} * 1024 * 1024;
+    const PRICE_JPEG_QUALITY = 0.85;
+
+    function croppedImageBlob(callback) {
+        cropper.getCroppedCanvas({
+            fillColor: '#fff',              // JPEG has no transparency
+            imageSmoothingQuality: 'high'
+        }).toBlob(callback, 'image/jpeg', PRICE_JPEG_QUALITY);
+    }
+
+    function jpegName(name) {
+        return name.replace(/\.[^.]+$/, '') + '.jpg';
+    }
+
+    // The size under the thumbnail: the file that will be uploaded
+    function showUploadSize(file) {
+        let sizeElement = file.previewElement && file.previewElement.querySelector('[data-dz-size]');
+        if (sizeElement) {
+            sizeElement.innerHTML = myDropzone.filesize(file.size);
+        }
+    }
+
     function openImageEditorModal(imageUrl, closeBtn, callback) {
         let btn = `<button type="button" id="cancelEdit">{{ _('Close') }}</button>`
         if (cropperState === 1) {
@@ -536,7 +573,7 @@
             });
     
             document.getElementById('saveEditedImage').onclick = function () {
-                cropper.getCroppedCanvas().toBlob(function (blob) {
+                croppedImageBlob(function (blob) {
                     closeImageEditorModal(imageEditorModal);
                     callback(blob);
                 });
@@ -583,8 +620,12 @@
     let spsChecker = 0;
     document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('myDropzone').addEventListener('click', function() {
-            cropperState = 1;    
+            cropperState = 1;
         })
+        // a dropped photo is cropped too: uncropped, it would be sent as an already stored one (upload status 1)
+        document.getElementById('myDropzone').addEventListener('drop', function() {
+            cropperState = 1;
+        }, true)
 
         // Add image from url to dropzone
         // Helper function to fetch images and maintain order
@@ -661,6 +702,10 @@
             // console.log('Input changed in specifications: ' + event.target.name + ' new value: ' + event.target.value);
             spsChecker = 1;  // Update the checker on any input change
         });
+        // Yes / No lists and calendars report their changes with "change"
+        specificationsDiv.addEventListener('change', function() {
+            spsChecker = 1;
+        });
 
                 
         const selectPMs = document.querySelector('.pm-toggle').textContent;
@@ -712,150 +757,167 @@
         // Handle the file upload when the button is clicked
         let uploadButton = document.getElementById("saveButton");
         let saving = document.getElementById("saving");
-        
-        uploadButton.addEventListener("click", function () {
-            uploadButton.style.display = 'none';
-            saving.style.display = 'inline-block';
-            const mistakes = document.getElementById('mistakes');
+        const mistakes = document.getElementById('mistakes');
+        let submitting = false;
 
+        // "Saving..." instead of Submit while the price is sent: one request at a time
+        function setSaving(on) {
+            submitting = on;
+            uploadButton.style.display = on ? 'none' : '';
+            saving.style.display = on ? 'inline-block' : 'none';
+        }
+
+        // A message in #mistakes, and Submit back. Server answers may hold <br/> (safeMessage keeps only that)
+        function showMistake(message, fromServer) {
+            if (fromServer) {
+                mistakes.innerHTML = safeMessage(message);
+            } else {
+                mistakes.textContent = message;
+            }
+            mistakes.style.display = 'flex';
+            setSaving(false);
+            mistakes.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        const somethingWrong = {{ _('Something went wrong. Please try again!') | tojson }};
+
+        // The answer to a request that did not come back as JSON
+        function requestFailedMessage(xhr) {
+            // an expired login is redirected to /login; an expired form token gets a 400 page
+            const loggedOut = xhr.responseURL && new URL(xhr.responseURL).pathname === '/login';
+            if (loggedOut || xhr.status === 400) {
+                return {{ _('Your session has expired. Please reload the page and try again.') | tojson }};
+            }
+            return somethingWrong;
+        }
+
+        uploadButton.addEventListener("click", function () {
+            if (submitting) {
+                return;
+            }
+            mistakes.textContent = '';
+            mistakes.style.display = 'none';
+
+            try {
+                sendPrice();
+            } catch (error) {
+                console.error(error);
+                showMistake(somethingWrong);
+            }
+        });
+
+        // 0: a new or cropped photo, uploaded; 1: a photo already stored
+        function uploadStatusOf(file) {
+            let uploadStatusInput = file.previewElement.querySelector(".uploadStatus");
+            return uploadStatusInput ? uploadStatusInput.value : '0';
+        }
+
+        function sendPrice() {
             let title = document.getElementById('title').value;
             if (title.length === 0) {
-                mistakes.innerHTML = "{{ _('Please specify Title') }}"
-                mistakes.style.display = 'flex';
-                uploadButton.style.display = 'inline-block';
-                saving.style.display = 'none'
+                showMistake({{ _('Please specify Title') | tojson }});
                 return;
             }
-            let price = document.getElementById('price').value;
-            if (price.length === 0) {
-                mistakes.innerHTML = "{{ _('Please specify Price') }}"
-                mistakes.style.display = 'flex';
-                uploadButton.style.display = 'inline-block';
-                saving.style.display = 'none'
-                return;
-            }
-
             // Create a FormData object to hold the files
             let formData = new FormData();
             formData.append('title', title);
-            formData.append('price', price);
 
-            // console.log(myDropzone.files)
+            // how the price is set and its prices, guide prices, notes settings; the specification values
+            const specs = SpecFields.collect(document.querySelector('.specifications'));
+            const optionsError = PriceOptions.collect(formData) || specs.error;
+            if (optionsError) {
+                showMistake(optionsError);
+                return;
+            }
 
-            let i = 0
-            myDropzone.files.forEach(function (file) {
-                let fileName = "file_" + i;
-                formData.append(fileName, file);
+            // the photos: at least one, none above the size the server keeps
+            const files = myDropzone.files.filter(Boolean);
+            if (files.length === 0) {
+                showMistake({{ _('At least one image should be uploaded') | tojson }});
+                return;
+            }
+            // only new (cropped) photos are stored; the ones already stored (upload status 1) are only reordered
+            const tooBig = files.find(file => uploadStatusOf(file) === '0' && file.size > PRICE_IMAGE_MAX_SIZE);
+            if (tooBig) {
+                showMistake({{ _('"%(name)s" is %(size)s MB: an image can be at most %(max)s MB.', name='{name}', size='{size}', max=priceImageMaxMB) | tojson }}
+                    .replace('{name}', tooBig.name).replace('{size}', (tooBig.size / (1024 * 1024)).toFixed(1)));
+                return;
+            }
+
+            setSaving(true);
+
+            files.forEach(function (file, i) {
+                formData.append("file_" + i, file);
 
                 // Add the alt text as a separate field if available
                 let altInput = file.previewElement.querySelector(".alt-input");
-                let altText = altInput ? altInput.value : ''; // Use empty string if altInput is missing
-                let altTextName = "alt_text_" + i;
-                formData.append(altTextName, altText);
+                formData.append("alt_text_" + i, altInput ? altInput.value : '');
 
                 // Add the id of slider as a separate field if available
                 let slideIDInput = file.previewElement.querySelector(".slideID");
-                let slideID = slideIDInput ? slideIDInput.value : ''; // Use empty string if altInput is missing
-                let slideIDName = "slideID_" + i;
-                formData.append(slideIDName, slideID);
+                formData.append("slideID_" + i, slideIDInput ? slideIDInput.value : '');
 
-                // Add upload status as a separate field if available
                 // If upload status is 0 server will upload new image
                 // if upload status is 1 server will get image from repositiry
                 // Then will check and change the order of image if needed
-                let uploadStatusInput = file.previewElement.querySelector(".uploadStatus");
-                let uploadStatusValue = uploadStatusInput ? uploadStatusInput.value : '0'; // Default to '0' if missing
-                let uploadStatus = "upload_status_" + i;
-                formData.append(uploadStatus, uploadStatusValue);
-                i++;
-
-        
+                formData.append("upload_status_" + i, uploadStatusOf(file));
             });
-
-            let fileStatus = 1;
-            if (fileCount === 0) {
-                fileStatus = 0;
-            } 
-            formData.append('fileStatus', fileStatus); 
-
+            formData.append('fileStatus', files.length > 0 ? 1 : 0);
 
             let PtID = document.getElementById('ptID').value;
             let spsName = document.getElementById('spsID').value;
-            let languageID = document.getElementById('language-id').value;
 
-            paymentMethods = getSelectedIdsStr();
+            let paymentMethods = getSelectedIdsStr();
             if (paymentMethods.length > 0) {
                 formData.append('payment_methods', paymentMethods);
             }
 
-            // formData.append("languageID", languageID);
-            // formData.append("ProductID", ProductID);
             formData.append("PtID", PtID);
             formData.append("Type", '2');
             formData.append("spsID", spsName);
             formData.append("spsChecker", spsChecker);
-            
-            // Get all input elements inside the .specifications div
-            const inputs = document.querySelectorAll(".specifications input");
-            let numspss = 0;
-            inputs.forEach(input => {
-                formData.append('spss_' + numspss.toString(), [input.id, input.value]);
-                numspss++;
+
+            // the specification values (spss_<n> = "<spssID>,<value>")
+            specs.values.forEach((spec, numspss) => {
+                formData.append('spss_' + numspss.toString(), spec.id + ',' + spec.value);
             });
 
             // Create a new XMLHttpRequest object
             let xhr = new XMLHttpRequest();
-            
+
             // Configure the request
-            xhr.open('POST', '/editprice');                   
+            xhr.open('POST', '/editprice');
             xhr.setRequestHeader('X-CSRFToken', csrfToken);
 
-            // Define what happens on successful data submission
             xhr.onload = function () {
-                if (xhr.status === 200) {
-                    let response = JSON.parse(xhr.responseText);
-
-                    let mistakesDiv = document.getElementById('mistakes');
-                    mistakesDiv.innerHTML = ''; // Clear previous messages
-                    
-                    if (response.status === '0') {
-                        // Handle Unknown Error
-                        mistakesDiv.innerHTML = safeMessage(response.answer);
-                        // mistakesDiv.style.color = 'red';
-                        mistakesDiv.style.display = 'flex';
-
-                        saving.style.display = 'none';
-                        uploadButton.style.display = 'inline-block';
-                        
-                        // Scroll the window to the mistakesDiv with smooth behavior
-                        mistakesDiv.scrollIntoView({ behavior: 'smooth' });                              
-                        
-                        
-                    } else if (response.status === '1') {
-                        mistakesDiv.style.display = 'none';
-                        saving.style.display = 'none';
-                        uploadButton.style.display = 'inline-block';
-
-                        console.log(response.answer)
-                        // Handle success
-                        alert(response.answer);
-                        let currentUrl = window.location.href;
-                        location.href = currentUrl;
-                    }
-                } else {
-                    // Handle error response
-                    uploadButton.classList.remove('hidden');
-                    saving.classList.add('hidden');
-
-                    console.error('Error adding category:', xhr.responseText);
+                let response = null;
+                try {
+                    response = JSON.parse(xhr.responseText);
+                } catch (error) {
+                    response = null;
                 }
+                if (response && response.newCSRFtoken) {
+                    csrfToken = response.newCSRFtoken;
+                }
+
+                if (xhr.status === 200 && response && response.status === '1') {
+                    // "Saving..." stays until the page reloads
+                    alert(response.answer);
+                    location.href = window.location.href;
+                } else if (response && response.status === '0' && response.answer) {
+                    showMistake(response.answer, true);
+                } else {
+                    console.error('Saving the price failed:', xhr.status);
+                    showMistake(requestFailedMessage(xhr));
+                }
+            };
+            xhr.onerror = function () {
+                showMistake(somethingWrong);
             };
 
             // Send the request with the FormData object
             xhr.send(formData);
-    
-
-    });
+        }
 
     const dropdown = document.getElementById("spsID");
     if (dropdown) {
@@ -916,29 +978,8 @@
                             saving.style.display = 'none';
                             uploadButton.style.display = 'inline-block';
 
-                            let dataArray = Object.entries(response.data);
-                            
-                            parentDiv.innerHTML = '';
-                            
-
-                            dataArray.forEach(function(list) {
-
-                                // Create the label element
-                                const label = document.createElement('label');
-                                label.setAttribute('for', list[1]['ID']);
-                                label.textContent = list[1]['Text'];
-
-                                // Create the input element
-                                const input = document.createElement('input');
-                                input.setAttribute('type', 'text');
-                                input.setAttribute('id', list[1]['ID']);
-                                input.setAttribute('name', list[1]['ID']);
-
-                                // Append the label and input to the document body or any other container
-                                parentDiv.appendChild(label);
-                                parentDiv.appendChild(input);
-
-                            });
+                            // each field as its category requires (static/JS/price-options.js)
+                            SpecFields.render(parentDiv, response.data);
                         }
                     } else {
                         // Handle error response

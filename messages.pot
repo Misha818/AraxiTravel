@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-15 19:05+0400\n"
+"POT-Creation-Date: 2026-10-16 22:23+0400\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,110 +17,116 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-#: app.py:204
+#: app.py:206
 msgid "The server is busy right now. Please try again in a moment."
 msgstr ""
 
-#: app.py:306
+#: app.py:308
 msgid "Too many login attempts. Please wait a minute and try again."
 msgstr ""
 
-#: app.py:308
+#: app.py:310
 msgid ""
 "Too many failed login attempts for this account. Please try again in 15 "
 "minutes."
 msgstr ""
 
-#: app.py:334 app.py:4453 app.py:4603 templates/login.html:164
+#: app.py:336 app.py:4808 app.py:4958 templates/login.html:164
 msgid "Please specify username"
 msgstr ""
 
-#: app.py:342 templates/login.html:172
+#: app.py:344 templates/login.html:172
 msgid "Please specify password"
 msgstr ""
 
-#: app.py:364 app.py:369
+#: app.py:366 app.py:371
 msgid "The username or password do not match"
 msgstr ""
 
-#: app.py:387
+#: app.py:389
 msgid "Rate limit exceeded"
 msgstr ""
 
-#: app.py:495 app.py:521 app.py:527 app.py:715 app.py:771 app.py:797 app.py:817
-#: app.py:922 app.py:941 app.py:1277 app.py:1282 app.py:1386 app.py:1393
-#: app.py:1433 app.py:2107 app.py:2132 app.py:2139 app.py:2153 app.py:2171
-#: app.py:2185 app.py:2189 app.py:2222 app.py:2262 app.py:2268 app.py:2279
-#: app.py:2285 app.py:2296 app.py:2315 app.py:2326 app.py:2400 app.py:2407
-#: app.py:2413 app.py:2418 app.py:2431 app.py:2444 app.py:2449 app.py:2691
-#: app.py:2821 app.py:2830 app.py:2841 app.py:2857 app.py:2888 app.py:2903
-#: app.py:3041 app.py:3049 app.py:3197 app.py:3202 app.py:3244 app.py:3256
-#: app.py:3271 app.py:3422 app.py:4262 app.py:5352 app.py:5367 app.py:5380
-#: app.py:5400 app.py:5409 app.py:5431 app.py:5483 app.py:5507 app.py:5514
-#: app.py:5523 app.py:5540 app.py:5899 app.py:5905 app.py:5979 app.py:6054
-#: app.py:6110 app.py:6315 app.py:6348 app.py:6423 app.py:6622 app.py:6695
-#: app.py:6763 app.py:6779 app.py:6800 app.py:6936 app.py:6957 app.py:6980
-#: app.py:7041 app.py:7061 app.py:7067 app.py:7070 app.py:7074 app.py:7090
-#: app.py:7148 app.py:7171 app.py:7177 app.py:7180 app.py:7184 app.py:7377
-#: app.py:7385 app.py:7460 app.py:7628 app.py:7636 app.py:7648 app.py:7654
-#: app.py:7704 app.py:7712 app.py:7720 app.py:7738 app.py:7959 app.py:7966
-#: app.py:7979 sysadmin.py:173 sysadmin.py:610 sysadmin.py:647 sysadmin.py:1435
+#: app.py:497 app.py:523 app.py:529 app.py:722 app.py:778 app.py:804 app.py:824
+#: app.py:929 app.py:948 app.py:1314 app.py:1319 app.py:1379 app.py:1391
+#: app.py:1445 app.py:1452 app.py:1496 app.py:2170 app.py:2195 app.py:2202
+#: app.py:2216 app.py:2234 app.py:2248 app.py:2252 app.py:2285 app.py:2325
+#: app.py:2331 app.py:2342 app.py:2348 app.py:2359 app.py:2378 app.py:2389
+#: app.py:2463 app.py:2470 app.py:2476 app.py:2481 app.py:2494 app.py:2507
+#: app.py:2512 app.py:2635 app.py:2692 app.py:3051 app.py:3120 app.py:3177
+#: app.py:3186 app.py:3197 app.py:3213 app.py:3244 app.py:3259 app.py:3266
+#: app.py:3401 app.py:3409 app.py:3548 app.py:3553 app.py:3558 app.py:3599
+#: app.py:3611 app.py:3626 app.py:3777 app.py:4617 app.py:5707 app.py:5722
+#: app.py:5735 app.py:5755 app.py:5764 app.py:5786 app.py:5838 app.py:5862
+#: app.py:5869 app.py:5878 app.py:5895 app.py:6126 app.py:6129 app.py:6155
+#: app.py:6161 app.py:6165 app.py:6199 app.py:6203 app.py:6218 app.py:6225
+#: app.py:6229 app.py:6525 app.py:6531 app.py:6605 app.py:6680 app.py:6736
+#: app.py:6957 app.py:6972 app.py:7006 app.py:7081 app.py:7309 app.py:7382
+#: app.py:7450 app.py:7466 app.py:7487 app.py:7623 app.py:7644 app.py:7667
+#: app.py:7728 app.py:7748 app.py:7754 app.py:7757 app.py:7761 app.py:7777
+#: app.py:7835 app.py:7858 app.py:7864 app.py:7867 app.py:7871 app.py:8064
+#: app.py:8072 app.py:8162 app.py:8330 app.py:8338 app.py:8350 app.py:8356
+#: app.py:8406 app.py:8414 app.py:8422 app.py:8440 app.py:8661 app.py:8668
+#: app.py:8681 booking.py:149 cart.py:103 sysadmin.py:173 sysadmin.py:610
+#: sysadmin.py:647 sysadmin.py:1437 templates/_booking_text.html:30
+#: templates/add-price.html:680 templates/edit-price.html:782
+#: templates/vehicle.html:268 templates/vehicle.html:282
 msgid "Something went wrong. Please try again!"
 msgstr ""
 
-#: app.py:729 app.py:883 templates/add_slide.html:507
+#: app.py:736 app.py:890 templates/add_slide.html:507
 #: templates/edit_slide.html:708
 msgid "Event URL is required"
 msgstr ""
 
-#: app.py:733 app.py:887 templates/add_slide.html:518
+#: app.py:740 app.py:894 templates/add_slide.html:518
 #: templates/edit_slide.html:719
 msgid "Please enter a valid URL"
 msgstr ""
 
-#: app.py:740 app.py:894 templates/add_slide.html:528
+#: app.py:747 app.py:901 templates/add_slide.html:528
 #: templates/edit_slide.html:729
 msgid "Start Date and Expiration Date are required"
 msgstr ""
 
-#: app.py:756 app.py:899 templates/add_slide.html:541
+#: app.py:763 app.py:906 templates/add_slide.html:541
 #: templates/edit_slide.html:745 templates/edit_slide.html:772
 msgid "Please upload an image"
 msgstr ""
 
-#: app.py:957
+#: app.py:964
 msgid "Something went wrong. Please try again! 3"
 msgstr ""
 
-#: app.py:1270
+#: app.py:1307
 msgid "Something went wrong. Please try again! 0"
 msgstr ""
 
-#: app.py:1301
+#: app.py:1338
 msgid "The phone numbers do not match."
 msgstr ""
 
-#: app.py:1306 app.py:2301 app.py:2338 app.py:3822 app.py:4173 app.py:4311
-#: app.py:5985 app.py:7619 app.py:7695 templates/index.html:217
+#: app.py:1343 app.py:2364 app.py:2401 app.py:4177 app.py:4528 app.py:4666
+#: app.py:6611 app.py:8321 app.py:8397 templates/index.html:217
 msgid "Invalid email format"
 msgstr ""
 
-#: app.py:1324
+#: app.py:1361
 msgid "Invalid value for "
 msgstr ""
 
-#: app.py:1396 app.py:7418 templates/buy-now.html:132
+#: app.py:1455 app.py:8105 templates/buy-now.html:137
 #: templates/checkout.html:136
 msgid "Invalid Promo Code"
 msgstr ""
 
-#: app.py:1428
+#: app.py:1491
 msgid ""
 "Your payment was received, but we couldn't complete your order. Please "
 "don't pay again: our team will contact you."
 msgstr ""
 
-#: app.py:1455
+#: app.py:1518
 #, python-format
 msgid ""
 "Your payment was received and your order is confirmed, but we couldn't "
@@ -128,193 +134,247 @@ msgid ""
 "order details. Order number: %(order)s"
 msgstr ""
 
-#: app.py:1469
+#: app.py:1532
 msgid "Payment failed"
 msgstr ""
 
-#: app.py:2211
+#: app.py:2274
 msgid "No employees are associated with the current email"
 msgstr ""
 
-#: app.py:2309
+#: app.py:2372
 msgid "Email already exists!"
 msgstr ""
 
-#: app.py:2317
+#: app.py:2380
 msgid "Email updated successfully!"
 msgstr ""
 
-#: app.py:2424
+#: app.py:2487
 msgid "Not enough stock to restore this order. The status was not changed."
 msgstr ""
 
-#: app.py:2491 app.py:3302 app.py:3320 app.py:3550 app.py:3580 app.py:3627
-#: app.py:3644 app.py:4122 app.py:4265 app.py:4338 app.py:4410 app.py:4537
-#: app.py:4651 app.py:4711 app.py:4769
+#: app.py:2637 templates/_price_options.html:189
+msgid "Prices must be whole numbers, 0 or higher!"
+msgstr ""
+
+#: app.py:2646
+msgid "Please choose how the price is set!"
+msgstr ""
+
+#: app.py:2653 app.py:2657
+msgid "Please specify price!"
+msgstr ""
+
+#: app.py:2659
+msgid "The price should be 0 or higher!"
+msgstr ""
+
+#: app.py:2666 templates/_price_options.html:190
+msgid "Please specify the price of at least one vehicle!"
+msgstr ""
+
+#: app.py:2673 templates/_price_options.html:191
+msgid "Please specify the price of at least one age group!"
+msgstr ""
+
+#: app.py:2682 templates/_price_options.html:192
+msgid ""
+"A guide is required: please specify the price of at least one guide "
+"language!"
+msgstr ""
+
+#: app.py:2695 templates/_price_options.html:193
+msgid "Please choose who can join: at least one age group!"
+msgstr ""
+
+#: app.py:2699 templates/_price_options.html:194
+msgid "An adult is required, so adults (Adult or Senior) must be able to join!"
+msgstr ""
+
+#: app.py:2755
+#, python-format
+msgid "\"%(name)s\": please enter an address or a Google Maps link."
+msgstr ""
+
+#: app.py:2759 sysadmin.py:1002
+msgid "Text is too long for field "
+msgstr ""
+
+#: app.py:2759
+msgid "Max allowed characters are 255."
+msgstr ""
+
+#: app.py:2765 templates/_price_options.html:203
+#, python-format
+msgid "\"%(name)s\" must be a number."
+msgstr ""
+
+#: app.py:2767
+#, python-format
+msgid "\"%(name)s\" must be Yes or No."
+msgstr ""
+
+#: app.py:2772 templates/_price_options.html:204
+#, python-format
+msgid "\"%(name)s\" must be a date."
+msgstr ""
+
+#: app.py:2773 templates/_price_options.html:205
+#, python-format
+msgid "\"%(name)s\" must be a date and time."
+msgstr ""
+
+#: app.py:2828 app.py:3657 app.py:3675 app.py:3905 app.py:3935 app.py:3982
+#: app.py:3999 app.py:4477 app.py:4620 app.py:4693 app.py:4765 app.py:4892
+#: app.py:5006 app.py:5066 app.py:5124
 msgid "Something is wrong!"
 msgstr ""
 
-#: app.py:2494 products.py:809 products.py:881
+#: app.py:2831 products.py:809 products.py:920
 msgid "Update"
 msgstr ""
 
-#: app.py:2494 products.py:810 products.py:882 templates/add-price.html:281
+#: app.py:2831 products.py:810 products.py:921 templates/add-price.html:287
 #: templates/add-role.html:224 templates/add-teammate.html:52
 #: templates/add_product.html:161 templates/add_product_category.html:163
 #: templates/add_product_lang.html:238 templates/add_slide.html:256
 #: templates/add_to_store.html:201 templates/assign-email.html:54
 #: templates/create-email.html:52 templates/create-promo-code.html:156
-#: templates/edit-position.html:228 templates/edit-price.html:306
+#: templates/edit-position.html:228 templates/edit-price.html:308
 #: templates/edit-profile.html:59 templates/edit-promo-code.html:231
 #: templates/edit-pts.html:196 templates/edit-role.html:228
 #: templates/edit-teammate.html:76 templates/edit_product_category.html:195
 #: templates/edit_slide.html:321 templates/edit_store.html:196
-#: templates/pr_thumbnail.html:412 templates/product.html:698
-#: templates/product.html:1379 templates/send-email.html:324
+#: templates/pr_thumbnail.html:412 templates/product.html:699
+#: templates/product.html:1380 templates/send-email.html:324
 #: templates/sp-specifications.html:244 templates/teammate-signup.html:57
-#: templates/transfer-funds.html:162
+#: templates/transfer-funds.html:162 templates/vehicle.html:221
 msgid "Saving..."
 msgstr ""
 
-#: app.py:2631
+#: app.py:2972
 msgid "To continue translate the product first"
 msgstr ""
 
-#: app.py:2695
+#: app.py:3038 templates/add-price.html:733 templates/edit-price.html:842
+#, python-format
+msgid "\"%(name)s\" is %(size)s MB: an image can be at most %(max)s MB."
+msgstr ""
+
+#: app.py:3055
 msgid "Please specify the title!"
 msgstr ""
 
-#: app.py:2700 app.py:3072 app.py:3377 app.py:3428
+#: app.py:3060 app.py:3432 app.py:3732 app.py:3783
 msgid "Max allowed number of chars for title is 20"
 msgstr ""
 
-#: app.py:2713 app.py:3081
+#: app.py:3073 app.py:3441
 msgid "Product Type Title Already Exists!"
 msgstr ""
 
-#: app.py:2719
-msgid "Please specify the price!"
-msgstr ""
-
-#: app.py:2723 app.py:3093
-msgid "The price should be 0 or higher!"
-msgstr ""
-
-#: app.py:2727 app.py:3089
+#: app.py:3085 app.py:3450 templates/add-price.html:728
+#: templates/edit-price.html:836
 msgid "At least one image should be uploaded"
 msgstr ""
 
-#: app.py:2763 app.py:3149 sysadmin.py:1002
-msgid "Text is too long for field "
-msgstr ""
-
-#: app.py:2767 app.py:3152
-msgid "Max allowed characters are 255."
-msgstr ""
-
-#: app.py:2812 app.py:3111
-msgid "image size is more than 5MB"
-msgstr ""
-
-#: app.py:2879
+#: app.py:3235
 msgid "Something went wrong. Please try again! 1"
 msgstr ""
 
-#: app.py:2909 app.py:3282 app.py:3630 app.py:4336 app.py:4408 app.py:5544
-#: app.py:5922 app.py:7953 products.py:240 templates/edit_store.html:279
+#: app.py:3269 app.py:3637 app.py:3985 app.py:4691 app.py:4763 app.py:5899
+#: app.py:6167 app.py:6231 app.py:6548 app.py:8655 products.py:240
+#: templates/edit_store.html:279
 msgid "Done!"
 msgstr ""
 
-#: app.py:3013
+#: app.py:3373
 msgid "To continue, please, add at least one product category."
 msgstr ""
 
-#: app.py:3053
+#: app.py:3413
 msgid "Nothing was uploaded!"
 msgstr ""
 
-#: app.py:3068
+#: app.py:3428
 msgid "Please specify title!"
 msgstr ""
 
-#: app.py:3085
-msgid "Please specify price!"
-msgstr ""
-
-#: app.py:3374
+#: app.py:3729
 msgid "Title is empty!"
 msgstr ""
 
-#: app.py:3380
+#: app.py:3735
 msgid "Link is empty!"
 msgstr ""
 
-#: app.py:3383 app.py:3434
+#: app.py:3738 app.py:3789
 msgid "Please Choose Product Category!"
 msgstr ""
 
-#: app.py:3425
+#: app.py:3780
 msgid "Product name is empty!"
 msgstr ""
 
-#: app.py:3431
+#: app.py:3786
 msgid "Product link is empty!"
 msgstr ""
 
-#: app.py:3491
+#: app.py:3846
 msgid "Category name is empty!"
 msgstr ""
 
-#: app.py:3556
+#: app.py:3911
 msgid "Category Name is empty!"
 msgstr ""
 
-#: app.py:3561 products.py:210
+#: app.py:3916 products.py:210
 msgid "Category Name Exists!"
 msgstr ""
 
-#: app.py:3669
+#: app.py:4024
 msgid "Product is published"
 msgstr ""
 
-#: app.py:3671
+#: app.py:4026
 msgid "Product is unpublished"
 msgstr ""
 
-#: app.py:3791 app.py:3993 app.py:4079 app.py:4085 app.py:4156 app.py:4294
-#: app.py:4366 app.py:4725 app.py:4731
+#: app.py:4146 app.py:4348 app.py:4434 app.py:4440 app.py:4511 app.py:4649
+#: app.py:4721 app.py:5080 app.py:5086
 msgid "Something wrong!"
 msgstr ""
 
-#: app.py:3798
+#: app.py:4153
 msgid "Please specify the first name"
 msgstr ""
 
-#: app.py:3805 app.py:4447 app.py:4599
+#: app.py:4160 app.py:4802 app.py:4954
 msgid "Please specify the last name"
 msgstr ""
 
-#: app.py:3812 app.py:4163 app.py:4301 app.py:4373
+#: app.py:4167 app.py:4518 app.py:4656 app.py:4728
 msgid "Please specify email"
 msgstr ""
 
-#: app.py:3844
+#: app.py:4199
 msgid "Please specify the position!"
 msgstr ""
 
-#: app.py:3851
+#: app.py:4206
 msgid "Something is wrong, please try again!"
 msgstr ""
 
-#: app.py:3868
+#: app.py:4223
 msgid "You can not change the position of the last CEO!"
 msgstr ""
 
-#: app.py:3872
+#: app.py:4227
 msgid "You can not deactivate the last CEO!"
 msgstr ""
 
-#: app.py:3955 app.py:4280 templates/add-teammate.html:45
+#: app.py:4310 app.py:4635 templates/add-teammate.html:45
 #: templates/affiliates.html:150 templates/affiliates.html:196
 #: templates/corporate-emails.html:470 templates/corporate-emails.html:489
 #: templates/edit-position.html:204 templates/edit-position.html:205
@@ -323,19 +383,19 @@ msgstr ""
 msgid "Position"
 msgstr ""
 
-#: app.py:3979
+#: app.py:4334
 msgid "Rol"
 msgstr ""
 
-#: app.py:3999 app.py:4177 app.py:4737
+#: app.py:4354 app.py:4532 app.py:5092
 msgid "Please specify the role"
 msgstr ""
 
-#: app.py:4005 app.py:4743
+#: app.py:4360 app.py:5098
 msgid "Please choose at least on action"
 msgstr ""
 
-#: app.py:4026 app.py:4765 templates/add_product.html:289
+#: app.py:4381 app.py:5120 templates/add_product.html:289
 #: templates/add_product_category.html:309 templates/add_product_lang.html:344
 #: templates/add_slide.html:395 templates/edit-profile.html:220
 #: templates/edit-teammate.html:273 templates/edit_product_category.html:457
@@ -344,15 +404,15 @@ msgstr ""
 msgid "Done"
 msgstr ""
 
-#: app.py:4091
+#: app.py:4446
 msgid "Please specify the position"
 msgstr ""
 
-#: app.py:4097
+#: app.py:4452
 msgid "Please choose at least on role"
 msgstr ""
 
-#: app.py:4143 templates/affiliates.html:139 templates/affiliates.html:183
+#: app.py:4498 templates/affiliates.html:139 templates/affiliates.html:183
 #: templates/confirmation-page.html:361 templates/edit-pts.html:169
 #: templates/product-categories.html:198 templates/product-categories.html:231
 #: templates/product-type-specifications.html:190
@@ -363,343 +423,449 @@ msgstr ""
 msgid "Name"
 msgstr ""
 
-#: app.py:4221
+#: app.py:4576
 msgid "Teammate Signup Invitation"
 msgstr ""
 
-#: app.py:4226 app.py:4238 app.py:6020 app.py:6024 sysadmin.py:1851
-#: sysadmin.py:1856 sysadmin.py:1888 templates/_site_footer.html:16
+#: app.py:4581 app.py:4593 app.py:6646 app.py:6650 sysadmin.py:1853
+#: sysadmin.py:1858 sysadmin.py:1890 templates/_site_footer.html:16
 #: templates/_site_header.html:13 templates/action-names-translate.html:77
 #: templates/public.html:67
 msgid "company"
 msgstr ""
 
-#: app.py:4227 templates/action-names-translate.html:74
+#: app.py:4582 templates/action-names-translate.html:74
 msgid "Click here to sign up"
 msgstr ""
 
-#: app.py:4229
+#: app.py:4584
 msgid "Hello dear"
 msgstr ""
 
-#: app.py:4230
+#: app.py:4585
 msgid "We are thrilled to invite you to join the Mammy’s Bread team! "
 msgstr ""
 
-#: app.py:4231
+#: app.py:4586
 msgid ""
 "Simply click the button below to finish setting up your profile and get "
 "started:"
 msgstr ""
 
-#: app.py:4232 sysadmin.py:1862 templates/action-names-translate.html:80
+#: app.py:4587 sysadmin.py:1864 templates/action-names-translate.html:80
 msgid ""
 "If you’re having trouble with the button above, copy and paste the URL "
 "below into your web browser."
 msgstr ""
 
-#: app.py:4233 templates/action-names-translate.html:81
+#: app.py:4588 templates/action-names-translate.html:81
 msgid "cheers"
 msgstr ""
 
-#: app.py:4235 sysadmin.py:1865 templates/action-names-translate.html:82
+#: app.py:4590 sysadmin.py:1867 templates/action-names-translate.html:82
 msgid "Araxi Travel Team"
 msgstr ""
 
-#: app.py:4236 app.py:4237 templates/edit-profile.html:35
+#: app.py:4591 app.py:4592 templates/edit-profile.html:35
 #: templates/teammate-signup.html:27 templates/teammate-signup.html:35
 msgid "Teammate Signup"
 msgstr ""
 
-#: app.py:4239 app.py:6025 app.py:6027 sysadmin.py:1889
-#: templates/_site_footer.html:49 templates/public.html:174
+#: app.py:4594 app.py:6651 app.py:6653 sysadmin.py:1891
+#: templates/_site_footer.html:49 templates/public.html:175
 msgid "Your Company. All rights reserved."
 msgstr ""
 
-#: app.py:4260 app.py:6052
+#: app.py:4615 app.py:6678
 msgid "Email sent successfully!"
 msgstr ""
 
-#: app.py:4377
+#: app.py:4732
 msgid "Please specify an employee"
 msgstr ""
 
-#: app.py:4389
+#: app.py:4744
 msgid "Email does not exist"
 msgstr ""
 
-#: app.py:4397
+#: app.py:4752
 msgid "Email is already assigned to the employee"
 msgstr ""
 
-#: app.py:4441 app.py:4594
+#: app.py:4796 app.py:4949
 msgid "Please specify firstname"
 msgstr ""
 
-#: app.py:4464 app.py:4614
+#: app.py:4819 app.py:4969
 msgid "Username exists"
 msgstr ""
 
-#: app.py:4469 app.py:4619
+#: app.py:4824 app.py:4974
 msgid "Please specify Password"
 msgstr ""
 
-#: app.py:4478 app.py:4634
+#: app.py:4833 app.py:4989
 msgid "Password confirmation field is empty"
 msgstr ""
 
-#: app.py:4482 app.py:4625
+#: app.py:4837 app.py:4980
 msgid "Passwords do not match!"
 msgstr ""
 
-#: app.py:4486 app.py:4638
+#: app.py:4841 app.py:4993
 msgid "Please specify prefared language"
 msgstr ""
 
-#: app.py:4498 app.py:4671
+#: app.py:4853 app.py:5026
 msgid "File should be in PNG or JPG/JPEG format"
 msgstr ""
 
-#: app.py:4504 app.py:4677 templates/add_product.html:213
+#: app.py:4859 app.py:5032 templates/add_product.html:213
 #: templates/edit-profile.html:113 templates/edit-teammate.html:161
 #: templates/teammate-signup.html:95
 msgid "File size should not exceed 1MB."
 msgstr ""
 
-#: app.py:4521
+#: app.py:4876
 msgid "The URL is expired"
 msgstr ""
 
-#: app.py:4655
+#: app.py:5010
 msgid "Incorrect password"
 msgstr ""
 
-#: app.py:4877 app.py:4929
+#: app.py:5232 app.py:5284
 msgid "Voided"
 msgstr ""
 
-#: app.py:4878 app.py:4930 sysadmin.py:1639
+#: app.py:5233 app.py:5285 sysadmin.py:1641
 msgid "Pending"
 msgstr ""
 
-#: app.py:4879 app.py:4931
+#: app.py:5234 app.py:5286
 msgid "Approved"
 msgstr ""
 
-#: app.py:4880 app.py:4932
+#: app.py:5235 app.py:5287
 msgid "Settled"
 msgstr ""
 
-#: app.py:5387
+#: app.py:5742
 msgid "Order Changed Successfully!"
 msgstr ""
 
-#: app.py:5413
+#: app.py:5768
 msgid "Status changed successfully!"
 msgstr ""
 
-#: app.py:5425 app.py:6066 templates/edit-pts.html:261
+#: app.py:5780 app.py:6692 templates/edit-pts.html:261
 #: templates/sp-specifications.html:316
 msgid "Please specify subproduct situation name!"
 msgstr ""
 
-#: app.py:5446 app.py:6080
+#: app.py:5801 app.py:6706
 msgid "Subproduct situation name exists!"
 msgstr ""
 
-#: app.py:5453 app.py:6087
+#: app.py:5808 app.py:6713
 msgid "Please select a category for every specification!"
 msgstr ""
 
-#: app.py:5657 templates/index.html:216
+#: app.py:6021 app.py:6133
+msgid "Please specify the vehicle type!"
+msgstr ""
+
+#: app.py:6023 app.py:6135 booking.py:206 sysadmin.py:616
+msgid "The text is too long."
+msgstr ""
+
+#: app.py:6027
+#, python-format
+msgid "Please specify the number of seats (1 to %(max)s)!"
+msgstr ""
+
+#: app.py:6031 app.py:6143 app.py:6209
+msgid "Please choose the display order from the list!"
+msgstr ""
+
+#: app.py:6149 app.py:6212
+msgid "This vehicle already exists!"
+msgstr ""
+
+#: app.py:6283 templates/index.html:216
 msgid "Invalid email address!"
 msgstr ""
 
-#: app.py:5742
+#: app.py:6368
 msgid "Invalid email format!"
 msgstr ""
 
-#: app.py:5953
+#: app.py:6579
 msgid "No email address found associated with your account!"
 msgstr ""
 
-#: app.py:5961 templates/send-email.html:667
+#: app.py:6587 templates/send-email.html:667
 msgid "Please specify sender email address!"
 msgstr ""
 
-#: app.py:5964 templates/send-email.html:678
+#: app.py:6590 templates/send-email.html:678
 msgid "Please specify recipient email address!"
 msgstr ""
 
-#: app.py:5989 templates/send-email.html:689
+#: app.py:6615 templates/send-email.html:689
 msgid "Please specify subject!"
 msgstr ""
 
-#: app.py:5992
+#: app.py:6618
 msgid "Please specify email content!"
 msgstr ""
 
-#: app.py:6021
+#: app.py:6647
 msgid "Continue Shopping"
 msgstr ""
 
-#: app.py:6022
+#: app.py:6648
 msgid "Contact US"
 msgstr ""
 
-#: app.py:6028 templates/action-names-translate.html:76
+#: app.py:6654 templates/action-names-translate.html:76
 msgid "unsubscribe"
 msgstr ""
 
-#: app.py:6101
+#: app.py:6727
 msgid "The current subproduct situation has already been translated!"
 msgstr ""
 
-#: app.py:6193
+#: app.py:6819
 msgid "The password must be between "
 msgstr ""
 
-#: app.py:6193
+#: app.py:6819
 msgid " and "
 msgstr ""
 
-#: app.py:6193
+#: app.py:6819
 msgid " characters long."
 msgstr ""
 
-#: app.py:6197
+#: app.py:6823
 msgid "The password must contain at least one digit."
 msgstr ""
 
-#: app.py:6200
+#: app.py:6826
 msgid "The password must contain at least one uppercase letter."
 msgstr ""
 
-#: app.py:6203
+#: app.py:6829
 msgid "The password must contain at least one lowercase letter."
 msgstr ""
 
-#: app.py:6206
+#: app.py:6832
 msgid "The password must contain at least one special character."
 msgstr ""
 
-#: app.py:6596 app.py:7570
+#: app.py:7196
+msgid "This booking is already in your cart."
+msgstr ""
+
+#: app.py:7198
+msgid "Your cart is full. Please book or remove something first."
+msgstr ""
+
+#: app.py:7201
+msgid "Added to your cart"
+msgstr ""
+
+#: app.py:7283 app.py:8272
 msgid ""
 "You have already added this product to the basket. You can change the "
 "quantity if You would like to."
 msgstr ""
 
-#: app.py:6598 app.py:7572 templates/buy-now.html:82 templates/buy-now.html:591
-#: templates/checkout.html:86 templates/checkout.html:486
+#: app.py:7285 app.py:8274 templates/buy-now.html:83 templates/buy-now.html:625
+#: templates/cart.html:37 templates/checkout.html:86
+#: templates/checkout.html:486
 msgid "In Basket"
 msgstr ""
 
-#: app.py:6599 app.py:7475
+#: app.py:7286 app.py:8177
 msgid "The seller doesn't have that many left."
 msgstr ""
 
-#: app.py:6738 app.py:6743
+#: app.py:7425 app.py:7430
 msgid "The specified amount is unavailable."
 msgstr ""
 
-#: app.py:6767 app.py:6924
+#: app.py:7454 app.py:7611
 msgid "Please Specify Product Type"
 msgstr ""
 
-#: app.py:6771 app.py:6928
+#: app.py:7458 app.py:7615
 msgid "Please Specify Store"
 msgstr ""
 
-#: app.py:6775 app.py:6932
+#: app.py:7462 app.py:7619
 msgid "Please Specify Quantity"
 msgstr ""
 
-#: app.py:6782 app.py:6939
+#: app.py:7469 app.py:7626
 msgid "Quantity should be greater than Zero"
 msgstr ""
 
-#: app.py:6786 app.py:6943
+#: app.py:7473 app.py:7630
 msgid "Please Specify Production Date"
 msgstr ""
 
-#: app.py:6790 app.py:6947
+#: app.py:7477 app.py:7634
 msgid "Please Specify Expiration Date"
 msgstr ""
 
-#: app.py:6796 app.py:6953
+#: app.py:7483 app.py:7640
 msgid "Please Specify Max Allowed Quantity"
 msgstr ""
 
-#: app.py:6803 app.py:6960
+#: app.py:7490 app.py:7647
 msgid "Max Allowed Quantity should be greater than Zero"
 msgstr ""
 
-#: app.py:6996
+#: app.py:7683
 msgid "Add more products?"
 msgstr ""
 
-#: app.py:7052 app.py:7162
+#: app.py:7739 app.py:7849
 msgid "code exists"
 msgstr ""
 
-#: app.py:7111
+#: app.py:7798
 msgid "Promo Code Created Successfully"
 msgstr ""
 
-#: app.py:7290
+#: app.py:7977
 msgid "Promo Code updated successfully!"
 msgstr ""
 
-#: app.py:7487
+#: app.py:8189
 msgid "Maximum available quantity for single purchase is "
 msgstr ""
 
-#: app.py:7493
+#: app.py:8195
 msgid "Out of stock"
 msgstr ""
 
-#: app.py:7499
+#: app.py:8201
 msgid "Maximum available quantity is "
 msgstr ""
 
-#: app.py:7499
+#: app.py:8201
 msgid "item added to the cart"
 msgstr ""
 
-#: app.py:7537 templates/index.html:18 templates/index.html:26
+#: app.py:8239 templates/index.html:18 templates/index.html:26
 msgid "site name"
 msgstr ""
 
-#: app.py:7609 app.py:7672
+#: app.py:8311 app.py:8374
 msgid "Please specify email!"
 msgstr ""
 
-#: app.py:7657
+#: app.py:8359
 msgid "You have subscribed successfully!"
 msgstr ""
 
-#: app.py:7676
+#: app.py:8378
 msgid "Please specify your name!"
 msgstr ""
 
-#: app.py:7680
+#: app.py:8382
 msgid "Please specify the subject!"
 msgstr ""
 
-#: app.py:7684
+#: app.py:8386
 msgid "Please specify the message!"
 msgstr ""
 
-#: app.py:7729
+#: app.py:8431
 msgid "Thank you for your message! We will contact you as soon as possible."
 msgstr ""
 
-#: app.py:7806
+#: app.py:8508
 msgid "Out of stock."
 msgstr ""
 
-#: app.py:8012
+#: app.py:8714
 msgid "Nothing to show"
+msgstr ""
+
+#: booking.py:27 templates/_price_options.html:9
+msgid "Infant"
+msgstr ""
+
+#: booking.py:27 templates/_price_options.html:9
+msgid "Child"
+msgstr ""
+
+#: booking.py:27 templates/_price_options.html:9
+msgid "Teen"
+msgstr ""
+
+#: booking.py:27 templates/_price_options.html:9
+msgid "Adult"
+msgstr ""
+
+#: booking.py:27 templates/_price_options.html:9
+msgid "Senior"
+msgstr ""
+
+#: booking.py:160
+msgid "Please choose the age group of every person!"
+msgstr ""
+
+#: booking.py:164 templates/_booking_text.html:22
+msgid "At least one adult (16+) is required."
+msgstr ""
+
+#: booking.py:170 templates/_booking_text.html:14
+msgid "Please choose a vehicle!"
+msgstr ""
+
+#: booking.py:172 templates/_booking_text.html:24
+#, python-format
+msgid "%(vehicle)s takes at most %(seats)s people."
+msgstr ""
+
+#: booking.py:174 booking.py:252 templates/_price_options.html:71
+#: templates/order-details.html:201
+#, python-format
+msgid "%(num)s seat"
+msgid_plural "%(num)s seats"
+msgstr[0] ""
+msgstr[1] ""
+
+#: booking.py:189
+msgid "A guide is required: please choose a guide language."
+msgstr ""
+
+#: booking.py:193
+msgid "This guide language is not offered."
+msgstr ""
+
+#: booking.py:195 templates/_booking_text.html:9
+#: templates/_price_options.html:120 templates/_price_options.html:123
+#: templates/_price_options.html:152 templates/cart.html:69
+#: templates/order-details.html:213
+msgid "Guide"
+msgstr ""
+
+#: booking.py:203 templates/buy-now.html:183
+msgid "Please agree to the terms and conditions."
+msgstr ""
+
+#: booking.py:208 templates/buy-now.html:175
+msgid "Please write the additional notes."
+msgstr ""
+
+#: cart.py:106 templates/_booking_text.html:16
+msgid "Please choose who is coming."
 msgstr ""
 
 #: products.py:165
@@ -725,89 +891,171 @@ msgstr ""
 msgid "An error occurred: %(error)s"
 msgstr ""
 
-#: sysadmin.py:616
-msgid "The text is too long."
-msgstr ""
-
 #: sysadmin.py:619
 msgid "Please remove HTML tags (text in angle brackets) from your input."
 msgstr ""
 
-#: sysadmin.py:1173 templates/checkout.html:221
+#: sysadmin.py:1174 templates/checkout.html:221
 msgid "Name on card is required."
 msgstr ""
 
-#: sysadmin.py:1175 templates/checkout.html:226
+#: sysadmin.py:1176 templates/checkout.html:226
 msgid "Credit card number is required."
 msgstr ""
 
-#: sysadmin.py:1177 templates/checkout.html:231
+#: sysadmin.py:1178 templates/checkout.html:231
 msgid "Expiration date required."
 msgstr ""
 
-#: sysadmin.py:1179 templates/checkout.html:236
+#: sysadmin.py:1180 templates/checkout.html:236
 msgid "Security code required."
 msgstr ""
 
-#: sysadmin.py:1638 templates/affiliate-order-details.html:197
+#: sysadmin.py:1640 templates/affiliate-order-details.html:197
 #: templates/affiliate-orders.html:247 templates/orders.html:394
 msgid "Cancelled"
 msgstr ""
 
-#: sysadmin.py:1640 templates/affiliate-order-details.html:195
+#: sysadmin.py:1642 templates/affiliate-order-details.html:195
 #: templates/affiliate-order-details.html:203
 #: templates/affiliate-orders.html:244 templates/affiliate-orders.html:254
 #: templates/orders.html:392 templates/orders.html:401
 msgid "Purchased"
 msgstr ""
 
-#: sysadmin.py:1641 templates/affiliate-order-details.html:206
+#: sysadmin.py:1643 templates/affiliate-order-details.html:206
 #: templates/affiliate-orders.html:257 templates/orders.html:404
 msgid "Preparing"
 msgstr ""
 
-#: sysadmin.py:1642
+#: sysadmin.py:1644
 msgid "Ready"
 msgstr ""
 
-#: sysadmin.py:1643 templates/affiliate-order-details.html:189
+#: sysadmin.py:1645 templates/affiliate-order-details.html:189
 #: templates/affiliate-order-details.html:212
 #: templates/affiliate-orders.html:263 templates/orders.html:410
 msgid "Delivered"
 msgstr ""
 
-#: sysadmin.py:1849 templates/action-names-translate.html:78
+#: sysadmin.py:1851 templates/action-names-translate.html:78
 msgid "Payment Confirmation"
 msgstr ""
 
-#: sysadmin.py:1857
+#: sysadmin.py:1859
 msgid "Click me"
 msgstr ""
 
-#: sysadmin.py:1859 sysadmin.py:1886 sysadmin.py:1887
+#: sysadmin.py:1861 sysadmin.py:1888 sysadmin.py:1889
 #: templates/confirmation-page.html:320
 msgid "Order Confirmed!"
 msgstr ""
 
-#: sysadmin.py:1860 templates/action-names-translate.html:83
+#: sysadmin.py:1862 templates/action-names-translate.html:83
 #: templates/confirmation-page.html:321
 msgid "Dear"
 msgstr ""
 
-#: sysadmin.py:1860
+#: sysadmin.py:1862
 msgid "thank you for applying"
 msgstr ""
 
-#: sysadmin.py:1861
+#: sysadmin.py:1863
 msgid "Click the button below to view and download your ticket(s)"
 msgstr ""
 
-#: sysadmin.py:1863
+#: sysadmin.py:1865
 msgid "See you on the event"
 msgstr ""
 
-#: sysadmin.py:1864
+#: sysadmin.py:1866
 msgid "Kind regards"
+msgstr ""
+
+#: templates/_booking_text.html:7 templates/_price_options.html:25
+#: templates/_price_options.html:127 templates/_price_options.html:135
+#: templates/_price_options.html:186 templates/cart.html:31
+msgid "Free"
+msgstr ""
+
+#: templates/_booking_text.html:8 templates/_price_options.html:125
+#: templates/cart.html:70 templates/order-details.html:214
+msgid "No guide"
+msgstr ""
+
+#: templates/_booking_text.html:10 templates/cart.html:64
+#: templates/order-details.html:200
+msgid "Vehicle"
+msgstr ""
+
+#: templates/_booking_text.html:11 templates/_product_hero.html:23
+#, python-format
+msgid "From %(price)s"
+msgstr ""
+
+#: templates/_booking_text.html:12
+#, python-format
+msgid "%(price)s per person"
+msgstr ""
+
+#: templates/_booking_text.html:13 templates/cart.html:88
+#: templates/slideshow.html:187 templates/slideshow.html:240
+msgid "Participation is free"
+msgstr ""
+
+#: templates/_booking_text.html:15 templates/cart.html:59
+msgid "Who is coming?"
+msgstr ""
+
+#: templates/_booking_text.html:17
+msgid "1 person"
+msgstr ""
+
+#: templates/_booking_text.html:18
+#, python-format
+msgid "%(num)s people"
+msgstr ""
+
+#: templates/_booking_text.html:19
+msgid "Fewer"
+msgstr ""
+
+#: templates/_booking_text.html:20 templates/product_client.html:187
+#: templates/store.html:582
+msgid "More"
+msgstr ""
+
+#: templates/_booking_text.html:21
+msgid "Age group"
+msgstr ""
+
+#: templates/_booking_text.html:23
+#, python-format
+msgid "At most %(num)s people can book at once."
+msgstr ""
+
+#: templates/_booking_text.html:25
+msgid "Choose your options to see the price."
+msgstr ""
+
+#: templates/_booking_text.html:26 templates/buy-now.html:125
+#: templates/checkout.html:124 templates/confirmation-page.html:442
+#: templates/confirmation-page.html:483 templates/order-details.html:222
+#: templates/order-details.html:304 templates/ticket-details.html:258
+msgid "Total"
+msgstr ""
+
+#: templates/_booking_text.html:27 templates/_cart_link.html:6
+#: templates/_cart_link.html:7 templates/slideshow.html:22
+msgid "Cart"
+msgstr ""
+
+#: templates/_booking_text.html:28
+msgid "Added"
+msgstr ""
+
+#: templates/_booking_text.html:29
+msgid "View cart"
 msgstr ""
 
 #: templates/_pagination.html:17
@@ -822,13 +1070,180 @@ msgstr ""
 msgid "Next page"
 msgstr ""
 
-#: templates/_product_hero.html:19
-msgid "Book Now"
+#: templates/_price_options.html:25 templates/_price_options.html:36
+#: templates/_price_options.html:127 templates/_price_options.html:135
+#: templates/_price_options.html:155 templates/_price_options.html:187
+msgid "Not offered"
 msgstr ""
 
-#: templates/_product_hero.html:23
+#: templates/_price_options.html:33 templates/_price_options.html:152
 #, python-format
-msgid "From %(price)s"
+msgid "Price: %(option)s"
+msgstr ""
+
+#: templates/_price_options.html:48
+msgid "How is the price set?"
+msgstr ""
+
+#: templates/_price_options.html:50
+msgid "Fixed price"
+msgstr ""
+
+#: templates/_price_options.html:50
+msgid "By vehicle"
+msgstr ""
+
+#: templates/_price_options.html:50
+msgid "By age group"
+msgstr ""
+
+#: templates/_price_options.html:60 templates/confirmation-page.html:429
+#: templates/order-details.html:291 templates/ticket-details.html:245
+msgid "Price"
+msgstr ""
+
+#: templates/_price_options.html:62
+msgid "Add Product Type Price"
+msgstr ""
+
+#: templates/_price_options.html:68
+msgid ""
+"Price per vehicle. Leave a vehicle empty if it is not offered; 0 means "
+"free."
+msgstr ""
+
+#: templates/_price_options.html:71 templates/affiliates.html:177
+#: templates/product-type-specifications.html:219
+#: templates/product-type-specifications.html:321 templates/slides.html:560
+#: templates/team.html:171 templates/vehicles.html:136
+msgid "Disabled"
+msgstr ""
+
+#: templates/_price_options.html:75 templates/_price_options.html:81
+#: templates/vehicles.html:3
+msgid "Vehicles"
+msgstr ""
+
+#: templates/_price_options.html:77
+msgid "There are no vehicles in this language yet."
+msgstr ""
+
+#: templates/_price_options.html:77 templates/vehicle.html:11
+#: templates/vehicles.html:121
+msgid "Add Vehicle"
+msgstr ""
+
+#: templates/_price_options.html:80
+#, python-format
+msgid "%(num)s vehicle is not translated into this language yet."
+msgid_plural "%(num)s vehicles are not translated into this language yet."
+msgstr[0] ""
+msgstr[1] ""
+
+#: templates/_price_options.html:86
+msgid ""
+"Price per person. Leave an age group empty if it can not join; 0 means "
+"free."
+msgstr ""
+
+#: templates/_price_options.html:91
+msgid "Age groups"
+msgstr ""
+
+#: templates/_price_options.html:96
+msgid "Who can join"
+msgstr ""
+
+#: templates/_price_options.html:105
+msgid ""
+"Everyone counts, infants too: with a fixed price everyone pays it, with a"
+" vehicle everyone takes a seat."
+msgstr ""
+
+#: templates/_price_options.html:111
+msgid "At least one adult (16+) required"
+msgstr ""
+
+#: templates/_price_options.html:121
+msgid ""
+"Price per group, added to the price when the client chooses a guide. "
+"Leave a language empty if there is no guide for it; 0 means free."
+msgstr ""
+
+#: templates/_price_options.html:145
+msgid "Offer \"No guide\" (free)"
+msgstr ""
+
+#: templates/_price_options.html:147
+msgid ""
+"Turn it off when the experience requires a guide: clients must then "
+"choose one of the guide languages."
+msgstr ""
+
+#: templates/_price_options.html:168 templates/buy-now.html:172
+#: templates/order-details.html:226 templates/product.html:1563
+#: templates/send-email.html:404 templates/transfer-funds.html:157
+#: templates/transfer-funds.html:261
+msgid "Additional notes"
+msgstr ""
+
+#: templates/_price_options.html:171
+msgid "Clients can write additional notes"
+msgstr ""
+
+#: templates/_price_options.html:176
+msgid "Notes are required"
+msgstr ""
+
+#: templates/_price_options.html:188
+msgid "Please specify Price"
+msgstr ""
+
+#: templates/_price_options.html:195 templates/slideshow.html:6
+msgid "Yes"
+msgstr ""
+
+#: templates/_price_options.html:196 templates/slideshow.html:6
+msgid "No"
+msgstr ""
+
+#: templates/_price_options.html:197
+msgid "Choose"
+msgstr ""
+
+#: templates/_price_options.html:198
+msgid "Address, or a Google Maps link or \"Embed a map\" code"
+msgstr ""
+
+#: templates/_price_options.html:199
+msgid ""
+"Google Maps: Share › Embed a map › Copy HTML, then paste it here. An "
+"address works too."
+msgstr ""
+
+#: templates/_price_options.html:200
+msgid "Please enter an address or a Google Maps link."
+msgstr ""
+
+#: templates/_price_options.html:201
+msgid ""
+"Short links (maps.app.goo.gl) can not be shown as a map. In Google Maps "
+"choose Share › Embed a map › Copy HTML and paste that, or write the "
+"address."
+msgstr ""
+
+#: templates/_price_options.html:202 templates/slideshow.html:10
+msgid "Map"
+msgstr ""
+
+#: templates/_price_options.html:206 templates/edit-pts.html:337
+#: templates/sp-specifications.html:389 templates/vehicle.html:255
+msgid "Please improve all red fields!"
+msgstr ""
+
+#: templates/_product_hero.html:19 templates/cart.html:97
+#: templates/slideshow.html:24
+msgid "Book Now"
 msgstr ""
 
 #: templates/_site_footer.html:23
@@ -848,12 +1263,12 @@ msgid "Journeys"
 msgstr ""
 
 #: templates/_site_footer.html:30 templates/_site_header.html:24
-#: templates/public.html:188
+#: templates/public.html:189
 msgid "About"
 msgstr ""
 
 #: templates/_site_footer.html:31 templates/_site_header.html:25
-#: templates/index.html:149 templates/public.html:189
+#: templates/index.html:149 templates/public.html:190
 msgid "Contacts"
 msgstr ""
 
@@ -869,11 +1284,11 @@ msgstr ""
 msgid "Main navigation"
 msgstr ""
 
-#: templates/_site_header.html:31 templates/_site_header.html:32
+#: templates/_site_header.html:33 templates/_site_header.html:34
 msgid "Open menu"
 msgstr ""
 
-#: templates/_site_header.html:31
+#: templates/_site_header.html:33
 msgid "Close menu"
 msgstr ""
 
@@ -954,9 +1369,10 @@ msgid "Store"
 msgstr ""
 
 #: templates/action-names-translate.html:18 templates/add_to_store.html:3
-#: templates/add_to_store.html:119 templates/slideshow.html:92
-#: templates/slideshow.html:149 templates/slideshow.html:205
-#: templates/store.html:286 templates/store.html:538
+#: templates/add_to_store.html:119 templates/slideshow.html:121
+#: templates/slideshow.html:128 templates/slideshow.html:182
+#: templates/slideshow.html:236 templates/store.html:286
+#: templates/store.html:538
 msgid "Add To Store"
 msgstr ""
 
@@ -1046,7 +1462,7 @@ msgstr ""
 msgid "Affiliate"
 msgstr ""
 
-#: templates/action-names-translate.html:38 templates/product.html:621
+#: templates/action-names-translate.html:38 templates/product.html:622
 msgid "Editor"
 msgstr ""
 
@@ -1091,9 +1507,10 @@ msgstr ""
 msgid "Edit Role"
 msgstr ""
 
-#: templates/action-names-translate.html:48 templates/edit-price.html:3
-#: templates/edit-price.html:193 templates/slideshow.html:92
-#: templates/slideshow.html:149 templates/slideshow.html:205
+#: templates/action-names-translate.html:48 templates/edit-price.html:6
+#: templates/edit-price.html:201 templates/slideshow.html:121
+#: templates/slideshow.html:128 templates/slideshow.html:182
+#: templates/slideshow.html:236
 msgid "Edit Price"
 msgstr ""
 
@@ -1122,8 +1539,8 @@ msgstr ""
 msgid "Edit Positions"
 msgstr ""
 
-#: templates/action-names-translate.html:55 templates/base.html:82
-#: templates/base.html:95 templates/edit-profile.html:27
+#: templates/action-names-translate.html:55 templates/base.html:93
+#: templates/base.html:106 templates/edit-profile.html:27
 msgid "Edit Profile"
 msgstr ""
 
@@ -1197,13 +1614,13 @@ msgstr ""
 msgid "Top"
 msgstr ""
 
-#: templates/add-price.html:3 templates/add-price.html:193
-#: templates/product.html:630
+#: templates/add-price.html:6 templates/add-price.html:201
+#: templates/product.html:631
 msgid "Add Price"
 msgstr ""
 
-#: templates/add-price.html:203 templates/add_slide.html:181
-#: templates/add_slide.html:627 templates/edit-price.html:203
+#: templates/add-price.html:211 templates/add_slide.html:181
+#: templates/add_slide.html:627 templates/edit-price.html:211
 #: templates/edit_slide.html:187 templates/edit_slide.html:882
 #: templates/products.html:355 templates/products.html:431
 #: templates/products.html:587 templates/slides.html:364
@@ -1212,121 +1629,111 @@ msgstr ""
 msgid "Title"
 msgstr ""
 
-#: templates/add-price.html:204
+#: templates/add-price.html:212
 msgid "Add Product Type Title"
 msgstr ""
 
-#: templates/add-price.html:204 templates/add_product.html:110
-#: templates/add_product_lang.html:115 templates/edit-price.html:204
-#: templates/product.html:1028
+#: templates/add-price.html:212 templates/add_product.html:110
+#: templates/add_product_lang.html:115 templates/edit-price.html:212
+#: templates/product.html:1029
 msgid "Max allowed number of chars is 20"
 msgstr ""
 
-#: templates/add-price.html:206 templates/cart.html:31 templates/cart.html:43
-#: templates/confirmation-page.html:429 templates/edit-price.html:206
-#: templates/order-details.html:245 templates/ticket-details.html:245
-msgid "Price"
-msgstr ""
-
-#: templates/add-price.html:208
-msgid "Add Product Type Price"
-msgstr ""
-
-#: templates/add-price.html:213 templates/edit-price.html:213
-#: templates/product.html:693
+#: templates/add-price.html:218 templates/edit-price.html:218
+#: templates/product.html:694
 msgid "Click here to upload files"
 msgstr ""
 
-#: templates/add-price.html:217 templates/edit-price.html:233
+#: templates/add-price.html:222 templates/edit-price.html:238
 msgid "Select payment methods"
 msgstr ""
 
-#: templates/add-price.html:230 templates/edit-price.html:251
+#: templates/add-price.html:235 templates/edit-price.html:256
 msgid "Choose product type specification"
 msgstr ""
 
-#: templates/add-price.html:266 templates/edit-price.html:291
+#: templates/add-price.html:270 templates/edit-price.html:291
 msgid "Translate Product Type Specification Name"
 msgstr ""
 
-#: templates/add-price.html:274 templates/edit-price.html:299
+#: templates/add-price.html:278 templates/edit-price.html:299
 msgid "You have not entered any product type specification yet."
 msgstr ""
 
-#: templates/add-price.html:275 templates/edit-price.html:300
+#: templates/add-price.html:279 templates/edit-price.html:300
 msgid "Click on the link below to add a product category!"
 msgstr ""
 
-#: templates/add-price.html:276 templates/edit-price.html:301
+#: templates/add-price.html:280 templates/edit-price.html:301
 msgid "Add Product Type Specifications"
 msgstr ""
 
-#: templates/add-price.html:280 templates/add-role.html:223
+#: templates/add-price.html:286 templates/add-role.html:223
 #: templates/add-teammate.html:51 templates/add_product.html:160
 #: templates/add_product_category.html:162 templates/add_product_lang.html:237
 #: templates/add_slide.html:255 templates/add_to_store.html:200
 #: templates/admin_panel.html:524 templates/admin_panel.html:554
-#: templates/assign-email.html:53 templates/buy-now.html:138
-#: templates/buy-now.html:219 templates/buy-now.html:263
-#: templates/buy-now.html:278 templates/buy-now.html:284
-#: templates/buy-now.html:326 templates/buy-now.html:341
-#: templates/buy-now.html:390 templates/buy-now.html:396
+#: templates/assign-email.html:53 templates/buy-now.html:143
+#: templates/buy-now.html:250 templates/buy-now.html:294
+#: templates/buy-now.html:309 templates/buy-now.html:315
+#: templates/buy-now.html:357 templates/buy-now.html:375
+#: templates/buy-now.html:424 templates/buy-now.html:430
 #: templates/checkout.html:142 templates/checkout.html:1187
 #: templates/checkout.html:1232 templates/checkout.html:1247
 #: templates/checkout.html:1253 templates/corporate-emails.html:606
 #: templates/create-email.html:51 templates/create-promo-code.html:155
-#: templates/edit-position.html:227 templates/edit-price.html:305
+#: templates/edit-position.html:227 templates/edit-price.html:307
 #: templates/edit-profile.html:58 templates/edit-promo-code.html:230
 #: templates/edit-pts.html:195 templates/edit-role.html:227
 #: templates/edit-teammate.html:75 templates/edit_product_category.html:194
 #: templates/edit_slide.html:320 templates/edit_store.html:195
-#: templates/index.html:206 templates/order-details.html:496
-#: templates/pr_thumbnail.html:411 templates/product.html:696
-#: templates/product.html:697 templates/product.html:1378
-#: templates/public.html:129 templates/public.html:152
-#: templates/public.html:389 templates/public.html:413
-#: templates/public.html:456 templates/public.html:509
-#: templates/public.html:534 templates/send-email.html:323
+#: templates/index.html:206 templates/order-details.html:542
+#: templates/pr_thumbnail.html:411 templates/product.html:697
+#: templates/product.html:698 templates/product.html:1379
+#: templates/public.html:130 templates/public.html:153
+#: templates/public.html:390 templates/public.html:414
+#: templates/public.html:457 templates/public.html:510
+#: templates/public.html:535 templates/send-email.html:323
 #: templates/send-email.html:672 templates/send-email.html:683
 #: templates/send-email.html:694 templates/send-email.html:723
 #: templates/send-email.html:739 templates/sp-specifications.html:243
 #: templates/teammate-signup.html:56 templates/ticket-details.html:500
-#: templates/transfer-funds.html:161
+#: templates/transfer-funds.html:161 templates/vehicle.html:220
 msgid "Submit"
 msgstr ""
 
-#: templates/add-price.html:286 templates/edit-price.html:311
+#: templates/add-price.html:292 templates/edit-price.html:313
 #: templates/edit-profile.html:61 templates/edit_product_category.html:198
 #: templates/pr_thumbnail.html:417
 msgid "Back"
 msgstr ""
 
-#: templates/add-price.html:474 templates/corporate-emails.html:408
-#: templates/edit-price.html:501 templates/emails.html:434
-#: templates/product.html:893 templates/product.html:1018
-#: templates/slideshow.html:77 templates/transfers.html:456
+#: templates/add-price.html:515 templates/corporate-emails.html:408
+#: templates/edit-price.html:538 templates/emails.html:434
+#: templates/product.html:894 templates/product.html:1019
+#: templates/slideshow.html:105 templates/transfers.html:456
 msgid "Close"
 msgstr ""
 
-#: templates/add-price.html:486 templates/add_product.html:288
+#: templates/add-price.html:527 templates/add_product.html:288
 #: templates/add_product_category.html:308 templates/add_product_lang.html:343
-#: templates/add_slide.html:394 templates/edit-price.html:513
+#: templates/add_slide.html:394 templates/edit-price.html:550
 #: templates/edit-profile.html:219 templates/edit-teammate.html:272
 #: templates/edit_product_category.html:456 templates/edit_slide.html:584
-#: templates/pr_thumbnail.html:664 templates/product.html:905
+#: templates/pr_thumbnail.html:664 templates/product.html:906
 #: templates/teammate-signup.html:171
 msgid "Crop"
 msgstr ""
 
-#: templates/add-price.html:622 templates/edit-price.html:723
+#: templates/add-price.html:687 templates/edit-price.html:789
+msgid "Your session has expired. Please reload the page and try again."
+msgstr ""
+
+#: templates/add-price.html:710 templates/edit-price.html:818
 msgid "Please specify Title"
 msgstr ""
 
-#: templates/add-price.html:631 templates/edit-price.html:731
-msgid "Please specify Price"
-msgstr ""
-
-#: templates/add-price.html:761 templates/edit-price.html:868
+#: templates/add-price.html:819 templates/edit-price.html:930
 msgid ""
 "All changes in specifications fields will be lost, would you like to "
 "continue?"
@@ -1377,15 +1784,15 @@ msgid "Add Teammate"
 msgstr ""
 
 #: templates/add-teammate.html:42 templates/add-teammate.html:43
-#: templates/assign-email.html:42 templates/buy-now.html:1291
+#: templates/assign-email.html:42 templates/buy-now.html:1328
 #: templates/checkout.html:182 templates/corporate-emails.html:348
 #: templates/corporate-emails.html:380 templates/create-email.html:42
 #: templates/create-email.html:43 templates/edit-teammate.html:54
 #: templates/edit-teammate.html:55 templates/emails.html:335
-#: templates/emails.html:394 templates/order-details.html:283
-#: templates/order-details.html:443 templates/orders.html:289
+#: templates/emails.html:394 templates/order-details.html:329
+#: templates/order-details.html:489 templates/orders.html:289
 #: templates/orders.html:343 templates/orders.html:445
-#: templates/public.html:104 templates/ticket-details.html:283
+#: templates/public.html:105 templates/ticket-details.html:283
 #: templates/ticket-details.html:445
 msgid "Email"
 msgstr ""
@@ -1418,13 +1825,13 @@ msgid "Long description"
 msgstr ""
 
 #: templates/add_product.html:119 templates/add_product_lang.html:124
-#: templates/product.html:1047 templates/products.html:385
+#: templates/product.html:1048 templates/products.html:385
 #: templates/products.html:434 templates/products.html:590
 msgid "Product Category"
 msgstr ""
 
 #: templates/add_product.html:121 templates/add_product_lang.html:126
-#: templates/product.html:979
+#: templates/product.html:980
 msgid "Choose product category"
 msgstr ""
 
@@ -1487,7 +1894,7 @@ msgid "Add Product in another lang"
 msgstr ""
 
 #: templates/add_product_lang.html:116 templates/add_product_lang.html:117
-#: templates/product.html:1032
+#: templates/product.html:1033
 msgid "Product link"
 msgstr ""
 
@@ -1617,7 +2024,7 @@ msgstr ""
 
 #: templates/add_to_store.html:123 templates/affiliate-order-details.html:280
 #: templates/confirmation-page.html:428 templates/edit_store.html:120
-#: templates/order-details.html:244 templates/promo-code-details.html:176
+#: templates/order-details.html:290 templates/promo-code-details.html:176
 #: templates/ticket-details.html:244
 msgid "Product"
 msgstr ""
@@ -1639,7 +2046,7 @@ msgstr ""
 
 #: templates/add_to_store.html:181 templates/add_to_store.html:187
 #: templates/add_to_store.html:188 templates/add_to_store.html:189
-#: templates/buy-now.html:1383 templates/buy-now.html:1445
+#: templates/buy-now.html:1420 templates/buy-now.html:1482
 #: templates/edit_store.html:176 templates/edit_store.html:182
 #: templates/edit_store.html:183 templates/edit_store.html:184
 msgid "Max allowed quantity to purchase"
@@ -1668,6 +2075,7 @@ msgstr ""
 #: templates/product-type-specifications.html:242 templates/products.html:455
 #: templates/promo-codes.html:225 templates/roles.html:142
 #: templates/slides.html:437 templates/slides.html:586
+#: templates/vehicles.html:156
 msgid "No data to show!"
 msgstr ""
 
@@ -1714,7 +2122,7 @@ msgid "All"
 msgstr ""
 
 #: templates/admin_panel.html:909 templates/admin_panel.html:910
-#: templates/slideshow.html:54
+#: templates/slideshow.html:82
 msgid "Full screen"
 msgstr ""
 
@@ -1760,7 +2168,7 @@ msgstr ""
 msgid "Promo Code"
 msgstr ""
 
-#: templates/affiliate-order-details.html:184 templates/order-details.html:284
+#: templates/affiliate-order-details.html:184 templates/order-details.html:330
 #: templates/ticket-details.html:284
 msgid "Ordered"
 msgstr ""
@@ -1774,7 +2182,7 @@ msgstr ""
 #: templates/edit_product_category.html:187
 #: templates/edit_product_category.html:188 templates/edit_slide.html:268
 #: templates/emails.html:368 templates/emails.html:406
-#: templates/order-details.html:470 templates/orders.html:272
+#: templates/order-details.html:516 templates/orders.html:272
 #: templates/orders.html:376 templates/orders.html:457
 #: templates/positions.html:109 templates/positions.html:129
 #: templates/product-categories.html:208 templates/product-categories.html:232
@@ -1786,7 +2194,8 @@ msgstr ""
 #: templates/roles.html:109 templates/roles.html:129 templates/slides.html:341
 #: templates/slides.html:394 templates/slides.html:428
 #: templates/slides.html:574 templates/team.html:154 templates/team.html:193
-#: templates/ticket-details.html:474
+#: templates/ticket-details.html:474 templates/vehicles.html:130
+#: templates/vehicles.html:142
 msgid "Status"
 msgstr ""
 
@@ -1808,12 +2217,12 @@ msgid "Net"
 msgstr ""
 
 #: templates/affiliate-order-details.html:283
-#: templates/confirmation-page.html:430 templates/order-details.html:246
+#: templates/confirmation-page.html:430 templates/order-details.html:292
 #: templates/promo-code-details.html:177 templates/ticket-details.html:246
 msgid "Discount"
 msgstr ""
 
-#: templates/affiliate-order-details.html:284 templates/order-details.html:247
+#: templates/affiliate-order-details.html:284 templates/order-details.html:293
 #: templates/ticket-details.html:247
 msgid "Discounted"
 msgstr ""
@@ -1962,6 +2371,7 @@ msgstr ""
 #: templates/product-type-specifications.html:318
 #: templates/promo-codes.html:189 templates/roles.html:121
 #: templates/slides.html:412 templates/slides.html:558 templates/team.html:168
+#: templates/vehicle.html:213 templates/vehicles.html:136
 msgid "Active"
 msgstr ""
 
@@ -1979,17 +2389,11 @@ msgstr ""
 msgid "No promo code registered"
 msgstr ""
 
-#: templates/affiliates.html:177 templates/product-type-specifications.html:219
-#: templates/product-type-specifications.html:321 templates/slides.html:560
-#: templates/team.html:171
-msgid "Disabled"
-msgstr ""
-
 #: templates/affiliates.html:202
 msgid "Affiliate Details"
 msgstr ""
 
-#: templates/affiliates.html:204 templates/order-details.html:273
+#: templates/affiliates.html:204 templates/order-details.html:319
 #: templates/product-categories.html:233 templates/product-categories.html:234
 #: templates/product-type-specifications.html:234
 #: templates/product-type-specifications.html:235 templates/products.html:431
@@ -1998,6 +2402,7 @@ msgstr ""
 #: templates/slides.html:430 templates/slides.html:468
 #: templates/slides.html:556 templates/store.html:1158 templates/team.html:195
 #: templates/team.html:196 templates/ticket-details.html:273
+#: templates/vehicles.html:143 templates/vehicles.html:145
 msgid "Edit"
 msgstr ""
 
@@ -2026,12 +2431,12 @@ msgstr ""
 msgid "Create an email"
 msgstr ""
 
-#: templates/base.html:70 templates/base.html:73 templates/base.html:157
+#: templates/base.html:70 templates/base.html:84 templates/base.html:169
 #: templates/side-bar-stuff-1.html:37
 msgid "Tools"
 msgstr ""
 
-#: templates/base.html:106 templates/base.html:143
+#: templates/base.html:117 templates/base.html:155
 #: templates/side-bar-stuff-1.html:64
 msgid "Logout"
 msgstr ""
@@ -2040,126 +2445,145 @@ msgstr ""
 msgid "Buy Now"
 msgstr ""
 
-#: templates/buy-now.html:90
+#: templates/buy-now.html:91
 msgid "Items in Cart"
 msgstr ""
 
-#: templates/buy-now.html:112 templates/buy-now.html:137
+#: templates/buy-now.html:117 templates/buy-now.html:142
 #: templates/checkout.html:116 templates/checkout.html:141
 msgid "Promo code"
 msgstr ""
 
-#: templates/buy-now.html:113
+#: templates/buy-now.html:118
 msgid "Example"
 msgstr ""
 
-#: templates/buy-now.html:120 templates/checkout.html:124
-#: templates/confirmation-page.html:442 templates/confirmation-page.html:483
-#: templates/order-details.html:258 templates/ticket-details.html:258
-msgid "Total"
-msgstr ""
-
-#: templates/buy-now.html:151
+#: templates/buy-now.html:160
 msgid "Choose payment method"
 msgstr ""
 
-#: templates/buy-now.html:167 templates/checkout.html:244
+#: templates/buy-now.html:174
+msgid "Anything we should know, e.g. where to pick you up or special needs"
+msgstr ""
+
+#: templates/buy-now.html:179
+msgid "terms and conditions"
+msgstr ""
+
+#: templates/buy-now.html:182
+#, python-format
+msgid "I agree to the %(terms)s."
+msgstr ""
+
+#: templates/buy-now.html:192 templates/checkout.html:244
 #: templates/choose.html:22
 msgid "Continue"
 msgstr ""
 
-#: templates/buy-now.html:206 templates/checkout.html:1174
+#: templates/buy-now.html:237 templates/checkout.html:1174
 msgid "Louding..."
 msgstr ""
 
-#: templates/buy-now.html:211 templates/buy-now.html:320
+#: templates/buy-now.html:242 templates/buy-now.html:351
 #: templates/checkout.html:1179
 msgid "Enter Promo Code"
 msgstr ""
 
-#: templates/buy-now.html:316 templates/login.html:146
-#: templates/order-details.html:184 templates/order-details.html:506
-#: templates/product.html:1832 templates/store.html:913
+#: templates/buy-now.html:347 templates/login.html:146
+#: templates/order-details.html:184 templates/order-details.html:552
+#: templates/product.html:1833 templates/store.html:913
 #: templates/ticket-details.html:184 templates/ticket-details.html:510
 msgid "Loading..."
 msgstr ""
 
-#: templates/buy-now.html:739 templates/checkout.html:636
+#: templates/buy-now.html:773 templates/checkout.html:636
 msgid "Add To Cart"
 msgstr ""
 
-#: templates/buy-now.html:1259
+#: templates/buy-now.html:1296
 msgid "Ticket"
 msgstr ""
 
-#: templates/buy-now.html:1262 templates/checkout.html:152
-#: templates/order-details.html:400 templates/ticket-details.html:400
+#: templates/buy-now.html:1299 templates/checkout.html:152
+#: templates/order-details.html:446 templates/ticket-details.html:400
 msgid "First name"
 msgstr ""
 
-#: templates/buy-now.html:1264 templates/checkout.html:154
+#: templates/buy-now.html:1301 templates/checkout.html:154
 msgid "Valid first name is required."
 msgstr ""
 
-#: templates/buy-now.html:1268 templates/checkout.html:157
-#: templates/order-details.html:414 templates/ticket-details.html:414
+#: templates/buy-now.html:1305 templates/checkout.html:157
+#: templates/order-details.html:460 templates/ticket-details.html:414
 msgid "Last name"
 msgstr ""
 
-#: templates/buy-now.html:1270 templates/checkout.html:159
+#: templates/buy-now.html:1307 templates/checkout.html:159
 msgid "Valid last name is required."
 msgstr ""
 
-#: templates/buy-now.html:1274 templates/checkout.html:164
-#: templates/order-details.html:428 templates/ticket-details.html:429
+#: templates/buy-now.html:1311 templates/checkout.html:164
+#: templates/order-details.html:474 templates/ticket-details.html:429
 msgid "Phone Number"
 msgstr ""
 
-#: templates/buy-now.html:1277 templates/buy-now.html:1285
+#: templates/buy-now.html:1314 templates/buy-now.html:1322
 #: templates/checkout.html:167 templates/checkout.html:176
 msgid "Please enter valid phone number!"
 msgstr ""
 
-#: templates/buy-now.html:1282 templates/checkout.html:173
+#: templates/buy-now.html:1319 templates/checkout.html:173
 msgid "Confirm Phone Number"
 msgstr ""
 
-#: templates/buy-now.html:1286 templates/checkout.html:177
+#: templates/buy-now.html:1323 templates/checkout.html:177
 msgid "Phone numbers do not match!"
 msgstr ""
 
-#: templates/buy-now.html:1293 templates/checkout.html:184
+#: templates/buy-now.html:1330 templates/checkout.html:184
 msgid "Please enter a valid email address!"
 msgstr ""
 
-#: templates/buy-now.html:1865 templates/buy-now.html:1914
+#: templates/buy-now.html:1911 templates/buy-now.html:1960
 #: templates/checkout.html:1316 templates/checkout.html:1402
 #: templates/checkout.html:1448 templates/public.html:46
 msgid "Please improve all field marked in red"
 msgstr ""
 
-#: templates/cart.html:3 templates/cart.html:30 templates/cart.html:42
+#: templates/cart.html:5 templates/cart.html:39
 msgid "Shopping Cart"
 msgstr ""
 
-#: templates/cart.html:34 templates/cart.html:319
+#: templates/cart.html:42
+msgid ""
+"Your saved bookings. Each one is booked separately, with the options you "
+"chose."
+msgstr ""
+
+#: templates/cart.html:74
+msgid "This booking is offered in another language."
+msgstr ""
+
+#: templates/cart.html:75
+msgid "Switch the language"
+msgstr ""
+
+#: templates/cart.html:77
+msgid ""
+"These options are no longer available. Please remove this booking and "
+"choose again."
+msgstr ""
+
+#: templates/cart.html:92
+msgid "Remove from cart"
+msgstr ""
+
+#: templates/cart.html:114
 msgid "You don’t have any items in your cart."
 msgstr ""
 
-#: templates/cart.html:35 templates/cart.html:323
+#: templates/cart.html:115
 msgid "Start shopping"
-msgstr ""
-
-#: templates/cart.html:122
-msgid "Subtotal"
-msgstr ""
-
-#: templates/cart.html:122
-msgid "items"
-msgstr ""
-
-#: templates/cart.html:124
-msgid "Proceed to Checkout"
 msgstr ""
 
 #: templates/checkout.html:4
@@ -2170,7 +2594,7 @@ msgstr ""
 msgid "Your cart"
 msgstr ""
 
-#: templates/checkout.html:147 templates/order-details.html:390
+#: templates/checkout.html:147 templates/order-details.html:436
 #: templates/ticket-details.html:390
 msgid "Billing address"
 msgstr ""
@@ -2179,7 +2603,7 @@ msgstr ""
 msgid "Optional"
 msgstr ""
 
-#: templates/checkout.html:188 templates/order-details.html:456
+#: templates/checkout.html:188 templates/order-details.html:502
 #: templates/ticket-details.html:459
 msgid "Address"
 msgstr ""
@@ -2279,7 +2703,6 @@ msgstr ""
 
 #: templates/corporate-emails.html:330 templates/emails.html:305
 #: templates/orders.html:292 templates/product_client.html:194
-#: templates/slideshow.html:174 templates/slideshow.html:228
 #: templates/store.html:906 templates/store.html:907
 #: templates/transfers.html:326
 msgid "Apply"
@@ -2400,12 +2823,8 @@ msgstr ""
 msgid "Search roles"
 msgstr ""
 
-#: templates/edit-price.html:204
+#: templates/edit-price.html:212
 msgid "Edit Product Type Title"
-msgstr ""
-
-#: templates/edit-price.html:208
-msgid "Edit Product Type Price"
 msgstr ""
 
 #: templates/edit-profile.html:44 templates/login.html:137
@@ -2455,10 +2874,6 @@ msgstr ""
 msgid "Add"
 msgstr ""
 
-#: templates/edit-pts.html:337 templates/sp-specifications.html:389
-msgid "Please improve all red fields!"
-msgstr ""
-
 #: templates/edit-teammate.html:61
 msgid "Avatar"
 msgstr ""
@@ -2501,13 +2916,13 @@ msgid "Unread"
 msgstr ""
 
 #: templates/emails.html:324 templates/emails.html:390 templates/index.html:199
-#: templates/public.html:146 templates/send-email.html:309
+#: templates/public.html:147 templates/send-email.html:309
 #: templates/send-email.html:310
 msgid "Subject"
 msgstr ""
 
 #: templates/emails.html:346 templates/emails.html:398
-#: templates/order-details.html:281 templates/ticket-details.html:281
+#: templates/order-details.html:327 templates/ticket-details.html:281
 msgid "Initials"
 msgstr ""
 
@@ -2703,47 +3118,63 @@ msgstr ""
 msgid "Log In"
 msgstr ""
 
-#: templates/order-details.html:192 templates/ticket-details.html:192
+#: templates/order-details.html:195
+msgid "Booking"
+msgstr ""
+
+#: templates/order-details.html:218
+msgid "People"
+msgstr ""
+
+#: templates/order-details.html:230
+msgid "Terms and conditions"
+msgstr ""
+
+#: templates/order-details.html:231
+msgid "Agreed"
+msgstr ""
+
+#: templates/order-details.html:238 templates/ticket-details.html:192
 msgid "Client Information"
 msgstr ""
 
-#: templates/order-details.html:282 templates/orders.html:288
+#: templates/order-details.html:328 templates/orders.html:288
 #: templates/orders.html:332 templates/orders.html:441
-#: templates/public.html:105 templates/ticket-details.html:282
+#: templates/public.html:106 templates/ticket-details.html:282
 msgid "Phone"
 msgstr ""
 
-#: templates/order-details.html:364 templates/order-details.html:602
+#: templates/order-details.html:410 templates/order-details.html:648
 #: templates/store.html:879 templates/store.html:1061 templates/store.html:1275
 #: templates/ticket-details.html:364 templates/ticket-details.html:606
 msgid "Something Went Wrong!"
 msgstr ""
 
-#: templates/order-details.html:534 templates/ticket-details.html:538
+#: templates/order-details.html:580 templates/ticket-details.html:538
 msgid "First name is required."
 msgstr ""
 
-#: templates/order-details.html:539 templates/ticket-details.html:543
+#: templates/order-details.html:585 templates/ticket-details.html:543
 msgid "Last name is required."
 msgstr ""
 
-#: templates/order-details.html:545 templates/ticket-details.html:549
+#: templates/order-details.html:591 templates/ticket-details.html:549
 msgid "Valid phone number is required."
 msgstr ""
 
-#: templates/order-details.html:551 templates/ticket-details.html:555
+#: templates/order-details.html:597 templates/ticket-details.html:555
 msgid "Valid email is required."
 msgstr ""
 
-#: templates/order-details.html:557 templates/ticket-details.html:561
+#: templates/order-details.html:603 templates/ticket-details.html:561
 msgid "Address is required."
 msgstr ""
 
-#: templates/order-details.html:563 templates/ticket-details.html:567
+#: templates/order-details.html:609 templates/ticket-details.html:567
 msgid "Status is required."
 msgstr ""
 
-#: templates/order-details.html:598 templates/ticket-details.html:602
+#: templates/order-details.html:644 templates/ticket-details.html:602
 msgid "Form submitted successfully!"
 msgstr ""
 
@@ -2781,7 +3212,7 @@ msgid "Product categories"
 msgstr ""
 
 #: templates/product-categories.html:187 templates/product-categories.html:230
-#: templates/product.html:622 templates/products.html:345
+#: templates/product.html:623 templates/products.html:345
 #: templates/products.html:430 templates/products.html:586
 #: templates/slides.html:354 templates/slides.html:424
 #: templates/slides.html:570 templates/store.html:355 templates/store.html:394
@@ -2817,63 +3248,55 @@ msgstr ""
 #: templates/product-type-specifications.html:339
 #: templates/product-type-specifications.html:340 templates/products.html:490
 #: templates/products.html:572 templates/slides.html:472
+#: templates/vehicles.html:143 templates/vehicles.html:149
 msgid "Translate"
 msgstr ""
 
-#: templates/product.html:604 templates/product.html:616
+#: templates/product.html:604 templates/product.html:617
 #: templates/side-bar-stuff-1.html:41
 msgid "Dashboard"
 msgstr ""
 
-#: templates/product.html:619 templates/product.html:1911
+#: templates/product.html:620 templates/product.html:1912
 msgid "Slider"
 msgstr ""
 
-#: templates/product.html:620
+#: templates/product.html:621
 msgid "Header"
 msgstr ""
 
-#: templates/product.html:629 templates/products.html:777
+#: templates/product.html:630 templates/products.html:777
 #: templates/slides.html:748
 msgid "Add Product Type"
 msgstr ""
 
-#: templates/product.html:641 templates/products.html:439
+#: templates/product.html:642 templates/products.html:439
 #: templates/products.html:574
 msgid "View"
 msgstr ""
 
-#: templates/product.html:699
+#: templates/product.html:700
 msgid "Cencel"
 msgstr ""
 
-#: templates/product.html:1017
+#: templates/product.html:1018
 msgid "Edit Header"
 msgstr ""
 
-#: templates/product.html:1027
+#: templates/product.html:1028
 msgid "Product name"
 msgstr ""
 
-#: templates/product.html:1037
+#: templates/product.html:1038
 msgid "Short Description"
 msgstr ""
 
-#: templates/product.html:1042
+#: templates/product.html:1043
 msgid "Long Description"
 msgstr ""
 
-#: templates/product.html:1043
+#: templates/product.html:1044
 msgid "Suggested max number of chars is 125"
-msgstr ""
-
-#: templates/product.html:1562 templates/send-email.html:404
-#: templates/transfer-funds.html:157 templates/transfer-funds.html:261
-msgid "Additional notes"
-msgstr ""
-
-#: templates/product_client.html:187 templates/store.html:582
-msgid "More"
 msgstr ""
 
 #: templates/products.html:332
@@ -2928,65 +3351,65 @@ msgstr ""
 msgid "Araxi Travel Logo"
 msgstr ""
 
-#: templates/public.html:102
+#: templates/public.html:103
 msgid "Contact and Follow"
 msgstr ""
 
-#: templates/public.html:103
+#: templates/public.html:104
 msgid "123 Street Name"
 msgstr ""
 
-#: templates/public.html:103
+#: templates/public.html:104
 msgid "City, State, 12345"
 msgstr ""
 
-#: templates/public.html:118
+#: templates/public.html:119
 msgid "Subscribe to us!"
 msgstr ""
 
-#: templates/public.html:119
+#: templates/public.html:120
 msgid "Be the first to know about upcoming events and new opportunities."
 msgstr ""
 
-#: templates/public.html:120 templates/public.html:497
+#: templates/public.html:121 templates/public.html:498
 msgid "Please specify valid email address!"
 msgstr ""
 
-#: templates/public.html:139
+#: templates/public.html:140
 msgid "Your email:"
 msgstr ""
 
-#: templates/public.html:143
+#: templates/public.html:144
 msgid "Your name:"
 msgstr ""
 
-#: templates/public.html:143
+#: templates/public.html:144
 msgid "John Snow"
 msgstr ""
 
-#: templates/public.html:150
+#: templates/public.html:151
 msgid "You message"
 msgstr ""
 
-#: templates/public.html:165
+#: templates/public.html:166
 msgid ""
 "Thank you for visiting! Our platform is still under construction. Buying "
 "options will be available soon."
 msgstr ""
 
-#: templates/public.html:184
+#: templates/public.html:185
 msgid "Home"
 msgstr ""
 
-#: templates/public.html:185
+#: templates/public.html:186
 msgid "Favorites"
 msgstr ""
 
-#: templates/public.html:186
+#: templates/public.html:187
 msgid "Events"
 msgstr ""
 
-#: templates/public.html:187
+#: templates/public.html:188
 msgid "Activities"
 msgstr ""
 
@@ -3039,49 +3462,46 @@ msgstr ""
 msgid "Past"
 msgstr ""
 
-#: templates/slideshow.html:31
+#: templates/slideshow.html:20 templates/slideshow.html:204
+#: templates/slideshow.html:256
+msgid "Add to cart"
+msgstr ""
+
+#: templates/slideshow.html:59
 msgid "No spot left"
 msgstr ""
 
-#: templates/slideshow.html:34 templates/slideshow.html:36
-#: templates/slideshow.html:40
+#: templates/slideshow.html:62 templates/slideshow.html:64
+#: templates/slideshow.html:68
 msgid "Gallery"
 msgstr ""
 
-#: templates/slideshow.html:48 templates/slideshow.html:71
+#: templates/slideshow.html:76 templates/slideshow.html:99
 msgid "Previous photo"
 msgstr ""
 
-#: templates/slideshow.html:51 templates/slideshow.html:74
+#: templates/slideshow.html:79 templates/slideshow.html:102
 msgid "Next photo"
 msgstr ""
 
-#: templates/slideshow.html:61
+#: templates/slideshow.html:89
 #, python-format
 msgid "Photo %(num)s"
 msgstr ""
 
-#: templates/slideshow.html:69
+#: templates/slideshow.html:97
 msgid "Photo viewer"
 msgstr ""
 
-#: templates/slideshow.html:154 templates/slideshow.html:209
-msgid "Participation is free"
-msgstr ""
-
-#: templates/slideshow.html:163 templates/slideshow.html:217
+#: templates/slideshow.html:196 templates/slideshow.html:248
 msgid "left in stock"
 msgstr ""
 
-#: templates/slideshow.html:170 templates/slideshow.html:224
-msgid "Add to cart"
-msgstr ""
-
-#: templates/slideshow.html:177 templates/slideshow.html:231
+#: templates/slideshow.html:208 templates/slideshow.html:260
 msgid "For+1"
 msgstr ""
 
-#: templates/slideshow.html:181 templates/slideshow.html:235
+#: templates/slideshow.html:212 templates/slideshow.html:264
 msgid "person+1"
 msgstr ""
 
@@ -3094,10 +3514,11 @@ msgid "Translate Specifications for Product Type"
 msgstr ""
 
 #: templates/sp-specifications.html:10 templates/sp-specifications.html:557
+#: templates/vehicle.html:184
 msgid "The field name to be translated:"
 msgstr ""
 
-#: templates/sp-specifications.html:198
+#: templates/sp-specifications.html:198 templates/vehicle.html:173
 msgid "Translate from"
 msgstr ""
 
@@ -3216,5 +3637,46 @@ msgstr ""
 
 #: templates/transfers.html:308 templates/transfers.html:309
 msgid "Filter by staff member"
+msgstr ""
+
+#: templates/vehicle.html:7
+msgid "Edit Vehicle"
+msgstr ""
+
+#: templates/vehicle.html:9
+msgid "Translate Vehicle"
+msgstr ""
+
+#: templates/vehicle.html:181 templates/vehicles.html:127
+#: templates/vehicles.html:139
+msgid "Vehicle type"
+msgstr ""
+
+#: templates/vehicle.html:184
+msgid "e.g. Sedan, Jeep, Minibus"
+msgstr ""
+
+#: templates/vehicle.html:188 templates/vehicle.html:192
+#: templates/vehicles.html:128 templates/vehicles.html:140
+msgid "Seats"
+msgstr ""
+
+#: templates/vehicle.html:188 templates/vehicle.html:216
+msgid "Seats, order and status are the same in every language."
+msgstr ""
+
+#: templates/vehicle.html:197 templates/vehicles.html:129
+#: templates/vehicles.html:141
+msgid "Display order"
+msgstr ""
+
+#: templates/vehicle.html:208
+msgid ""
+"Seats: how many passengers the vehicle takes. Clients can't book a bigger"
+" group for it."
+msgstr ""
+
+#: templates/vehicle.html:209
+msgid "Display order: the other vehicles move one place up or down to make room."
 msgstr ""
 

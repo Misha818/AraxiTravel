@@ -407,3 +407,179 @@ Database change (needed once on every server, e.g. production, before deploying 
   cannot inject markup; if the formatting does not match the text, the plain text is shown.
 - Editor: static/JS/slide-text-editor.js (Quill 1.3.6, one line, max 255 characters) and
   static/css/slide-form.css, shared by add_slide.html and edit_slide.html.
+
+# Prices by vehicle / age group, guide prices, notes settings (Staff > Add / Edit Price, Vehicles)
+
+Add Price and Edit Price set a price in one of three ways (product_type.PricingBasis):
+0 = fixed (product_type.Price), 1 = by vehicle (v_price, per vehicle), 2 = by age group
+(age_price, per person). Guide prices (guide_price, per group) work with any of them; the guide
+languages are every row of `languages`, and "No guide" is not stored (offered for free unless
+product_type.GuideRequired is 1: then the client must choose a guide language, and the product
+header's "From" price includes the cheapest guide).
+In every price table an option without a row is not offered, and 0 means free. The rows belong to
+one language's product_type, so each language version has its own prices.
+- With vehicle / age pricing product_type.Price only keeps the lowest non-zero option price; the
+  final price is worked out from the options. The product header's "From" price is the lowest
+  non-zero price over all of them (products.productHeaderData).
+- Vehicles: Staff > Vehicles (Editor role), one `vehicle` row per language linked by
+  vehicle_relatives.Ref_Key; the name is per language, Seats / Order / Status are shared.
+- Age groups: the `age` table (Infant 0-2, Child 3-11, Teen 12-15, Adult 16-64, Senior 65+); their
+  names are translated in the .po files (templates/_price_options.html).
+- Who can join: with fixed and vehicle pricing the allowed age groups are pt_age rows ("Who can
+  join" checkboxes, all checked by default); with age group pricing the groups that have a price
+  (empty = not allowed, 0 = free). Everyone counts toward the group size, the vehicle's seats and
+  the stock, infants too. product_type.AdultRequired: a booking needs an Adult or a Senior.
+- product_type.NotesEnabled / NotesRequired: whether the client can / must write notes.
+- Specification fields are shown by their category (Text, Number, Yes/No, Date, Date and time,
+  Location). A Location is an address or a Google Maps link (pasted "Embed a map" code is turned
+  into its link); it is shown with Google's key-free embedded map, so the
+  Content-Security-Policy allows frames from www.google.com and maps.google.com.
+- Code: helpers above price_header_product() in app.py, templates/_price_options.html,
+  static/JS/price-options.js, static/css/price-options.css, templates/vehicles.html, vehicle.html.
+
+Database change (needed once on every server, e.g. production, before deploying this code;
+Dump.sql already has it for new databases):
+
+    ALTER TABLE `product_type`
+        ADD COLUMN `PricingBasis` INT NOT NULL DEFAULT 0,
+        ADD COLUMN `NotesEnabled` INT NOT NULL DEFAULT 1,
+        ADD COLUMN `NotesRequired` INT NOT NULL DEFAULT 0,
+        ADD COLUMN `GuideRequired` INT NOT NULL DEFAULT 0,
+        ADD COLUMN `AdultRequired` INT NOT NULL DEFAULT 0;
+
+    ALTER TABLE `product_type_details` MODIFY `Text` TEXT;
+
+    CREATE TABLE `vehicle` (
+        `ID` INT AUTO_INCREMENT,
+        `Type` VARCHAR(255),
+        `Seats` INT,
+        `Order` INT,
+        `Status` INT,
+        PRIMARY KEY (`ID`)
+    ) ENGINE=InnoDB;
+
+    CREATE TABLE `vehicle_relatives` (
+        `ID` INT AUTO_INCREMENT,
+        `Ref_Key` INT,
+        `Vehicle_ID` INT,
+        `Language_ID` INT,
+        `User_ID` INT,
+        `Status` INT,
+        PRIMARY KEY (`ID`)
+    ) ENGINE=InnoDB;
+
+    CREATE TABLE `v_price` (
+        `ID` INT AUTO_INCREMENT,
+        `Price` INT,
+        `vehicleID` INT,
+        `productTypeID` INT,
+        PRIMARY KEY (`ID`)
+    ) ENGINE=InnoDB;
+
+    CREATE TABLE `age` (
+        `ID` INT AUTO_INCREMENT,
+        `ageGroups` VARCHAR(255),
+        `ageRange` VARCHAR(255),
+        `Order` INT,
+        PRIMARY KEY (`ID`)
+    ) ENGINE=InnoDB;
+
+    CREATE TABLE `age_price` (
+        `ID` INT AUTO_INCREMENT,
+        `Price` INT,
+        `ageID` INT,
+        `productTypeID` INT,
+        PRIMARY KEY (`ID`)
+    ) ENGINE=InnoDB;
+
+    CREATE TABLE `pt_age` (
+        `ID` INT AUTO_INCREMENT,
+        `ageID` INT,
+        `productTypeID` INT,
+        PRIMARY KEY (`ID`)
+    ) ENGINE=InnoDB;
+
+    CREATE TABLE `guide_price` (
+        `ID` INT AUTO_INCREMENT,
+        `Price` INT,
+        `languageID` INT,
+        `productTypeID` INT,
+        PRIMARY KEY (`ID`)
+    ) ENGINE=InnoDB;
+
+    INSERT INTO `age` (`ageGroups`, `ageRange`, `Order`)
+    VALUES
+        ('Infant', '0-2', 0),
+        ('Child', '3-11', 1),
+        ('Teen', '12-15', 2),
+        ('Adult', '16-64', 3),
+        ('Senior', '65+', 4);
+
+    -- existing prices: fixed and vehicle prices let every age group join
+    INSERT INTO `pt_age` (`ageID`, `productTypeID`)
+    SELECT `age`.`ID`, `product_type`.`ID` FROM `product_type` CROSS JOIN `age`
+    WHERE IFNULL(`product_type`.`PricingBasis`, 0) IN (0, 1);
+
+    INSERT INTO `actions` (`ID`, `Action`, `ActionDir`, `ActionName`, `ActionGroup`, `ActionType`, `Img`)
+    VALUES
+        (89, 'vehicles', 'vehicles', 'Vehicles', 20, 1, 'fas fa-car'),
+        (90, 'add_vehicle_view', 'add-vehicle', 'Add Vehicle', 20, 1, 'fas fa-plus'),
+        (91, 'add_vehicle', 'add_vehicle', 'Add Vehicle', 20, 2, ''),
+        (92, 'edit_vehicle_view', 'edit-vehicle/', 'Edit Vehicle', 20, 2, ''),
+        (93, 'edit_vehicle', 'edit_vehicle', 'Edit Vehicle', 20, 2, '');
+
+    UPDATE `rol` SET `ActionIDs` = CONCAT(`ActionIDs`, ',89,90,91,92,93') WHERE `Rol` = 'Editor' AND NOT FIND_IN_SET('89', `ActionIDs`);
+
+# Booking on the service page and buy-now page (vehicle, age groups, guide, notes, terms)
+
+- Service page (slideshow.html): each price card asks who is coming (a - / + counter per age group
+  that can join; it replaces the people dropdown, the stock / order limit and the vehicle's seats
+  cap the total), offers its vehicles and its guides ("No guide" or a guide language; the page's
+  language is chosen first when it is offered). "Apply" opens /buy-now/<PT_Ref_Key>-<people>?vehicle=
+  <vehicle ID>&guide=<languages.Language_ID>&ages=<age ID>:<count>,...
+- Buy-now page: the same counters, vehicle and guide; the counters add and remove the tickets (one per
+  person, each labelled with its age group); the client's additional notes (when the price allows
+  them; required if set so); the terms and conditions checkbox (required, links to /terms). The
+  price is shown from /booking-quote.
+- booking.py works out every booking's price (booking_quote): fixed = Price x people, vehicle = the
+  vehicle's price, age group = the sum of each person's age group price; + the guide's price (per
+  group). Every booking gives each person's age group (one that can join) and needs an adult when
+  the price requires one. /checkout, the promo code check and both pages use it, so the amount charged is always the
+  server's. One person is still one ticket and one unit of stock; each unit is charged total / people.
+- What was booked is kept with the order in booking_details / booking_ages (names and prices copied)
+  and shown to staff on Orders > order details.
+- Code: booking.py, static/JS/booking.js, static/css/booking.css, templates/_booking_text.html.
+
+Database change (needed once on every server, e.g. production, before deploying this code;
+Dump.sql already has it for new databases):
+
+    CREATE TABLE `booking_details` (
+        `ID` INT AUTO_INCREMENT,
+        `payment_details_id` INT,
+        `ptRefKey` INT,
+        `productTypeID` INT,
+        `PricingBasis` INT,
+        `vehicleID` INT,
+        `vehicleType` VARCHAR(255),
+        `vehicleSeats` INT,
+        `vehiclePrice` INT,
+        `guideLanguageID` INT,
+        `guideLanguage` VARCHAR(100),
+        `guidePrice` INT,
+        `people` INT,
+        `total` FLOAT,
+        `notes` TEXT,
+        `termsAccepted` INT,
+        `created` DATETIME,
+        PRIMARY KEY (`ID`)
+    ) ENGINE=InnoDB;
+
+    CREATE TABLE `booking_ages` (
+        `ID` INT AUTO_INCREMENT,
+        `bookingID` INT,
+        `ageID` INT,
+        `ageGroup` VARCHAR(255),
+        `people` INT,
+        `price` INT,
+        PRIMARY KEY (`ID`)
+    ) ENGINE=InnoDB;

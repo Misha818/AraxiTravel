@@ -305,17 +305,20 @@
         });
 
         imgElement.classList.add('selectedThumbnail');
-        updateSpssButton();
+        updatePriceTitle();
     }
 
-    // The show/hide-specifications button is only needed when the price on show has specifications
-    function updateSpssButton() {
-        const btn = document.querySelector('.spss-button');
-        if (!btn) {
+    // The price section's heading (slideshow.html, data-price-title) shows the title of the price on show,
+    // with that price's Edit Price / Add To Store links for staff
+    function updatePriceTitle() {
+        const heading = document.querySelector('[data-price-title]');
+        const shown = [...document.querySelectorAll('.productType')].find(block => block.style.display !== 'none');
+        const title = shown && shown.querySelector('.subproduct');
+        if (!heading || !title) {
             return;
         }
-        const shown = [...document.querySelectorAll('.productType')].find(block => block.style.display !== 'none');
-        btn.classList.toggle('no-spss', !(shown && shown.querySelector('.spss')));
+        heading.textContent = title.textContent.trim();
+        heading.setAttribute('data-bs-content', title.getAttribute('data-bs-content') || '');
     }
 
 document.addEventListener("DOMContentLoaded", function() {
@@ -367,31 +370,7 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
-    updateSpssButton();
-
-  
-
-    function toggle_spss_elements() {
-        document.querySelectorAll('.spss').forEach(el => {
-            el.classList.toggle('spss-view');
-          });
-          
-    }
-
-    document.querySelectorAll('.spss-button i').forEach(btn => {
-        btn.addEventListener('click', function() {
-            toggle_spss_elements();
-            if (btn.classList.contains('fa-circle-up')){
-                btn.classList.remove('fa-circle-up');
-                btn.classList.add('fa-circle-down');
-            } else {
-                btn.classList.remove('fa-circle-down');
-                btn.classList.add('fa-circle-up');
-            }
-        });
-    
-
-    });
+    updatePriceTitle();
 
     function get_max_prch_qty(ptID, callback) {
 
@@ -469,6 +448,10 @@ document.addEventListener("DOMContentLoaded", function() {
     quantities.forEach(quantity => {
         quantity.addEventListener('change', function(e) {
             let selectParentNode = this.parentNode;
+            // cards with booking choices (vehicle, guide, age groups) show their price with booking.js
+            if (selectParentNode.parentNode.querySelector('[data-booking]') && document.getElementById('bookingData')) {
+                return;
+            }
             let ptID = selectParentNode.querySelector('.buy-btn').value;
             let selectedOption = this.value;
             get_max_prch_qty(ptID, function(maxPrchQty) {

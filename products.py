@@ -836,7 +836,10 @@ def constructPrData(RefKey, productStatus, languageID=''):
 def productHeaderData(productID, thumbnail, languageID):
     """Header of the public product page (product_client.html): its photo and the lowest price.
     image: first photo of the product's gallery, else its thumbnail, else None.
-    minPrice / priceCount: active price options in this language (None / 0 when there are none)."""
+    minPrice / priceCount: active price options in this language (None / 0 when there are none).
+    minPrice is the lowest non-zero price (0 when every price is free). A price set by vehicle or by
+    age group (product_type.PricingBasis 1 / 2) counts with its vehicle (active ones) / age group prices,
+    plus its cheapest guide when it requires a guide."""
     image = None
     resultImg = sqlSelect("""SELECT `Name` FROM `slider`
                              WHERE `ProductID` = %s AND `Type` = 1
@@ -846,16 +849,52 @@ def productHeaderData(productID, thumbnail, languageID):
     elif thumbnail:
         image = 'images/pr_thumbnails/' + thumbnail
 
-    resultPrice = sqlSelect("""SELECT MIN(`product_type`.`Price`) AS `minPrice`, COUNT(*) AS `priceCount`
+    # every price this product has: the fixed one, or the ones of its vehicles / age groups
+    resultPrice = sqlSelect("""SELECT `product_type`.`ID`, `product_type`.`Price` AS `Price`
                                FROM `product_type`
                                LEFT JOIN `product_type_relatives` ON `product_type_relatives`.`PT_ID` = `product_type`.`ID`
                                WHERE `product_type`.`Product_ID` = %s
                                    AND `product_type_relatives`.`Language_ID` = %s
-                                   AND `product_type`.`Status` = 1;""", (productID, languageID), True)
+                                   AND `product_type`.`Status` = 1
+                                   AND IFNULL(`product_type`.`PricingBasis`, 0) = 0
+                               UNION ALL
+                               SELECT `product_type`.`ID`, `v_price`.`Price`
+                               FROM `product_type`
+                               LEFT JOIN `product_type_relatives` ON `product_type_relatives`.`PT_ID` = `product_type`.`ID`
+                               JOIN `v_price` ON `v_price`.`productTypeID` = `product_type`.`ID`
+                               JOIN `vehicle` ON `vehicle`.`ID` = `v_price`.`vehicleID` AND `vehicle`.`Status` = 1
+                               WHERE `product_type`.`Product_ID` = %s
+                                   AND `product_type_relatives`.`Language_ID` = %s
+                                   AND `product_type`.`Status` = 1
+                                   AND `product_type`.`PricingBasis` = 1
+                               UNION ALL
+                               SELECT `product_type`.`ID`, `age_price`.`Price`
+                               FROM `product_type`
+                               LEFT JOIN `product_type_relatives` ON `product_type_relatives`.`PT_ID` = `product_type`.`ID`
+                               JOIN `age_price` ON `age_price`.`productTypeID` = `product_type`.`ID`
+                               WHERE `product_type`.`Product_ID` = %s
+                                   AND `product_type_relatives`.`Language_ID` = %s
+                                   AND `product_type`.`Status` = 1
+                                   AND `product_type`.`PricingBasis` = 2;""",
+                            (productID, languageID) * 3, True)
+    # a price that requires a guide (product_type.GuideRequired) can't be booked for less than its cheapest guide
+    resultGuide = sqlSelect("""SELECT `product_type`.`ID`, MIN(`guide_price`.`Price`) AS `Price`
+                               FROM `product_type`
+                               LEFT JOIN `product_type_relatives` ON `product_type_relatives`.`PT_ID` = `product_type`.`ID`
+                               JOIN `guide_price` ON `guide_price`.`productTypeID` = `product_type`.`ID`
+                               WHERE `product_type`.`Product_ID` = %s
+                                   AND `product_type_relatives`.`Language_ID` = %s
+                                   AND `product_type`.`Status` = 1
+                                   AND `product_type`.`GuideRequired` = 1
+                               GROUP BY `product_type`.`ID`;""", (productID, languageID), True)
+    requiredGuide = {row['ID']: row['Price'] or 0 for row in resultGuide['data']}
+
     minPrice, priceCount = None, 0
-    if resultPrice['length'] > 0 and resultPrice['data'][0]['minPrice'] is not None:
-        minPrice = resultPrice['data'][0]['minPrice']
-        priceCount = resultPrice['data'][0]['priceCount']
+    prices = [row['Price'] + requiredGuide.get(row['ID'], 0) for row in resultPrice['data'] if row['Price'] is not None]
+    if prices:
+        nonZero = [price for price in prices if price > 0]
+        minPrice = min(nonZero) if nonZero else 0
+        priceCount = len(prices)   # more than one => "From"
 
     return {'image': image, 'minPrice': minPrice, 'priceCount': priceCount}
 

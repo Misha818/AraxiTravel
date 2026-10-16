@@ -1,0 +1,350 @@
+/* Booking a price: the choices on the service page's price cards (slideshow.html) and on the
+   buy-now page (static/JS/booking.js) */
+
+.booking:empty {
+    display: none;
+}
+
+.booking,
+#bookingCard {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 10px 0;
+}
+
+#bookingCard[hidden] {
+    display: none;
+}
+
+.bk-choice {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.bk-choice > legend,
+.bk-title {
+    float: none;
+    width: auto;
+    margin: 0 0 6px 0;
+    padding: 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--navy-900);
+}
+
+.bk-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.bk-pill {
+    position: relative;
+    margin: 0;
+    cursor: pointer;
+}
+
+.bk-pill input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.bk-pill span {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 96px;
+    padding: 7px 12px;
+    text-align: left;
+    color: var(--navy-900);
+    background-color: var(--cream-50);
+    border: 1px solid var(--cream-200);
+    border-radius: 8px;
+    transition: background-color .15s ease, color .15s ease, border-color .15s ease;
+}
+
+.bk-pill:hover span {
+    border-color: var(--river-600);
+}
+
+/* the names take the colour of their pill or row */
+.bk-pill strong,
+.productType .bk-pill strong,
+.productType .bk-age-name strong {
+    font-size: 14px;
+    color: inherit !important;
+}
+
+.bk-pill small {
+    font-size: 12px;
+    opacity: .85;
+}
+
+.bk-pill input:checked + span {
+    color: #fff;
+    background-color: var(--river-600);
+    border-color: var(--river-600);
+}
+
+.bk-pill input:focus-visible + span {
+    outline: 3px solid var(--navy-900);
+    outline-offset: 2px;
+}
+
+.bk-choice.invalid .bk-pill span {
+    border-color: red;
+}
+
+/* who is coming: a - / + counter per age group */
+.bk-age-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 4px 0;
+}
+
+.bk-age-row + .bk-age-row {
+    border-top: 1px solid var(--cream-200);
+}
+
+.bk-age-name {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    color: var(--navy-900);
+}
+
+.bk-age-name small {
+    font-size: 12px;
+    color: var(--ink-600);
+}
+
+.bk-stepper {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 6px;
+}
+
+.bk-stepper button {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    font-size: 18px;
+    line-height: 1;
+    color: var(--river-600);
+    background-color: var(--cream-50);
+    border: 1px solid var(--river-600);
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.bk-stepper button:hover:not(:disabled) {
+    background-color: var(--river-100);
+}
+
+.bk-stepper button:focus-visible {
+    outline: 3px solid var(--navy-900);
+    outline-offset: 2px;
+}
+
+.bk-stepper button:disabled {
+    color: var(--ink-400);
+    border-color: var(--cream-200);
+    cursor: not-allowed;
+}
+
+.bk-stepper output {
+    min-width: 22px;
+    text-align: center;
+    font-weight: 700;
+    color: var(--navy-900);
+}
+
+.bk-age-total {
+    margin: 4px 0 0 0;
+    font-size: 14px;
+    font-weight: 700;
+    text-align: right;
+    color: var(--navy-900);
+}
+
+.bk-ages[hidden] {
+    display: none;
+}
+
+/* the card's people dropdown is replaced by the counters (it still keeps the total) */
+.bk-counted > p,
+.bk-counted > select.quantity {
+    display: none;
+}
+
+/* buy-now: the counters add and remove the tickets, each shows its age group */
+.bk-managed .tkt-add,
+.bk-managed .tkt-remove {
+    display: none !important;
+}
+
+.bk-age-tag {
+    margin: 0;
+    font-weight: 700;
+    color: var(--river-600);
+}
+
+.bk-message {
+    margin: 0;
+    color: red;
+    font-size: 14px;
+}
+
+.bk-message:empty {
+    display: none;
+}
+
+.bk-message.is-success {
+    color: var(--river-600);
+}
+
+.bk-hint {
+    margin: 0;
+    font-size: 14px;
+    color: var(--ink-600);
+}
+
+/* the price of the booking on the buy-now page */
+#booking-summary .bk-pending {
+    font-size: 14px;
+    color: var(--ink-600);
+}
+
+#booking-summary .bk-error {
+    color: red;
+}
+
+#booking-summary .bk-total {
+    background-color: var(--cream-50);
+}
+
+/* notes and terms (buy-now page) */
+.bk-notes textarea {
+    min-height: 90px;
+}
+
+.bk-terms a {
+    color: var(--river-600);
+}
+
+/* a Location specification value on the price card */
+.spss .spss-map {
+    display: block;
+    width: 100%;
+    height: 180px;
+    margin-top: 6px;
+    border: 0;
+    border-radius: 6px;
+}
+
+/* ---- The price card's actions (slideshow.html booking_buttons) and the cart page's "Book Now":
+   outlined in the logo ochre, no fill until hovered ---- */
+.bk-btn {
+    --bk-btn-color: #c59054e6;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 44px;
+    margin: 0;
+    padding: 0 22px;
+    font: 600 15px/1 var(--font-body, sans-serif);
+    letter-spacing: .01em;
+    color: var(--bk-btn-color);
+    background: transparent;
+    border: 1.5px solid var(--bk-btn-color);
+    border-radius: 999px;
+    box-shadow: none;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color .2s, border-color .2s, color .2s, box-shadow .2s;
+}
+
+/* styles.css colours .buy-btn (and everything in it) red: the outline wins inside the card */
+.cart-container .bk-btn,
+.cart-container .bk-btn * {
+    color: var(--bk-btn-color);
+    background: transparent;
+}
+
+.bk-btn:hover,
+.cart-container .bk-btn:hover,
+.cart-container .bk-btn:hover * {
+    color: var(--bk-btn-color);
+    background-color: rgba(197, 144, 84, .12);
+}
+
+.bk-btn:hover {
+    border-color: #c59054;
+    box-shadow: 0 10px 22px -14px rgba(197, 144, 84, .9);
+}
+
+.cart-container .bk-btn:hover * {
+    background-color: transparent;
+}
+
+.bk-btn:focus-visible {
+    outline: 2px solid var(--navy-900, #072339);
+    outline-offset: 3px;
+}
+
+.bk-btn:disabled {
+    cursor: progress;
+    opacity: .6;
+}
+
+.bk-btn svg {
+    width: 20px;
+    height: 20px;
+    flex: none;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.bk-btn--book::after {
+    content: "\2192";
+    font-size: 17px;
+    transition: transform .2s;
+}
+
+.bk-btn--book:hover::after {
+    transform: translateX(3px);
+}
+
+/* added: a tick for a moment */
+.bk-btn--cart.is-added {
+    background-color: rgba(197, 144, 84, .12);
+}
+
+.cart-container:has(.bk-btn) {
+    gap: 10px;
+}
+
+/* "Added to your cart" (the card's message, just above the buttons), with a link to the cart */
+.bk-message a {
+    margin-left: 6px;
+    font-weight: 600;
+    color: var(--navy-900);
+}
+
+@media (max-width: 480px) {
+    .cart-container .bk-btn {
+        flex: 1 1 0;
+        padding: 0 14px;
+    }
+}
