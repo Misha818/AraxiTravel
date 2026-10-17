@@ -195,6 +195,10 @@
                 <h5 class="mb-3">{{ _('Booking') }}</h5>
                 <table class="table table-bordered">
                     <tbody>
+                        <tr>
+                            <th scope="row">{{ _('Date') }}</th>
+                            <td colspan="2">{{ format_date(booking['bookingDate'], 'full') if booking['bookingDate'] else '—' }}</td>
+                        </tr>
                         {% if booking['vehicleType'] %}
                         <tr>
                             <th scope="row">{{ _('Vehicle') }}</th>

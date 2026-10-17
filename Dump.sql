@@ -387,6 +387,7 @@ CREATE TABLE `booking_details` (
     `guideLanguage` VARCHAR(100),
     `guidePrice` INT,
     `people` INT,
+    `bookingDate` DATE, -- the day booked for
     `total` FLOAT,
     `notes` TEXT, -- the client's additional notes
     `termsAccepted` INT,

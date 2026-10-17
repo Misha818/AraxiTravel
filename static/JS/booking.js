@@ -1,8 +1,10 @@
 // Booking a price on the public pages (booking.py has the rules and works out the amount):
 //   service page (slideshow.html) - each price card: who is coming (a count per age group that can
 //       join), vehicle and guide choice, the price of the choice; "Book Now" opens
-//       /buy-now/<ptID>-<people>?vehicle=&guide=&ages=<age ID>:<count>,... and "Add to cart" keeps the
-//       same choices in the cart (/cart/add, cart.py), whose page books them with the same link
+//       /buy-now/<ptID>-<people>?vehicle=&guide=&ages=<age ID>:<count>,...&date=<YYYY-MM-DD> and "Add to
+//       cart" keeps the same choices in the cart (/cart/add, cart.py), whose page books them with the same
+//       link. Every booking is for a day (booking.py booking_date_range); when the cart already has a
+//       booking for that day, the client is asked first (confirmSameDay)
 //   buy-now page (buy-now.html)   - the same choices; one ticket per person, each tagged with its age
 //       group; the price from /booking-quote, the client's notes and the terms agreement
 // Everyone counts toward the group size, the vehicle's seats and the stock, infants too.
@@ -45,13 +47,66 @@
         return options.ages.find(a => a.ID === Number(id)) || null;
     }
 
-    // A row of choice pills (radio buttons): items [{value, label, sub}]
-    function pills(name, legend, items, selected) {
+    // ---------- Sections that open and close: who is coming, vehicle, guide ----------
+    // Closed at first: the heading is a button that opens and closes the section (smoothly: the panel's one
+    // grid row goes from 0fr to 1fr, booking.css .bk-fold__panel) and, while it's closed, shows the choice in
+    // short. Returns {body, summary}: the section's content goes in body, summary.textContent is the short form.
+    function makeFoldable(fieldset, title, id) {
+        fieldset.classList.add('bk-fold');
+        const legend = document.createElement('legend');
+        const toggle = document.createElement('button');
+        toggle.type = 'button';
+        toggle.className = 'bk-fold__toggle';
+        toggle.setAttribute('aria-controls', id);
+        const heading = document.createElement('span');
+        heading.className = 'bk-fold__title';
+        heading.textContent = title;
+        const summary = document.createElement('span');
+        summary.className = 'bk-fold__summary';
+        const chevron = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        chevron.setAttribute('viewBox', '0 0 24 24');
+        chevron.setAttribute('aria-hidden', 'true');
+        chevron.setAttribute('class', 'bk-fold__chevron');
+        chevron.innerHTML = '<path d="M6 9l6 6 6-6"/>';
+        toggle.appendChild(heading);
+        toggle.appendChild(summary);
+        toggle.appendChild(chevron);
+        legend.appendChild(toggle);
+        fieldset.appendChild(legend);
+
+        const panel = document.createElement('div');
+        panel.className = 'bk-fold__panel';
+        panel.id = id;
+        const inner = document.createElement('div');
+        inner.className = 'bk-fold__inner';
+        const body = document.createElement('div');
+        body.className = 'bk-fold__body';
+        inner.appendChild(body);
+        panel.appendChild(inner);
+        fieldset.appendChild(panel);
+
+        setFold(fieldset, false);
+        toggle.addEventListener('click', () => setFold(fieldset, !fieldset.classList.contains('is-open')));
+        return { body: body, summary: summary };
+    }
+
+    // opens (true) or closes a section made by makeFoldable; closed, its content can't be reached with the
+    // keyboard
+    function setFold(fieldset, open) {
+        if (!fieldset || !fieldset.classList.contains('bk-fold')) {
+            return;
+        }
+        fieldset.classList.toggle('is-open', open);
+        fieldset.querySelector('.bk-fold__toggle').setAttribute('aria-expanded', String(open));
+        fieldset.querySelector('.bk-fold__panel').inert = !open;
+    }
+
+    // A row of choice pills (radio buttons) that opens and closes: items [{value, label, sub}]; className
+    // names the section (bk-vehicle, bk-guide). Closed, it shows the chosen pill's name
+    function pills(name, legend, items, selected, className) {
         const fieldset = document.createElement('fieldset');
-        fieldset.className = 'bk-choice';
-        const title = document.createElement('legend');
-        title.textContent = legend;
-        fieldset.appendChild(title);
+        fieldset.className = 'bk-choice ' + (className || '');
+        const fold = makeFoldable(fieldset, legend, name + 'Panel');
         const row = document.createElement('div');
         row.className = 'bk-pills';
         items.forEach(item => {
@@ -75,7 +130,15 @@
             label.appendChild(text);
             row.appendChild(label);
         });
-        fieldset.appendChild(row);
+        fold.body.appendChild(row);
+
+        function showChoice() {
+            const checked = row.querySelector('input:checked');
+            fold.summary.textContent = checked ? checked.parentNode.querySelector('strong').textContent : T.notChosen;
+            fold.summary.classList.toggle('is-empty', !checked);
+        }
+        showChoice();
+        fieldset.addEventListener('change', showChoice);
         return fieldset;
     }
 
@@ -89,12 +152,13 @@
 
     // ---------- Who is coming: a − / + counter per age group that can join ----------
     // counts: {ageID: n}. onChange(ageID, +1 / -1) asks for a change; render() shows counts and limits.
+    // Opens and closes (makeFoldable); closed, it shows who is coming in short.
     function ageCounters(options, name, onChange) {
         const fieldset = document.createElement('fieldset');
         fieldset.className = 'bk-choice bk-ages';
-        const legend = document.createElement('legend');
-        legend.textContent = T.whoComes;
-        fieldset.appendChild(legend);
+        const fold = makeFoldable(fieldset, T.whoComes, name + 'Ages');
+        const inner = fold.body;
+        const summary = fold.summary;
 
         const rows = {};
         options.ages.forEach(a => {
@@ -132,16 +196,20 @@
 
             row.appendChild(label);
             row.appendChild(stepper);
-            fieldset.appendChild(row);
+            inner.appendChild(row);
             rows[a.ID] = { less: less, more: more, count: count };
         });
 
         const total = document.createElement('p');
         total.className = 'bk-age-total';
-        fieldset.appendChild(total);
+        inner.appendChild(total);
 
         return {
             element: fieldset,
+            // opens the counters (a message about who is coming is shown)
+            open: function () {
+                setFold(fieldset, true);
+            },
             // counts {ageID: n}; max: how many people can come (null while unknown); min: how many must stay
             // (buy-now: one ticket at least; the card can go down to nobody, so any group can be the only one)
             render: function (counts, max, min) {
@@ -154,6 +222,9 @@
                     row.more.disabled = max === null || sum >= max;
                 });
                 total.textContent = peopleText(sum);
+                // closed: who is coming in short, e.g. "Adult × 2, Child × 1"
+                const chosen = options.ages.filter(a => counts[a.ID]).map(a => a.Name + ' × ' + counts[a.ID]);
+                summary.textContent = chosen.length ? chosen.join(', ') : peopleText(0);
             }
         };
     }
@@ -224,6 +295,108 @@
         });
     }
 
+    // ---------- The day of the booking ----------
+    // 'YYYY-MM-DD' as the page's language writes it, e.g. "Saturday, 24 October 2026"
+    function formatDay(day) {
+        const value = new Date(day + 'T00:00:00');
+        try {
+            return value.toLocaleDateString(document.documentElement.lang || undefined,
+                { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+        } catch (error) {
+            return day;
+        }
+    }
+
+    // the date field: a native date picker limited to the days the price can be booked for
+    function dateField(name, options, value) {
+        const fieldset = document.createElement('fieldset');
+        fieldset.className = 'bk-choice bk-date';
+        const legend = document.createElement('legend');
+        legend.id = name + 'DateLabel';
+        legend.textContent = T.date;
+        fieldset.appendChild(legend);
+        const input = document.createElement('input');
+        input.type = 'date';
+        input.name = name + 'date';
+        input.className = 'bk-date-input';
+        input.required = true;
+        input.min = options.dateMin;
+        input.max = options.dateMax;
+        input.value = value || '';
+        input.setAttribute('aria-labelledby', legend.id);
+        fieldset.appendChild(input);
+        return { element: fieldset, input: input };
+    }
+
+    // a day the price can be booked for, or '' (the browser's picker keeps to min / max, typing may not)
+    function validDay(options, value) {
+        return value && value >= options.dateMin && value <= options.dateMax ? value : '';
+    }
+
+    // "Are you sure?" when the cart already has bookings for the same day (titles). Resolves true to go on
+    let dialog = null;
+    function confirmSameDay(day, titles) {
+        if (typeof HTMLDialogElement !== 'function') {
+            return Promise.resolve(window.confirm(fill(T.sameDayText, { date: formatDay(day) }) + '\n' +
+                titles.join('\n') + '\n\n' + T.sameDayQuestion));
+        }
+        if (!dialog) {
+            dialog = document.createElement('dialog');
+            dialog.className = 'bk-dialog';
+            dialog.setAttribute('aria-labelledby', 'bkDialogTitle');
+            dialog.innerHTML = '<form method="dialog"><h2 id="bkDialogTitle"></h2><p class="bk-dialog__text"></p>' +
+                '<ul class="bk-dialog__list"></ul><p class="bk-dialog__question"></p><div class="bk-dialog__actions">' +
+                '<button type="submit" class="bk-btn" value="no" autofocus></button>' +
+                '<button type="submit" class="bk-btn bk-btn--solid" value="yes"></button></div></form>';
+            dialog.querySelector('h2').textContent = T.sameDayTitle;
+            dialog.querySelector('.bk-dialog__question').textContent = T.sameDayQuestion;
+            dialog.querySelector('[value="no"]').textContent = T.otherDay;
+            dialog.querySelector('[value="yes"]').textContent = T.sameDayYes;
+            // a click on the backdrop: no
+            dialog.addEventListener('click', event => {
+                if (event.target === dialog) {
+                    dialog.close('no');
+                }
+            });
+            document.body.appendChild(dialog);
+        }
+        dialog.querySelector('.bk-dialog__text').textContent = fill(T.sameDayText, { date: formatDay(day) });
+        const list = dialog.querySelector('.bk-dialog__list');
+        list.innerHTML = '';
+        titles.forEach(title => {
+            const li = document.createElement('li');
+            li.textContent = title;
+            list.appendChild(li);
+        });
+        dialog.returnValue = '';
+        dialog.showModal();
+        return new Promise(resolve => {
+            dialog.addEventListener('close', () => resolve(dialog.returnValue === 'yes'), { once: true });
+        });
+    }
+
+    // true when nothing else in the cart is for that day, or the client says it's fine. Not counted: the cart
+    // item exceptID (being booked from the cart), and the same booking as the choices params (URLSearchParams
+    // with ptID) when it is in the cart
+    function sameDayOK(day, exceptID, params) {
+        const formData = new FormData();
+        if (params) {
+            params.forEach((value, key) => formData.append(key, value));
+        }
+        formData.set('date', day);
+        formData.append('except', exceptID || '');
+        return fetch('/cart/date-check', { method: 'POST', headers: { 'X-CSRFToken': T.csrf }, body: formData })
+            .then(response => response.json())
+            .then(answer => {
+                T.csrf = answer.newCSRFtoken || T.csrf;
+                return answer.items && answer.items.length ? confirmSameDay(day, answer.items) : true;
+            })
+            .catch(error => {
+                console.error(error);
+                return true;
+            });
+    }
+
     // the first adult group that can join, else the first group
     function defaultCounts(options) {
         const first = options.ages.find(a => a.Adult) || options.ages[0];
@@ -255,6 +428,12 @@
                 return s && s.options.length ? s.options.length : null;
             }
 
+            let selectedDate = '';
+            const day = options.dateMin ? dateField(name, options, '') : null;
+            if (day) {
+                box.appendChild(day.element);
+            }
+
             const counters = ageCounters(options, name, (ageID, step) => {
                 const max = peopleLimit(options, stockMax(), selectedVehicle);
                 if (step > 0 && max !== null && sumCounts(counts) >= max) {
@@ -271,10 +450,10 @@
             if (options.basis === PRICING_VEHICLE && options.vehicles.length) {
                 box.appendChild(pills(name + 'vehicle', T.vehicle, options.vehicles.map(v => ({
                     value: v.ID, label: v.Type, sub: v.SeatsLabel + ' · ' + (v.Price > 0 ? money(v.Price) : T.free)
-                })), selectedVehicle));
+                })), selectedVehicle, 'bk-vehicle'));
             }
             if (options.guides.length) {
-                box.appendChild(pills(name + 'guide', T.guide, guideItems(options), selectedGuide));
+                box.appendChild(pills(name + 'guide', T.guide, guideItems(options), selectedGuide, 'bk-guide'));
             }
             const message = document.createElement('p');
             message.className = 'bk-message';
@@ -318,6 +497,11 @@
             }
 
             box.addEventListener('change', event => {
+                if (event.target.name === name + 'date') {
+                    selectedDate = validDay(options, event.target.value);
+                    event.target.classList.toggle('is-invalid', !selectedDate && !!event.target.value);
+                    showMessage(selectedDate || !event.target.value ? '' : T.dateUnavailable);
+                }
                 if (event.target.name === name + 'vehicle') {
                     selectedVehicle = Number(event.target.value);
                     showMessage('');
@@ -351,16 +535,27 @@
                 if (stockMax() === null) {
                     return null;
                 }
+                if (!selectedDate) {
+                    showMessage(day ? T.chooseDate : T.dateUnavailable);
+                    if (day) {
+                        day.input.classList.add('is-invalid');
+                        day.input.focus();
+                    }
+                    return null;
+                }
                 if (people < 1) {
                     showMessage(T.chooseWho);
+                    counters.open();
                     return null;
                 }
                 if (options.basis === PRICING_VEHICLE && !vehicleByID(options, selectedVehicle)) {
                     showMessage(T.chooseVehicle);
+                    setFold(box.querySelector('.bk-vehicle'), true);
                     return null;
                 }
                 if (options.adultRequired && !hasAdult(options, counts)) {
                     showMessage(T.adultRequired);
+                    counters.open();
                     return null;
                 }
                 const params = new URLSearchParams();
@@ -369,6 +564,7 @@
                 }
                 params.set('guide', selectedGuide);
                 params.set('ages', Object.keys(counts).filter(id => counts[id] > 0).map(id => id + ':' + counts[id]).join(','));
+                params.set('date', selectedDate);
                 return { people: people, params: params };
             }
 
@@ -380,9 +576,20 @@
                     event.preventDefault();
                     event.stopImmediatePropagation();
                     const chosen = choices();
-                    if (chosen) {
-                        window.location.href = '/buy-now/' + options.ptRefKey + '-' + chosen.people + '?' + chosen.params.toString();
+                    if (!chosen || bookBtn.disabled) {
+                        return;
                     }
+                    bookBtn.disabled = true;
+                    const check = new URLSearchParams(chosen.params);
+                    check.set('ptID', options.ptRefKey);
+                    sameDayOK(selectedDate, '', check).then(ok => {
+                        bookBtn.disabled = false;
+                        if (ok) {
+                            window.location.href = '/buy-now/' + options.ptRefKey + '-' + chosen.people + '?' + chosen.params.toString();
+                        } else {
+                            day.input.focus();
+                        }
+                    });
                 });
             }
 
@@ -396,13 +603,31 @@
                         return;
                     }
                     cartBtn.disabled = true;
-                    const formData = new FormData();
-                    formData.append('ptID', options.ptRefKey);
-                    chosen.params.forEach((value, key) => formData.append(key, value));
-                    fetch('/cart/add', { method: 'POST', headers: { 'X-CSRFToken': T.csrf }, body: formData })
-                        .then(response => response.json())
+                    // the server answers status 3 with the cart's other bookings for that day: ask, then send
+                    // again with sameDay=1
+                    function add(sameDay) {
+                        const formData = new FormData();
+                        formData.append('ptID', options.ptRefKey);
+                        chosen.params.forEach((value, key) => formData.append(key, value));
+                        if (sameDay) {
+                            formData.append('sameDay', '1');
+                        }
+                        return fetch('/cart/add', { method: 'POST', headers: { 'X-CSRFToken': T.csrf }, body: formData })
+                            .then(response => response.json())
+                            .then(answer => {
+                                T.csrf = answer.newCSRFtoken || T.csrf;
+                                if (answer.status !== '3') {
+                                    return answer;
+                                }
+                                return confirmSameDay(selectedDate, answer.items).then(ok => ok ? add(true) : null);
+                            });
+                    }
+                    add(false)
                         .then(answer => {
-                            T.csrf = answer.newCSRFtoken || T.csrf;
+                            if (!answer) {
+                                day.input.focus();
+                                return;
+                            }
                             if (answer.status === '0') {
                                 showMessage(answer.answer);
                                 return;
@@ -498,6 +723,32 @@
             return c;
         }
 
+        // ---- the day: the one chosen on the service page, changeable here. Another day that the cart
+        // already has a booking for is asked about (the cart item being booked doesn't count)
+        let bookingDay = options.dateMin ? validDay(options, options.date) : '';
+        const day = options.dateMin ? dateField('bkNow', options, bookingDay) : null;
+        if (day) {
+            card.appendChild(day.element);
+            day.input.addEventListener('change', () => {
+                const value = validDay(options, day.input.value);
+                day.input.classList.toggle('is-invalid', !value);
+                if (!value) {
+                    bookingDay = '';
+                    showMessage(day.input.value ? T.dateUnavailable : '');
+                    return;
+                }
+                sameDayOK(value, options.cartItem).then(ok => {
+                    if (ok) {
+                        bookingDay = value;
+                        showMessage('');
+                    } else {
+                        day.input.value = bookingDay;
+                        day.input.focus();
+                    }
+                });
+            });
+        }
+
         // ---- who is coming, vehicle and guide
         const counters = ageCounters(options, 'bkNow', (ageID, step) => {
             const max = peopleLimit(options, stockMax, vehicle);
@@ -523,16 +774,16 @@
         if (options.basis === PRICING_VEHICLE) {
             card.appendChild(pills('bkVehicle', T.vehicle, options.vehicles.map(v => ({
                 value: v.ID, label: v.Type, sub: v.SeatsLabel + ' · ' + (v.Price > 0 ? money(v.Price) : T.free)
-            })), vehicle));
+            })), vehicle, 'bk-vehicle'));
         }
         if (options.guides.length) {
-            card.appendChild(pills('bkGuide', T.guide, guideItems(options), guide));
+            card.appendChild(pills('bkGuide', T.guide, guideItems(options), guide, 'bk-guide'));
         }
         card.hidden = card.children.length === 0;
         card.addEventListener('change', event => {
             if (event.target.name === 'bkVehicle') {
                 vehicle = Number(event.target.value);
-                card.querySelector('.bk-choice:not(.bk-ages)').classList.remove('invalid');
+                card.querySelector('.bk-vehicle').classList.remove('invalid');
                 // a smaller vehicle: the youngest go first
                 const max = peopleLimit(options, stockMax, vehicle);
                 if (max !== null) {
@@ -752,14 +1003,23 @@
             validate: function () {
                 let ok = true;
                 if (options.basis === PRICING_VEHICLE && !vehicleByID(options, vehicle)) {
-                    const choice = card.querySelector('.bk-choice:not(.bk-ages)');
+                    const choice = card.querySelector('.bk-vehicle');
                     if (choice) {
                         choice.classList.add('invalid');
+                        setFold(choice, true);
                     }
                     ok = false;
                 }
                 if (options.adultRequired && !hasAdult(options, counts())) {
                     showMessage(T.adultRequired);
+                    counters.open();
+                    ok = false;
+                }
+                if (!bookingDay) {
+                    if (day) {
+                        day.input.classList.add('is-invalid');
+                    }
+                    showMessage(day ? T.chooseDate : T.dateUnavailable);
                     ok = false;
                 }
                 if (notes && notes.required && !notes.value.trim()) {
@@ -777,6 +1037,7 @@
                 return {
                     vehicle: vehicle || null,
                     guide: guide || 0,
+                    date: bookingDay,
                     ages: ages(),
                     notes: notes ? notes.value.trim() : '',
                     terms: terms ? terms.checked : false

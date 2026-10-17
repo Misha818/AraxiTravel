@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, jsonify, session, redirect, g, url_for, make_response
 from araxitravel_db import get_db, close_db
 from mysql.connector.pooling import PoolError
-from flask_babel import Babel, _, lazy_gettext as _l, gettext
+from flask_babel import Babel, _, lazy_gettext as _l, gettext, format_date
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from products import productHeaderData, email_text, submit_notes_text, get_pr_order, slidesToEdit, checkCategoryName, checkProductCategoryName, get_RefKey_LangID_by_link, get_article_category_images, get_product_category_images, edit_p_h, submit_reach_text, submit_product_text, add_p_c_sql, edit_p_c_view, edit_a_c_view, edit_p_c_sql, get_product_categories, get_ar_thumbnail_images, get_pr_thumbnail_images, add_product, productDetails, constructPrData, add_product_lang
@@ -175,8 +175,8 @@ MAIN_CURRENCY = os.getenv('MAIN_CURRENCY')
 
 # MAX_ALLOWED_QUANTITY (from .env) is defined in sysadmin.py, which the checkout code there also uses
 from sysadmin import MAX_ALLOWED_QUANTITY
-from booking import get_booking, booking_options, booking_quote, booking_choices_error, save_booking, client_options, NO_GUIDE
-from cart import read_cart, write_cart, cart_count, cart_view, new_cart_item, same_booking, parse_age_counts, MAX_CART_ITEMS
+from booking import get_booking, booking_options, booking_quote, booking_choices_error, save_booking, client_options, parse_booking_date, NO_GUIDE
+from cart import read_cart, write_cart, cart_count, cart_view, cart_items_on, new_cart_item, same_booking, parse_age_counts, iso_date, MAX_CART_ITEMS
 
 SMAIL_API_KEY = os.getenv('SMAIL_API_KEY')
 SMAIL_API = os.getenv('SMAIL_API')
@@ -534,7 +534,7 @@ def change_pr_order():
 
 @app.context_processor
 def inject_babel():
-    return dict(_=gettext)
+    return dict(_=gettext, format_date=format_date)
 
 @app.context_processor
 def inject_locale():
@@ -1269,6 +1269,12 @@ def buy_now(surl):
     cartItem = request.args.get('cart', '')
     cartItem = cartItem if cartItem.isalnum() and len(cartItem) <= 16 else ''
 
+    if bookingData is not None:
+        # the day chosen on the service page (?date=YYYY-MM-DD), if it can still be booked
+        day = parse_booking_date(request.args.get('date', ''), int(key))[0]
+        bookingData['date'] = day.isoformat() if day else None
+        bookingData['cartItem'] = cartItem
+
     return render_template('buy-now.html', prDataGlobal=prDataGlobal, bookingData=bookingData, cartItem=cartItem, paymentMethods=payment_methods, mainCurrency=mainCurrency, newCSRFtoken=newCSRFtoken, current_locale=get_locale())
     
 
@@ -1378,6 +1384,9 @@ def checkout():
             if not isinstance(booking, dict) or bookingOptions is None or len(data['ptData']) != 1:
                 return jsonify({'status': "0", 'answer': gettext('Something went wrong. Please try again!'), 'newCSRFtoken': newCSRFtoken})
             answer = booking_choices_error(bookingOptions, booking.get('notes'), booking.get('terms') is True)
+            bookingDate = None
+            if answer is None:
+                bookingDate, answer = parse_booking_date(booking.get('date'), bookingOptions['ptRefKey'])
             if answer is None:
                 bookingQuote = booking_quote(bookingOptions, len(data['contact_list']), booking.get('vehicle'),
                                              booking.get('guide', NO_GUIDE), booking.get('ages'))
@@ -1460,7 +1469,7 @@ def checkout():
         amount = buffer['totalPrice']
 
         # what was booked, kept with the order (a failure here doesn't stop the order: it is logged)
-        if bookingQuote is not None and save_booking(pdID, bookingOptions, bookingQuote, booking.get('notes'), True) is None:
+        if bookingQuote is not None and save_booking(pdID, bookingOptions, bookingQuote, booking.get('notes'), True, bookingDate) is None:
             app.logger.error("Order %s: the booking details could not be saved", pdID)
         
         # Send data to bank api
@@ -7187,7 +7196,7 @@ def cart(productTypesQuantity=None):
 def cart_add():
     newCSRFtoken = generate_csrf()
     item, answer = new_cart_item(request.form.get('ptID', ''), request.form.get('vehicle'), request.form.get('guide', NO_GUIDE),
-                                 parse_age_counts(request.form.get('ages')), getLangID())
+                                 parse_age_counts(request.form.get('ages')), request.form.get('date'), getLangID())
     if item is None:
         return jsonify({'status': '0', 'answer': answer, 'newCSRFtoken': newCSRFtoken})
 
@@ -7196,10 +7205,31 @@ def cart_add():
         return jsonify({'status': '2', 'answer': gettext('This booking is already in your cart.'), 'count': len(items), 'newCSRFtoken': newCSRFtoken})
     if len(items) >= MAX_CART_ITEMS:
         return jsonify({'status': '0', 'answer': gettext('Your cart is full. Please book or remove something first.'), 'newCSRFtoken': newCSRFtoken})
+    # other bookings for the same day: the client is asked first, then sends it again with sameDay=1
+    sameDay = cart_items_on(items, item['d'], getLangID())
+    if sameDay and request.form.get('sameDay') != '1':
+        return jsonify({'status': '3', 'items': sameDay, 'count': len(items), 'newCSRFtoken': newCSRFtoken})
 
     items.append(item)
     response = jsonify({'status': '1', 'answer': gettext('Added to your cart'), 'count': len(items), 'newCSRFtoken': newCSRFtoken})
     return write_cart(response, items)
+
+
+# Before a booking for the day `date` is booked: the cart's other bookings for that day, so the client can be
+# asked to confirm. Not counted: the item `except` (the one being booked from the cart) and, with the service
+# page's choices (ptID, vehicle, guide, ages), the same booking already in the cart
+@app.route("/cart/date-check", methods=["POST"])
+@validate_request
+def cart_date_check():
+    titles = []
+    if iso_date(request.form.get('date')):
+        items = read_cart(request)
+        if request.form.get('ptID'):
+            same, _ = new_cart_item(request.form.get('ptID'), request.form.get('vehicle'), request.form.get('guide', NO_GUIDE),
+                                    parse_age_counts(request.form.get('ages')), request.form.get('date'), getLangID())
+            items = [item for item in items if not (same and same_booking(same, item))]
+        titles = cart_items_on(items, request.form.get('date'), getLangID(), request.form.get('except', ''))
+    return jsonify({'status': '1', 'items': titles, 'newCSRFtoken': generate_csrf()})
 
 
 # Removes the cart item `id` (the cart page, and the buy-now page once the item is booked)

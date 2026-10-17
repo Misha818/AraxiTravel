@@ -14,6 +14,9 @@
 # A guide (guide_price, per group) is added to any of them; "No guide" (0) is free, and not offered
 # when product_type.GuideRequired is 1.
 # One person = one ticket = one unit of stock, as before.
+# Every booking is for one day (booking_date_range): from MIN_DAYS_AHEAD days after today up to the last
+# day the price's stock is valid (quantity.expDate). There is no schedule or per-day capacity yet.
+from datetime import date, timedelta
 from flask_babel import gettext, ngettext
 from sysadmin import sqlSelect, sqlInsert
 
@@ -21,6 +24,7 @@ PRICING_FIXED, PRICING_VEHICLE, PRICING_AGE = 0, 1, 2
 NO_GUIDE = 0
 MAX_NOTES_LENGTH = 2000
 ADULT_AGE_GROUPS = ('Adult', 'Senior')   # age.ageGroups that count as adults
+MIN_DAYS_AHEAD = 1                        # the earliest booking day: tomorrow (no same-day bookings)
 
 
 def age_group_name(name):
@@ -44,6 +48,30 @@ def allowed_age_groups(ptID):
     if not rows:
         rows = sqlSelect("SELECT `ID`, `ageGroups`, `ageRange` FROM `age` ORDER BY `Order`, `ID`;", (), True)['data']
     return [age_group(row) for row in rows]
+
+
+def booking_date_range(ptRefKey):
+    """The days the price ptRefKey can be booked for: (first, last) dates, or None when there is none.
+    first: MIN_DAYS_AHEAD days after today; last: the last day of its valid stock (quantity.expDate)"""
+    first = date.today() + timedelta(days=MIN_DAYS_AHEAD)
+    result = sqlSelect("""SELECT MAX(`expDate`) AS `last` FROM `quantity`
+                          WHERE `ptRefKey` = %s AND `Status` = 1 AND `Quantity` > 0 AND `expDate` >= %s;""",
+                       (ptRefKey, first), True)
+    last = result['data'][0]['last'] if result['length'] else None
+    return (first, last) if last else None
+
+
+def parse_booking_date(text, ptRefKey):
+    """The booking day text ('YYYY-MM-DD') if the price can be booked for it: (date, None), else
+    (None, error message)"""
+    try:
+        day = date.fromisoformat(str(text or '').strip())
+    except ValueError:
+        return None, gettext('Please choose a date.')
+    dates = booking_date_range(ptRefKey)
+    if dates is None or not dates[0] <= day <= dates[1]:
+        return None, gettext('This date is not available. Please choose another date.')
+    return day, None
 
 
 def booking_options(ptRefKey, languageID):
@@ -209,8 +237,9 @@ def booking_choices_error(options, notes, termsAccepted):
     return None
 
 
-def save_booking(pdID, options, quote, notes, termsAccepted):
-    """Keeps what was booked with the order pdID (payment_details): booking_details and booking_ages.
+def save_booking(pdID, options, quote, notes, termsAccepted, bookingDate):
+    """Keeps what was booked with the order pdID (payment_details) for the day bookingDate: booking_details
+    and booking_ages.
     The names and prices are copied, so the order still reads the same if they change later.
     Returns the booking_details ID, or None if it couldn't be saved"""
     vehicle, guide = quote['vehicle'], quote['guide']
@@ -218,13 +247,13 @@ def save_booking(pdID, options, quote, notes, termsAccepted):
     result = sqlInsert("""INSERT INTO `booking_details`
                             (`payment_details_id`, `ptRefKey`, `productTypeID`, `PricingBasis`, `vehicleID`, `vehicleType`,
                              `vehicleSeats`, `vehiclePrice`, `guideLanguageID`, `guideLanguage`, `guidePrice`, `people`,
-                             `total`, `notes`, `termsAccepted`, `created`)
-                          VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW());""",
+                             `bookingDate`, `total`, `notes`, `termsAccepted`, `created`)
+                          VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW());""",
                        (pdID, options['ptRefKey'], options['ptID'], options['basis'],
                         vehicle['ID'] if vehicle else None, vehicle['Type'] if vehicle else None,
                         vehicle['Seats'] if vehicle else None, vehicle['Price'] if vehicle else None,
                         guide['ID'] if guide else NO_GUIDE, guide['Language'] if guide else None, guide['Price'] if guide else 0,
-                        quote['people'], quote['total'], notes or None, 1 if termsAccepted else 0))
+                        quote['people'], bookingDate, quote['total'], notes or None, 1 if termsAccepted else 0))
     if result['status'] == 0:
         return None
     bookingID = result['inserted_id']
@@ -239,7 +268,10 @@ def save_booking(pdID, options, quote, notes, termsAccepted):
 
 def client_options(options, langPrefix):
     """The options as the pages' JavaScript uses them (static/JS/booking.js)"""
+    dates = booking_date_range(options['ptRefKey'])
     return {
+        'dateMin': dates[0].isoformat() if dates else None,
+        'dateMax': dates[1].isoformat() if dates else None,
         'ptRefKey': options['ptRefKey'],
         'basis': options['basis'],
         'price': options['price'],

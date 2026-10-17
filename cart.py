@@ -12,6 +12,7 @@
 #   v   the vehicle's Ref_Key (vehicle_relatives; vehicle IDs differ between languages) or null
 #   g   the guide language (languages.Language_ID, 0 = no guide)
 #   a   {age.ID: count}
+#   d   the day booked for ('YYYY-MM-DD'); null for items added before there was a date (chosen on buy-now)
 #   l   the language it was added in (languages.Language_ID): prices are set per language, so a price may
 #       not be offered in the language the cart is shown in
 import base64
@@ -19,7 +20,8 @@ import json
 import secrets
 
 from flask_babel import gettext
-from booking import booking_options, booking_quote, to_int, NO_GUIDE, PRICING_VEHICLE
+from datetime import date
+from booking import booking_options, booking_quote, parse_booking_date, to_int, NO_GUIDE, PRICING_VEHICLE
 from sysadmin import sqlSelect
 
 CART_COOKIE = 'araxi_cart'
@@ -47,7 +49,7 @@ def read_cart(request):
         if pt is None or not ages or any(k is None or n is None or n < 1 for k, n in ages.items()):
             continue
         cart.append({'id': str(item.get('id', ''))[:16] or secrets.token_hex(4), 'pt': pt,
-                     'v': to_int(item.get('v')), 'g': guide, 'a': ages, 'l': to_int(item.get('l'))})
+                     'v': to_int(item.get('v')), 'g': guide, 'a': ages, 'd': iso_date(item.get('d')), 'l': to_int(item.get('l'))})
     return cart
 
 
@@ -59,6 +61,14 @@ def write_cart(response, cart):
     value = base64.urlsafe_b64encode(json.dumps(cart, separators=(',', ':')).encode()).decode()
     response.set_cookie(CART_COOKIE, value, max_age=CART_MAX_AGE, path='/', httponly=True, samesite='Lax')
     return response
+
+
+def iso_date(text):
+    """text if it is a 'YYYY-MM-DD' date, else None"""
+    try:
+        return date.fromisoformat(str(text)).isoformat() if text else None
+    except ValueError:
+        return None
 
 
 def cart_count(request):
@@ -95,12 +105,15 @@ def expand_ages(counts):
     return [ageID for ageID, n in counts.items() for _ in range(n)]
 
 
-def new_cart_item(ptRefKey, vehicleID, guideID, ageCounts, languageID):
-    """A cart item from the service page's choices, checked like a booking.
+def new_cart_item(ptRefKey, vehicleID, guideID, ageCounts, bookingDate, languageID):
+    """A cart item from the service page's choices, checked like a booking (bookingDate: 'YYYY-MM-DD').
     Returns (item, None) or (None, error message)"""
     options = booking_options(ptRefKey, languageID)
     if options is None:
         return None, gettext('Something went wrong. Please try again!')
+    day, error = parse_booking_date(bookingDate, options['ptRefKey'])
+    if error:
+        return None, error
     people = sum(ageCounts.values())
     if people < 1:
         return None, gettext('Please choose who is coming.')
@@ -109,12 +122,27 @@ def new_cart_item(ptRefKey, vehicleID, guideID, ageCounts, languageID):
         return None, quote['error']
     vehicleKey = vehicle_ref_key(quote['vehicle']['ID']) if quote['vehicle'] else None
     item = {'id': secrets.token_hex(4), 'pt': options['ptRefKey'], 'v': vehicleKey,
-            'g': quote['guide']['ID'] if quote['guide'] else NO_GUIDE, 'a': quote['ageCounts'], 'l': int(languageID)}
+            'g': quote['guide']['ID'] if quote['guide'] else NO_GUIDE, 'a': quote['ageCounts'], 'd': day.isoformat(),
+            'l': int(languageID)}
     return item, None
 
 
 def same_booking(a, b):
-    return a['pt'] == b['pt'] and a['v'] == b['v'] and a['g'] == b['g'] and a['a'] == b['a']
+    return a['pt'] == b['pt'] and a['v'] == b['v'] and a['g'] == b['g'] and a['a'] == b['a'] and a['d'] == b['d']
+
+
+def cart_items_on(cart, bookingDate, languageID, exceptID=''):
+    """The titles ('Service: Price') of the cart's bookings for the day bookingDate ('YYYY-MM-DD'), except
+    the item exceptID (the one being booked from the cart)"""
+    day = iso_date(bookingDate)
+    items = [item for item in cart if day and item['d'] == day and item['id'] != exceptID]
+    products = product_rows({item['pt'] for item in items}, languageID)
+    titles = []
+    for item in items:
+        product = products.get(item['pt']) or product_rows({item['pt']}, item['l'] or languageID).get(item['pt'])
+        if product:
+            titles.append(product['prTitle'] + ': ' + product['ptTitle'])
+    return titles
 
 
 def product_rows(ptRefKeys, languageID):
@@ -140,18 +168,34 @@ def language_prefix(languageID):
     return result['data'][0]['Prefix'] if result['length'] else None
 
 
+def buy_now_query(item, vehicleID, quote, dateOk):
+    """The buy-now link's choices, as the service page's "Book Now" sends them (static/JS/booking.js)"""
+    query = {'guide': quote['guide']['ID'] if quote['guide'] else NO_GUIDE,
+             'ages': ','.join(f'{k}:{n}' for k, n in item['a'].items()), 'cart': item['id']}
+    if vehicleID:
+        query['vehicle'] = vehicleID
+    if dateOk:
+        query['date'] = item['d']
+    return query
+
+
 def cart_view(cart, languageID):
     """The cart as the cart page shows it: one entry per item, priced now
     [{id, available, prTitle, prUrl, ptTitle, imgName, AltText, people, ages: [{Name, count}], vehicle, guide,
-      lines, total, buyNow: {ptRefKey, people, vehicle, guide, ages}, otherLanguage}]
+      lines, total, buyNow: {surl, query}, otherLanguage, date, dateOk, sameDay}]
     available is False when the price or a choice is no longer offered (only removing it is possible).
+    date: the day booked for (a date, or None); dateOk: it can still be booked for that day (if not, the
+    day is chosen again on the buy-now page); sameDay: another booking in the cart is for the same day.
     otherLanguage: the prefix of the language the item was added in, when the price isn't offered in
     languageID but still is in that one (the page offers to switch)"""
     products = product_rows({item['pt'] for item in cart}, languageID)
+    days = [item['d'] for item in cart if item['d']]
     view = []
     for item in cart:
         entry = {'id': item['id'], 'available': False, 'people': sum(item['a'].values()), 'ages': [],
-                 'vehicle': None, 'guide': None, 'lines': [], 'total': 0, 'buyNow': None, 'otherLanguage': None}
+                 'vehicle': None, 'guide': None, 'lines': [], 'total': 0, 'buyNow': None, 'otherLanguage': None,
+                 'date': date.fromisoformat(item['d']) if item['d'] else None, 'dateOk': False,
+                 'sameDay': bool(item['d']) and days.count(item['d']) > 1}
         product = products.get(item['pt'])
         options = booking_options(item['pt'], languageID)
         if options is None and item['l'] and item['l'] != int(languageID) and booking_options(item['pt'], item['l']) is not None:
@@ -163,6 +207,7 @@ def cart_view(cart, languageID):
             quote = booking_quote(options, entry['people'], vehicleID, item['g'], expand_ages(item['a']))
             if quote['ok']:
                 names = {a['ID']: a['Name'] for a in options['ages']}
+                entry['dateOk'] = bool(item['d']) and parse_booking_date(item['d'], options['ptRefKey'])[0] is not None
                 entry.update({
                     'available': True,
                     'ages': [{'Name': names[a['ID']], 'count': item['a'][a['ID']]} for a in options['ages'] if item['a'].get(a['ID'])],
@@ -170,9 +215,7 @@ def cart_view(cart, languageID):
                     'guide': quote['guide'],
                     'lines': quote['lines'],
                     'total': quote['total'],
-                    'buyNow': {'ptRefKey': options['ptRefKey'], 'people': entry['people'], 'cart': item['id'],
-                               'vehicle': vehicleID, 'guide': quote['guide']['ID'] if quote['guide'] else NO_GUIDE,
-                               'ages': ','.join(f'{k}:{n}' for k, n in item['a'].items())},
+                    'buyNow': {'surl': f"{options['ptRefKey']}-{entry['people']}", 'query': buy_now_query(item, vehicleID, quote, entry['dateOk'])},
                 })
         view.append(entry)
     return view

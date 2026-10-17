@@ -535,8 +535,11 @@ Dump.sql already has it for new databases):
 - Service page (slideshow.html): each price card asks who is coming (a - / + counter per age group
   that can join; it replaces the people dropdown, the stock / order limit and the vehicle's seats
   cap the total), offers its vehicles and its guides ("No guide" or a guide language; the page's
-  language is chosen first when it is offered). "Apply" opens /buy-now/<PT_Ref_Key>-<people>?vehicle=
-  <vehicle ID>&guide=<languages.Language_ID>&ages=<age ID>:<count>,...
+  language is chosen first when it is offered) and the day (from tomorrow up to the last day of the
+  price's valid stock, quantity.expDate). "Book Now" opens /buy-now/<PT_Ref_Key>-<people>?vehicle=
+  <vehicle ID>&guide=<languages.Language_ID>&ages=<age ID>:<count>,...&date=<YYYY-MM-DD>; "Add to cart"
+  keeps the same choices in the cart (cart.py, cookie araxi_cart; /cart books each one with that link).
+  When the cart already has a booking for the same day, the client is asked to confirm (/cart/date-check).
 - Buy-now page: the same counters, vehicle and guide; the counters add and remove the tickets (one per
   person, each labelled with its age group); the client's additional notes (when the price allows
   them; required if set so); the terms and conditions checkbox (required, links to /terms). The
@@ -567,6 +570,7 @@ Dump.sql already has it for new databases):
         `guideLanguage` VARCHAR(100),
         `guidePrice` INT,
         `people` INT,
+        `bookingDate` DATE,
         `total` FLOAT,
         `notes` TEXT,
         `termsAccepted` INT,
@@ -583,3 +587,7 @@ Dump.sql already has it for new databases):
         `price` INT,
         PRIMARY KEY (`ID`)
     ) ENGINE=InnoDB;
+
+  If booking_details was created before the booking day was added:
+
+    ALTER TABLE `booking_details` ADD `bookingDate` DATE AFTER `people`;

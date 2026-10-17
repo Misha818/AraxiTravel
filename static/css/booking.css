@@ -178,6 +178,130 @@
     display: none;
 }
 
+/* ---- Sections that open and close: who is coming, vehicle, guide (booking.js makeFoldable). The heading is
+   a button; closed, it shows the choice in short. The panel's only grid row goes from 0fr to 1fr, which
+   animates its height smoothly, with a fade ---- */
+.bk-choice.bk-fold > legend {
+    width: 100%;
+    margin: 0;
+}
+
+.bk-fold__toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    margin: 0;
+    padding: 6px 0;
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+    text-align: left;
+    color: inherit;
+    background: none;
+    border: 0;
+    border-radius: 6px;
+    box-shadow: none;
+    cursor: pointer;
+}
+
+.bk-fold__toggle:hover,
+.bk-fold__toggle:focus {
+    color: inherit;
+    background: none;
+}
+
+.bk-fold__toggle:focus-visible {
+    outline: 2px solid var(--navy-900);
+    outline-offset: 3px;
+}
+
+.bk-fold__title {
+    flex: none;
+}
+
+.bk-fold__summary {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    font: 600 13px/1.3 var(--font-body, sans-serif);
+    letter-spacing: normal;
+    text-transform: none;
+    text-align: right;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--navy-900);
+    transition: opacity .25s ease;
+}
+
+/* nothing chosen yet (e.g. no vehicle) */
+.bk-fold__summary.is-empty {
+    font-weight: 500;
+    color: var(--ochre-600);
+}
+
+/* open: the section shows it all */
+.bk-fold.is-open .bk-fold__summary {
+    opacity: 0;
+}
+
+.bk-fold__chevron {
+    flex: none;
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: var(--navy-900);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform .35s cubic-bezier(.22, .61, .36, 1), stroke .2s;
+}
+
+.bk-fold__toggle:hover .bk-fold__chevron {
+    stroke: var(--ochre-500);
+}
+
+.bk-fold.is-open .bk-fold__chevron {
+    transform: rotate(180deg);
+}
+
+.bk-fold__panel {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transition: grid-template-rows .4s cubic-bezier(.22, .61, .36, 1), opacity .3s ease;
+}
+
+.bk-fold.is-open .bk-fold__panel {
+    grid-template-rows: 1fr;
+    opacity: 1;
+}
+
+.bk-fold__inner {
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* room inside the clipped area for the chosen pill's shadow and the focus rings; the space under the
+   heading folds away with the content */
+.bk-fold__body {
+    margin: 0 -6px;
+    padding: 10px 6px 8px 6px;
+}
+
+/* a vehicle is missing (buy-now) */
+.bk-fold.invalid .bk-fold__summary {
+    color: #c0392b;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .bk-fold__panel,
+    .bk-fold__chevron,
+    .bk-fold__summary {
+        transition: none;
+    }
+}
+
 /* the card's people dropdown is replaced by the counters (it still keeps the total) */
 .bk-counted > p,
 .bk-counted > select.quantity {
@@ -347,4 +471,134 @@
         flex: 1 1 0;
         padding: 0 14px;
     }
+}
+
+/* ---- The day of the booking (booking.js dateField) ---- */
+.bk-date-input {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 48px;
+    padding: 10px 14px;
+    font: 500 15px/1.2 var(--font-body, sans-serif);
+    color: var(--navy-900);
+    background-color: #fff;
+    border: 1px solid var(--cream-200);
+    border-radius: 12px;
+    color-scheme: light;
+    transition: border-color .15s, box-shadow .15s;
+}
+
+.bk-date-input:hover {
+    border-color: var(--river-400);
+}
+
+.bk-date-input:focus-visible {
+    outline: none;
+    border-color: var(--navy-900);
+    box-shadow: 0 0 0 3px rgba(7, 35, 57, .14);
+}
+
+.bk-date-input.is-invalid {
+    border-color: #c0392b;
+}
+
+.bk-date-input::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: .7;
+}
+
+/* ---- "Same day as another booking?" (booking.js confirmSameDay). It is added to the end of the page, where
+   styles.css and Bootstrap style every button and centre the text: the rules here are scoped to win ---- */
+.bk-dialog {
+    position: fixed;
+    inset: 0;
+    box-sizing: border-box;
+    width: min(calc(100% - 32px), 440px);
+    height: fit-content;
+    max-height: calc(100% - 32px);
+    margin: auto;
+    overflow: auto;
+    padding: 28px;
+    color: var(--navy-900);
+    font-family: var(--font-body, sans-serif);
+    text-align: left;
+    background: #fff;
+    border: 0;
+    border-radius: 20px;
+    box-shadow: 0 30px 80px -20px rgba(4, 24, 42, .45);
+}
+
+.bk-dialog::backdrop {
+    background: rgba(4, 24, 42, .45);
+}
+
+.bk-dialog h2 {
+    margin: 0 0 12px 0;
+    font: 400 1.5rem/1.2 var(--font-display, serif);
+    color: var(--navy-900);
+}
+
+.bk-dialog p {
+    margin: 0 0 10px 0;
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--ink-600);
+}
+
+.bk-dialog__list {
+    margin: 0 0 14px 0;
+    padding: 12px 14px 12px 32px;
+    font-size: 15px;
+    font-weight: 600;
+    background: var(--cream-50);
+    border-radius: 12px;
+}
+
+.bk-dialog .bk-dialog__question {
+    color: var(--navy-900);
+    font-weight: 600;
+}
+
+.bk-dialog__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+/* styles.css centres every paragraph on narrower screens (p:not(.ql-editor p)) */
+.bk-dialog .bk-dialog__text,
+.bk-dialog .bk-dialog__question,
+.bk-dialog .bk-dialog__list,
+.bk-dialog #bkDialogTitle {
+    text-align: left;
+}
+
+.bk-dialog .bk-dialog__actions .bk-btn {
+    flex: 1 1 auto;
+    justify-content: center;
+    width: auto;
+    margin: 0;
+    color: var(--bk-btn-color);
+    background-color: transparent;
+    border: 1.5px solid var(--bk-btn-color);
+    border-radius: 999px;
+}
+
+.bk-dialog .bk-dialog__actions .bk-btn:hover {
+    background-color: rgba(197, 144, 84, .12);
+}
+
+/* the filled ochre button (the answer that goes on) */
+.bk-dialog .bk-dialog__actions .bk-btn--solid {
+    color: var(--navy-950);
+    background-color: var(--ochre-500);
+    border-color: var(--ochre-500);
+}
+
+.bk-dialog .bk-dialog__actions .bk-btn--solid:hover {
+    color: var(--navy-950);
+    background-color: #b98446;
+    border-color: #b98446;
 }

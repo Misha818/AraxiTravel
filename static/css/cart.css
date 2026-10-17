@@ -255,3 +255,16 @@
     margin-left: 4px;
     color: var(--navy-900);
 }
+.bk-cart-item__note {
+    margin: 10px 0 0;
+    font-size: 13px;
+    color: var(--ink-600);
+}
+.bk-cart-item__note--same {
+    display: inline-block;
+    padding: 4px 10px;
+    color: var(--ochre-600);
+    background: rgba(197, 144, 84, .12);
+    border-radius: 999px;
+    font-weight: 600;
+}

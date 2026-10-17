@@ -56,6 +56,10 @@
         {% if item.available %}
         <dl class="bk-cart-item__choices">
           <div>
+            <dt>{{ _('Date') }}:</dt>
+            <dd>{{ format_date(item.date, 'full') if item.date else '—' }}</dd>
+          </div>
+          <div>
             <dt>{{ _('Who is coming?') }}</dt>
             <dd>{% for age in item.ages %}{{ age.Name }} × {{ age.count }}{% if not loop.last %}, {% endif %}{% endfor %}</dd>
           </div>
@@ -70,6 +74,13 @@
             <dd>{{ item.guide.Language if item.guide else _('No guide') }}</dd>
           </div>
         </dl>
+        {% if item.date and not item.dateOk %}
+        <p class="bk-cart-item__note">{{ _('This date is no longer available: you can choose another one when you book.') }}</p>
+        {% elif not item.date %}
+        <p class="bk-cart-item__note">{{ _('You will choose the date when you book.') }}</p>
+        {% elif item.sameDay %}
+        <p class="bk-cart-item__note bk-cart-item__note--same">{{ _('Another booking in your cart is for the same day.') }}</p>
+        {% endif %}
         {% elif item.otherLanguage %}
         <p class="bk-cart-item__unavailable">{{ _('This booking is offered in another language.') }}
           <a href="{{ url_for('setlang', lang=item.otherLanguage) }}">{{ _('Switch the language') }}</a></p>
@@ -94,7 +105,7 @@
           </button>
           {% if item.available %}
           {% set b = item.buyNow %}
-          <a class="bk-btn bk-btn--book" href="{{ url_for('buy_now', surl=b.ptRefKey ~ '-' ~ b.people, guide=b.guide, ages=b.ages, cart=b.cart, **({'vehicle': b.vehicle} if b.vehicle else {})) }}">{{ _('Book Now') }}</a>
+          <a class="bk-btn bk-btn--book" href="{{ url_for('buy_now', surl=b.surl) }}?{{ b.query | urlencode }}">{{ _('Book Now') }}</a>
           {% endif %}
         </div>
       </div>

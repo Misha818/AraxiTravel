@@ -6,7 +6,7 @@
      - from 1366px (where the photos and prices sit side by side, styles.css) the page becomes two columns:
        the gallery with the product text under it on the left, and on the right the price heading, the
        price thumbnails and the card, running alongside both;
-     - narrower screens stack them: the price column comes under the gallery, at most 640px wide.
+     - narrower screens stack them: the gallery, the product text, then the price column, at most 640px wide.
    The page layout only while the gallery with prices is on show: the staff page hides #slides (inline
    display: none) for the photo uploader and its editors, and then keeps its own layout.
    styles.css still has the older price-section rules (centred text, orange labels, sizes per screen width);
@@ -152,6 +152,11 @@
     text-transform: uppercase;
     text-align: left;
     color: var(--river-600);
+}
+
+/* who is coming, vehicle and guide open and close (booking.css .bk-fold): no space under their headings */
+#slides .productType .bk-fold > legend {
+    margin: 0;
 }
 
 #slides .productType .bk-age-row {
@@ -325,6 +330,35 @@
 /* ================= Up to 1365px: the price column under the gallery ================= */
 @media screen and (max-width: 1365.98px) {
 
+    /* ---- Order: the gallery, the product text (#editorContentParent), then the prices, then the rest of
+       the page (the other services, the footer...). .containerZ is a flex column: #slides gives up its own
+       box, so the gallery and the price column are items of that column, each keeping #slides' width ---- */
+    .containerZ > #slides:not(.no-price):not([style*="none"]) {
+        display: contents !important;
+    }
+
+    #slides:not(.no-price) > .pg {
+        flex: none;
+        box-sizing: border-box;
+        width: min(calc(100% - 24px), 960px);
+        margin: 0 auto 32px auto;
+    }
+
+    .pr-hero ~ #slides:not(.no-price) > .pg {
+        margin-top: clamp(2.5rem, 6vw, 4rem);
+    }
+
+    #slides:not(.no-price) > .product-details {
+        order: 1;
+        flex: none;
+        width: min(calc(100% - 24px), 640px) !important;
+        margin-bottom: 48px !important;
+    }
+
+    .containerZ:has(> #slides:not(.no-price):not([style*="none"])) > #slides ~ :not(#editorContentParent) {
+        order: 2;
+    }
+
     /* the column itself has no card of its own (the price card is the card), centred at most 640px wide */
     #slides .product-details {
         box-sizing: border-box;
@@ -358,6 +392,18 @@
         max-width: none;
         margin: 0 !important;
         padding: 24px;
+    }
+}
+
+/* #slides is 16px narrower than the screen here (styles.css) */
+@media screen and (max-width: 650px) {
+
+    #slides:not(.no-price) > .pg {
+        width: calc(100% - 16px);
+    }
+
+    #slides:not(.no-price) > .product-details {
+        width: calc(100% - 16px) !important;
     }
 }
 
