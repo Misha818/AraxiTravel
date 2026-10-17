@@ -147,17 +147,67 @@ def default_guide(options, langPrefix):
     return NO_GUIDE
 
 
-def lowest_price(options):
-    """The lowest non-zero price of one booking option (the "From" price of the price's card), 0 if
-    every option is free"""
-    if options['basis'] == PRICING_VEHICLE:
-        prices = [v['Price'] for v in options['vehicles']]
-    elif options['basis'] == PRICING_AGE:
-        prices = [a['Price'] for a in options['ages']]
-    else:
-        prices = [options['price']]
-    nonZero = [p for p in prices if p and p > 0]
-    return min(nonZero) if nonZero else 0
+def lowest_total(options):
+    """The "From" price of the price: the lowest total of a booking booking_quote accepts, so every rule
+    counts (who can join, an adult required, a vehicle's seats, a guide required). Free bookings don't
+    count: 0 only when every booking is free; None when no booking is possible at all.
+
+    Every price is 0 or more and a total is the sum of its parts (a vehicle or fixed price per person,
+    a price per person, a guide), so leaving people out never costs more, and no rule needs more than
+    an adult besides. The cheapest booking with a paid part therefore has at most two people: the part
+    (a paid person, or one person to go with a paid vehicle / guide / fixed price) and an adult when one
+    is required. Trying every group of one or two people with every vehicle and guide finds it."""
+    ageIDs = [a['ID'] for a in options['ages']]
+    groups = [[a] for a in ageIDs] + [[a, b] for i, a in enumerate(ageIDs) for b in ageIDs[i:]]
+    vehicles = [v['ID'] for v in options['vehicles']] if options['basis'] == PRICING_VEHICLE else [None]
+    guides = [NO_GUIDE] + [g['ID'] for g in options['guides']]
+    lowest, free = None, False
+    for ages in groups:
+        for vehicleID in vehicles:
+            for guideID in guides:
+                quote = booking_quote(options, len(ages), vehicleID, guideID, ages)
+                if not quote['ok']:
+                    continue
+                if quote['total'] > 0:
+                    lowest = quote['total'] if lowest is None else min(lowest, quote['total'])
+                else:
+                    free = True
+    if lowest is not None:
+        return lowest
+    return 0 if free else None
+
+
+def product_lowest_total(productID, languageID):
+    """The "From" price of a product (its page's photo header): the lowest lowest_total of its active
+    prices in languageID that can be booked now (they have days, booking_date_range), or of all of them
+    when none can. (None, 0) when no price can be booked at all.
+    Returns (amount, count): count is how many price options the prices have (more than one: "From")"""
+    rows = sqlSelect("""SELECT `product_type_relatives`.`PT_Ref_Key` AS `ptRefKey`
+                        FROM `product_type`
+                            JOIN `product_type_relatives` ON `product_type_relatives`.`PT_ID` = `product_type`.`ID`
+                        WHERE `product_type`.`Product_ID` = %s
+                            AND `product_type_relatives`.`Language_ID` = %s
+                            AND `product_type`.`Status` = 1;""", (productID, languageID), True)['data']
+    bookable, other, count = [], [], 0
+    for row in rows:
+        options = booking_options(row['ptRefKey'], languageID)
+        if options is None:
+            continue
+        total = lowest_total(options)
+        if total is None:
+            continue
+        if options['basis'] == PRICING_VEHICLE:
+            count += len(options['vehicles'])
+        elif options['basis'] == PRICING_AGE:
+            count += len(options['ages'])
+        else:
+            count += 1
+        (bookable if booking_date_range(options['ptRefKey']) else other).append(total)
+    totals = bookable or other
+    if not totals:
+        return None, 0
+    paid = [t for t in totals if t > 0]
+    return (min(paid) if paid else 0), count
 
 
 def to_int(value, default=None):
@@ -275,7 +325,7 @@ def client_options(options, langPrefix):
         'ptRefKey': options['ptRefKey'],
         'basis': options['basis'],
         'price': options['price'],
-        'from': lowest_price(options),
+        'from': lowest_total(options),
         'notesEnabled': options['notesEnabled'],
         'notesRequired': options['notesRequired'],
         'guideRequired': options['guideRequired'],

@@ -2003,6 +2003,10 @@ document.querySelector('.btn-primary').addEventListener('click', function(event)
             let Cart = cookie.get('Cart', false);
             
             cookie.remove('Cart', { path: '/' });
+            // the notes kept in the browser for this booking (static/JS/booking.js noteStore)
+            if (window.BookingPage) {
+              window.BookingPage.booked();
+            }
 
             // booked from the cart: the item leaves it (keepalive: the request outlives the redirect)
             {% if cartItem %}

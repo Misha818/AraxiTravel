@@ -359,6 +359,40 @@
     min-height: 90px;
 }
 
+/* the notes field at the end of the price card (booking.js notesField), like the date field */
+.bk-notes-input {
+    box-sizing: border-box;
+    display: block;
+    width: 100%;
+    min-height: 84px;
+    padding: 10px 14px;
+    font: 400 15px/1.45 var(--font-body, sans-serif);
+    color: var(--navy-900);
+    background-color: #fff;
+    border: 1px solid var(--cream-200);
+    border-radius: 12px;
+    resize: vertical;
+    transition: border-color .15s, box-shadow .15s;
+}
+
+.bk-notes-input::placeholder {
+    color: #8a8f98;
+}
+
+.bk-notes-input:hover {
+    border-color: var(--river-400);
+}
+
+.bk-notes-input:focus-visible {
+    outline: none;
+    border-color: var(--navy-900);
+    box-shadow: 0 0 0 3px rgba(7, 35, 57, .14);
+}
+
+.bk-notes-input.is-invalid {
+    border-color: #c0392b;
+}
+
 .bk-terms a {
     color: var(--river-600);
 }

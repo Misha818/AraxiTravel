@@ -145,6 +145,12 @@
         .then(answer => {
           csrf = answer.newCSRFtoken || csrf;
           button.closest('[data-cart-item]').remove();
+          // the notes written for it on the price card (static/JS/booking.js noteStore)
+          try {
+            localStorage.removeItem('araxiNotes:cart:' + button.dataset.cartRemove);
+          } catch (error) {
+            // no storage
+          }
           document.querySelectorAll('[data-cart-count]').forEach(el => {
             el.textContent = answer.count;
             el.hidden = !answer.count;

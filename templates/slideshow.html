@@ -24,6 +24,20 @@
   <button type="button" class="buy-btn bk-btn bk-btn--book" value="{{ ptID }}">{{ _('Book Now') }}</button>
 {%- endmacro %}
 
+{#- A price card's price before anything is chosen: "From" the cheapest booking it takes (booking.py
+    lowest_total, the same as static/JS/booking.js shows); row's own price when it has no booking data -#}
+{% macro card_price(ptID, price) -%}
+  {%- set options = (bookingData or {}).get(ptID) -%}
+  {%- set lowest = options['from'] if options else price -%}
+  {%- if lowest is none -%}
+  {%- elif lowest == 0 -%}
+    {{ _('Participation is free') }}
+  {%- else -%}
+    {%- set amount = '{:,.0f}'.format(lowest) if lowest == lowest | int else '{:,.2f}'.format(lowest) -%}
+    {{ _('From %(price)s', price=mainCurrency ~ ' ' ~ amount) if options else amount ~ ' ' ~ mainCurrency }}
+  {%- endif -%}
+{%- endmacro %}
+
 {% set Title = Title %}
 {% set ptTitleStyle = '' %}
 
@@ -182,14 +196,7 @@
               data-bs-content="<a href='{{ url_for('edit_price', ptID=subProducts[0]['ID']) }}  '>{{ _('Edit Price') }}</a> <a href='{{ url_for('add_to_store', ptID=subProducts[0]['ID']) }}' target='_BLANK'>{{ _('Add To Store') }}</a>"
                  
         >{{ resultSpss.data[0].ptTitle }}</h2>
-        <p class="price">
-          {% if resultSpss.data[0].Price == 0 %}
-            {{ _('Participation is free') }}
-          {% else %}
-            {{ resultSpss.data[0].Price }} {{ mainCurrency }} 
-          {% endif %}
-        
-        </p>
+        <p class="price">{{ card_price(resultSpss.data[0]['ptID'], resultSpss.data[0].Price) }}</p>
         <p class="inStock">
           {% if resultSpss.data[0].Quantity %}
             {% if resultSpss.data[0].Quantity < 9 %}
@@ -235,13 +242,7 @@
                     data-bs-html="true" 
                     data-bs-content="<a href='{{ url_for('edit_price', ptID=ns.flag) }}  '>{{ _('Edit Price') }}</a> <a href='{{ url_for('add_to_store', ptID=ns.flag) }}' target='_BLANK'>{{ _('Add To Store') }}</a>"
               >{{ row['ptTitle'] }}</h2>
-              <p class="price">
-                {% if row.Price == 0 %}
-                  {{ _('Participation is free') }}
-                {% else %}
-                  {{ row['Price'] }} {{ mainCurrency }} 
-                {% endif %}
-              </p>
+              <p class="price">{{ card_price(row['ptID'], row.Price) }}</p>
               <p class="inStock">
                 {% if row['Quantity'] %}
                   {% if row['Quantity'] < 9 %}

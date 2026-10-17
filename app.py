@@ -7190,7 +7190,8 @@ def cart(productTypesQuantity=None):
 
 
 # "Add to cart" on the service page: a booking with what was chosen (ptID = PT_Ref_Key, vehicle,
-# guide, ages = '<age ID>:<count>,...'), checked like a booking; answers the cart's new size
+# guide, ages = '<age ID>:<count>,...'), checked like a booking; answers the cart's new size and the item's id
+# (the client's notes stay in the browser under that id, static/JS/booking.js noteStore)
 @app.route("/cart/add", methods=["POST"])
 @validate_request
 def cart_add():
@@ -7201,8 +7202,9 @@ def cart_add():
         return jsonify({'status': '0', 'answer': answer, 'newCSRFtoken': newCSRFtoken})
 
     items = read_cart(request)
-    if any(same_booking(item, old) for old in items):
-        return jsonify({'status': '2', 'answer': gettext('This booking is already in your cart.'), 'count': len(items), 'newCSRFtoken': newCSRFtoken})
+    same = next((old for old in items if same_booking(item, old)), None)
+    if same:
+        return jsonify({'status': '2', 'answer': gettext('This booking is already in your cart.'), 'id': same['id'], 'count': len(items), 'newCSRFtoken': newCSRFtoken})
     if len(items) >= MAX_CART_ITEMS:
         return jsonify({'status': '0', 'answer': gettext('Your cart is full. Please book or remove something first.'), 'newCSRFtoken': newCSRFtoken})
     # other bookings for the same day: the client is asked first, then sends it again with sameDay=1
@@ -7211,7 +7213,7 @@ def cart_add():
         return jsonify({'status': '3', 'items': sameDay, 'count': len(items), 'newCSRFtoken': newCSRFtoken})
 
     items.append(item)
-    response = jsonify({'status': '1', 'answer': gettext('Added to your cart'), 'count': len(items), 'newCSRFtoken': newCSRFtoken})
+    response = jsonify({'status': '1', 'answer': gettext('Added to your cart'), 'id': item['id'], 'count': len(items), 'newCSRFtoken': newCSRFtoken})
     return write_cart(response, items)
 
 

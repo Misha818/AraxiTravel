@@ -328,6 +328,51 @@
         return { element: fieldset, input: input };
     }
 
+    // ---------- The client's notes (when the price takes them: Add / Edit Price "Additional notes") ----------
+    // Written on the price card and carried to the buy-now page in this browser (localStorage, not in the link
+    // or the cart cookie: they can be long and personal): under 'cart:<item id>' for a cart item and
+    // 'pt:<ptRefKey>' for "Book Now". Without storage the buy-now page's field just starts empty.
+    const noteStore = {
+        get: function (key) {
+            try {
+                return localStorage.getItem('araxiNotes:' + key) || '';
+            } catch (error) {
+                return '';
+            }
+        },
+        set: function (key, text) {
+            try {
+                if (text) {
+                    localStorage.setItem('araxiNotes:' + key, text);
+                } else {
+                    localStorage.removeItem('araxiNotes:' + key);
+                }
+            } catch (error) {
+                // no storage: nothing to carry
+            }
+        }
+    };
+
+    // the notes field of the price card ("*" when they are required)
+    function notesField(name, options) {
+        const fieldset = document.createElement('fieldset');
+        fieldset.className = 'bk-choice bk-notes-field';
+        const legend = document.createElement('legend');
+        legend.id = name + 'NotesLabel';
+        legend.textContent = T.notes + (options.notesRequired ? ' *' : '');
+        fieldset.appendChild(legend);
+        const input = document.createElement('textarea');
+        input.name = name + 'notes';
+        input.className = 'bk-notes-input';
+        input.rows = 3;
+        input.maxLength = 2000;
+        input.required = !!options.notesRequired;
+        input.placeholder = T.notesPlaceholder;
+        input.setAttribute('aria-labelledby', legend.id);
+        fieldset.appendChild(input);
+        return { element: fieldset, input: input };
+    }
+
     // a day the price can be booked for, or '' (the browser's picker keeps to min / max, typing may not)
     function validDay(options, value) {
         return value && value >= options.dateMin && value <= options.dateMax ? value : '';
@@ -455,6 +500,11 @@
             if (options.guides.length) {
                 box.appendChild(pills(name + 'guide', T.guide, guideItems(options), selectedGuide, 'bk-guide'));
             }
+            const notes = options.notesEnabled ? notesField(name, options) : null;
+            if (notes) {
+                box.appendChild(notes.element);
+                notes.input.addEventListener('input', () => notes.input.classList.remove('is-invalid'));
+            }
             const message = document.createElement('p');
             message.className = 'bk-message';
             message.setAttribute('role', 'alert');
@@ -489,7 +539,10 @@
                 if (priceEl) {
                     const price = cardPrice(options, counts, selectedVehicle, selectedGuide);
                     if (price === null || people === 0) {
-                        priceEl.textContent = fill(T.fromPrice, { price: money(options.from) });
+                        // the cheapest booking the price takes (booking.py lowest_total); null: none can be made
+                        if (options.from !== null) {
+                            priceEl.textContent = options.from > 0 ? fill(T.fromPrice, { price: money(options.from) }) : T.participationFree;
+                        }
                     } else {
                         priceEl.textContent = price > 0 ? money(price) : T.participationFree;
                     }
@@ -558,6 +611,12 @@
                     counters.open();
                     return null;
                 }
+                if (notes && notes.input.required && !notes.input.value.trim()) {
+                    showMessage(T.writeNotes);
+                    notes.input.classList.add('is-invalid');
+                    notes.input.focus();
+                    return null;
+                }
                 const params = new URLSearchParams();
                 if (options.basis === PRICING_VEHICLE) {
                     params.set('vehicle', selectedVehicle);
@@ -565,7 +624,7 @@
                 params.set('guide', selectedGuide);
                 params.set('ages', Object.keys(counts).filter(id => counts[id] > 0).map(id => id + ':' + counts[id]).join(','));
                 params.set('date', selectedDate);
-                return { people: people, params: params };
+                return { people: people, params: params, notes: notes ? notes.input.value.trim() : '' };
             }
 
             // "Book Now": the buy-now page with the choices
@@ -585,6 +644,7 @@
                     sameDayOK(selectedDate, '', check).then(ok => {
                         bookBtn.disabled = false;
                         if (ok) {
+                            noteStore.set('pt:' + options.ptRefKey, chosen.notes);
                             window.location.href = '/buy-now/' + options.ptRefKey + '-' + chosen.people + '?' + chosen.params.toString();
                         } else {
                             day.input.focus();
@@ -631,6 +691,9 @@
                             if (answer.status === '0') {
                                 showMessage(answer.answer);
                                 return;
+                            }
+                            if (answer.id) {
+                                noteStore.set('cart:' + answer.id, chosen.notes);
                             }
                             showMessage(answer.answer, true);
                             const link = document.createElement('a');
@@ -986,11 +1049,16 @@
             waitForTickets();
         }
 
-        // ---- notes and terms
+        // ---- notes (as written on the price card, noteStore) and terms
         const notes = document.getElementById('bookingNotes');
         const terms = document.getElementById('bookingTerms');
+        const notesKey = options.cartItem ? 'cart:' + options.cartItem : 'pt:' + options.ptRefKey;
         if (notes) {
-            notes.addEventListener('input', () => notes.classList.remove('is-invalid'));
+            notes.value = notes.value || noteStore.get(notesKey);
+            notes.addEventListener('input', () => {
+                notes.classList.remove('is-invalid');
+                noteStore.set(notesKey, notes.value.trim());
+            });
         }
         if (terms) {
             terms.addEventListener('change', () => terms.classList.remove('is-invalid'));
@@ -1046,6 +1114,11 @@
 
             total: function () {
                 return lastQuote ? lastQuote.total : null;
+            },
+
+            // the order is placed: the notes kept for it aren't needed any more
+            booked: function () {
+                noteStore.set(notesKey, '');
             }
         };
     }
