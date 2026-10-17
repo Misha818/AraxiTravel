@@ -591,3 +591,7 @@ Dump.sql already has it for new databases):
   If booking_details was created before the booking day was added:
 
     ALTER TABLE `booking_details` ADD `bookingDate` DATE AFTER `people`;
+
+  If product_type was created before a price had a duration (minutes; Add / Edit Price "Duration"):
+
+    ALTER TABLE `product_type` ADD `Duration` INT AFTER `AdultRequired`;

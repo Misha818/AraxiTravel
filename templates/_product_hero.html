@@ -20,7 +20,8 @@
             </div>
         </div>
         {% if prHeader.price %}
-        <p class="pr-hero__price">{{ _('From %(price)s', price=prHeader.price) if prHeader.priceCount > 1 else prHeader.price }}</p>
+        <p class="pr-hero__price">{{ _('From %(price)s', price=prHeader.price) if prHeader.priceCount > 1 else prHeader.price }}
+            {%- if prHeader.duration %}<span class="pr-hero__duration"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>{{ prHeader.duration }}</span>{% endif %}</p>
         {% endif %}
     </div>
 </section>

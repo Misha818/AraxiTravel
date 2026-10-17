@@ -78,6 +78,7 @@ def booking_options(ptRefKey, languageID):
     """What can be chosen for the price ptRefKey (PT_Ref_Key) in languageID, or None if it doesn't
     exist or is disabled:
     {'ptRefKey', 'ptID', 'title', 'basis', 'price', 'notesEnabled', 'notesRequired', 'guideRequired', 'adultRequired',
+     'duration' (minutes or None),
      'vehicles': [{ID, Type, Seats, Price}],           offered vehicles (vehicle pricing)
      'ages': [{ID, Name, Range, Adult, Price}],        who can join: the priced groups with their prices
                                                        (age pricing), else the allowed groups without
@@ -86,7 +87,7 @@ def booking_options(ptRefKey, languageID):
     result = sqlSelect("""SELECT `product_type`.`ID`, `product_type`.`Title`, `product_type`.`Price`,
                                  IFNULL(`product_type`.`PricingBasis`, 0) AS `PricingBasis`,
                                  `product_type`.`NotesEnabled`, `product_type`.`NotesRequired`, `product_type`.`GuideRequired`,
-                                 `product_type`.`AdultRequired`
+                                 `product_type`.`AdultRequired`, `product_type`.`Duration`
                           FROM `product_type_relatives`
                               LEFT JOIN `product_type` ON `product_type`.`ID` = `product_type_relatives`.`PT_ID`
                           WHERE `product_type_relatives`.`PT_Ref_Key` = %s
@@ -107,6 +108,7 @@ def booking_options(ptRefKey, languageID):
         'notesRequired': row['NotesRequired'] or 0,
         'guideRequired': row['GuideRequired'] or 0,
         'adultRequired': row['AdultRequired'] or 0,
+        'duration': row['Duration'],
         'vehicles': [],
         'ages': [],
         'guides': [],
@@ -147,6 +149,45 @@ def default_guide(options, langPrefix):
     return NO_GUIDE
 
 
+# How long a price takes (product_type.Duration, minutes) as the price card and the product's header show it:
+#   under HALF_DAY_FROM                   hours and minutes ("2 h 30 min")
+#   HALF_DAY_FROM up to FULL_DAY_FROM     "Half day"
+#   FULL_DAY_FROM up to one day (24 h)    "Full day"
+#   more than a day                       whole days ("2 days"), and a half ("1½ days") or the hours left
+#                                         ("1 day and 5 h")
+HALF_DAY_FROM = 3 * 60
+FULL_DAY_FROM = 6 * 60
+DAY = 24 * 60
+
+
+def time_label(minutes):
+    """'2 h 30 min', '2 h', '45 min'"""
+    hours, minutes = divmod(minutes, 60)
+    if hours and minutes:
+        return gettext('%(hours)s h %(minutes)s min', hours=hours, minutes=minutes)
+    if hours:
+        return gettext('%(hours)s h', hours=hours)
+    return gettext('%(minutes)s min', minutes=minutes)
+
+
+def duration_label(minutes):
+    """The duration (minutes) in words, or None when it isn't set"""
+    if not minutes or minutes < 1:
+        return None
+    if minutes < HALF_DAY_FROM:
+        return time_label(minutes)
+    if minutes < FULL_DAY_FROM:
+        return gettext('Half day')
+    if minutes <= DAY:
+        return gettext('Full day')
+    days, rest = divmod(minutes, DAY)
+    if rest == 0:
+        return ngettext('%(num)s day', '%(num)s days', days)
+    if rest == DAY // 2:
+        return gettext('%(num)s½ days', num=days)
+    return gettext('%(days)s and %(time)s', days=ngettext('%(num)s day', '%(num)s days', days), time=time_label(rest))
+
+
 def lowest_total(options):
     """The "From" price of the price: the lowest total of a booking booking_quote accepts, so every rule
     counts (who can join, an adult required, a vehicle's seats, a guide required). Free bookings don't
@@ -181,7 +222,8 @@ def product_lowest_total(productID, languageID):
     """The "From" price of a product (its page's photo header): the lowest lowest_total of its active
     prices in languageID that can be booked now (they have days, booking_date_range), or of all of them
     when none can. (None, 0) when no price can be booked at all.
-    Returns (amount, count): count is how many price options the prices have (more than one: "From")"""
+    Returns (amount, count, duration): count is how many price options the prices have (more than one:
+    "From"); duration: the duration_label of the price with that amount (None when it has none)"""
     rows = sqlSelect("""SELECT `product_type_relatives`.`PT_Ref_Key` AS `ptRefKey`
                         FROM `product_type`
                             JOIN `product_type_relatives` ON `product_type_relatives`.`PT_ID` = `product_type`.`ID`
@@ -202,12 +244,13 @@ def product_lowest_total(productID, languageID):
             count += len(options['ages'])
         else:
             count += 1
-        (bookable if booking_date_range(options['ptRefKey']) else other).append(total)
+        (bookable if booking_date_range(options['ptRefKey']) else other).append((total, options['duration']))
     totals = bookable or other
     if not totals:
-        return None, 0
-    paid = [t for t in totals if t > 0]
-    return (min(paid) if paid else 0), count
+        return None, 0, None
+    paid = [t for t in totals if t[0] > 0]
+    total, duration = min(paid or totals, key=lambda t: t[0])
+    return total, count, duration_label(duration)
 
 
 def to_int(value, default=None):
@@ -326,6 +369,7 @@ def client_options(options, langPrefix):
         'basis': options['basis'],
         'price': options['price'],
         'from': lowest_total(options),
+        'duration': duration_label(options['duration']),
         'notesEnabled': options['notesEnabled'],
         'notesRequired': options['notesRequired'],
         'guideRequired': options['guideRequired'],

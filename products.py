@@ -839,7 +839,8 @@ def productHeaderData(productID, thumbnail, languageID):
     image: first photo of the product's gallery, else its thumbnail, else None.
     minPrice / priceCount: the price options in this language (None / 0 when none can be booked).
     minPrice is the lowest total a booking can have under the prices' rules (who can join, an adult or a
-    guide required, ...), free bookings left out (0 when every booking is free); booking.py lowest_total."""
+    guide required, ...), free bookings left out (0 when every booking is free); booking.py lowest_total.
+    duration: how long the price with that amount takes, in words (booking.py duration_label) or None."""
     image = None
     resultImg = sqlSelect("""SELECT `Name` FROM `slider`
                              WHERE `ProductID` = %s AND `Type` = 1
@@ -850,9 +851,9 @@ def productHeaderData(productID, thumbnail, languageID):
         image = 'images/pr_thumbnails/' + thumbnail
 
     # the cheapest booking any of its prices takes, every rule counted (booking.py product_lowest_total)
-    minPrice, priceCount = product_lowest_total(productID, languageID)
+    minPrice, priceCount, duration = product_lowest_total(productID, languageID)
 
-    return {'image': image, 'minPrice': minPrice, 'priceCount': priceCount}
+    return {'image': image, 'minPrice': minPrice, 'priceCount': priceCount, 'duration': duration}
 
 
 def constructArData(RefKey, articleStatus):

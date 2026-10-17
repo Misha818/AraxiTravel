@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% from '_price_options.html' import price_basis, guide_prices, notes_settings, price_options_text with context %}
+{% from '_price_options.html' import price_basis, guide_prices, duration_field, notes_settings, price_options_text with context %}
 {#- no language switch in the header: the price is edited in one language #}
 {% set hideLangSwitch = true %}
 {% block title %}
@@ -211,6 +211,7 @@
     <label for="title" class="field-label">{{ _('Title') }}</label>
     <input type="text" name="title" id="title" placeholder="{{ _('Edit Product Type Title') + ' | ' + _('Max allowed number of chars is 20') }}" class="imageInput" value="{{ mainResult['data'][0]['Title'] }}" autocomplete="off">
 
+    {{ duration_field(priceOptions) }}
     {{ price_basis(priceOptions, mainCurrency, mainResult['data'][0]['Price']|int) }}
     {{ guide_prices(priceOptions, mainCurrency) }}
 

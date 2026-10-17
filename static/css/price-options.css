@@ -143,6 +143,30 @@
     border-color: red !important;
 }
 
+/* ---- Duration: days, hours, minutes side by side ---- */
+.price-form .po-duration__parts {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin: 4px 0 2px 0;
+}
+
+.price-form .po-duration__part {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink-900);
+}
+
+.price-form .po-duration__part input {
+    width: 100%;
+    margin: 0;
+}
+
 /* ---- Additional notes ---- */
 .price-form .po-check,
 .price-form .po-switch {

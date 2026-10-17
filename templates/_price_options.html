@@ -2,7 +2,7 @@
     static/css/price-options.css). options: price_options_view() in app.py; currency: MAIN_CURRENCY;
     price: the fixed price (Edit Price).
     Import with context (for _ and ngettext):
-    {% from '_price_options.html' import price_basis, guide_prices, notes_settings, price_options_text with context %} -#}
+    {% from '_price_options.html' import price_basis, guide_prices, duration_field, notes_settings, price_options_text with context %} -#}
 
 {#- the names of the age groups (age.ageGroups) -#}
 {% macro age_label(name) -%}
@@ -162,6 +162,27 @@
 {%- endmacro %}
 
 
+{#- How long the price takes (required): days, hours and minutes, saved in minutes (product_type.Duration).
+    The public pages show it in words: hours and minutes, half day, full day or days (booking.py duration_label) -#}
+{% macro duration_field(options) -%}
+{%- set total = options.duration or 0 %}
+{%- set parts = [(total // 1440, 'durationDays', _('Days'), 365), ((total % 1440) // 60, 'durationHours', _('Hours'), 23), (total % 60, 'durationMinutes', _('Minutes'), 59)] %}
+<fieldset class="po-section po-duration" id="durationField">
+    <legend class="field-label">{{ _('Duration') }} *</legend>
+    <div class="po-duration__parts">
+        {%- for value, name, label, top in parts %}
+        <label class="po-duration__part" for="{{ name }}">
+            <span>{{ label }}</span>
+            <input type="number" class="imageInput" id="{{ name }}" name="{{ name }}" min="0" max="{{ top }}" step="1"
+                   inputmode="numeric" value="{{ value if options.duration else '' }}" placeholder="0">
+        </label>
+        {%- endfor %}
+    </div>
+    <p class="po-hint">{{ _('Under 3 hours it is shown in hours and minutes, from 3 hours as a half day, from 6 hours as a full day.') }}</p>
+</fieldset>
+{%- endmacro %}
+
+
 {#- Additional notes on the client's booking: allowed (default) and, if so, optional or required -#}
 {% macro notes_settings(options) -%}
 <fieldset class="po-section po-notes">
@@ -203,6 +224,8 @@
     'number': _('"%(name)s" must be a number.', name='{name}'),
     'date': _('"%(name)s" must be a date.', name='{name}'),
     'dateTime': _('"%(name)s" must be a date and time.', name='{name}'),
-    'improve': _('Please improve all red fields!')
+    'improve': _('Please improve all red fields!'),
+    'duration': _('Please specify the duration!'),
+    'durationParts': _('Please specify the duration: days, hours (0-23) and minutes (0-59)!')
 } | tojson }}</script>
 {%- endmacro %}

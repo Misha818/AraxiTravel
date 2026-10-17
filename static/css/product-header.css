@@ -118,6 +118,27 @@
 .pr-hero__book:active { transform: scale(.97); }
 .pr-hero__book:focus-visible { outline: 2px solid var(--white); outline-offset: 3px; }
 
+/* how long the price with the lowest amount takes (booking.py duration_label), after a thin divider */
+.pr-hero .pr-hero__duration {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    margin-left: .6rem;
+    padding-left: .6rem;
+    border-left: 1px solid rgba(255, 255, 255, .35);
+    font-weight: 500;
+}
+
+.pr-hero .pr-hero__duration svg {
+    width: 1em;
+    height: 1em;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
 .pr-hero .pr-hero__price {
     flex: none;
     margin: 0;

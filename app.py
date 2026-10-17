@@ -175,7 +175,7 @@ MAIN_CURRENCY = os.getenv('MAIN_CURRENCY')
 
 # MAX_ALLOWED_QUANTITY (from .env) is defined in sysadmin.py, which the checkout code there also uses
 from sysadmin import MAX_ALLOWED_QUANTITY
-from booking import get_booking, booking_options, booking_quote, booking_choices_error, save_booking, client_options, parse_booking_date, NO_GUIDE
+from booking import get_booking, booking_options, booking_quote, booking_choices_error, save_booking, client_options, parse_booking_date, to_int, NO_GUIDE
 from cart import read_cart, write_cart, cart_count, cart_view, cart_items_on, new_cart_item, same_booking, parse_age_counts, iso_date, MAX_CART_ITEMS
 
 SMAIL_API_KEY = os.getenv('SMAIL_API_KEY')
@@ -2596,6 +2596,7 @@ def price_options_view(languageID, ptID=None):
         'notesRequired': 0,
         'guideRequired': 0,
         'adultRequired': 1,   # a new price requires an adult unless unchecked
+        'duration': None,     # minutes (product_type.Duration); the form shows days, hours and minutes
         'vehicles': get_price_vehicles(languageID, ptID),
         'untranslatedVehicles': count_untranslated_vehicles(languageID),
         'ages': get_ages(),
@@ -2609,7 +2610,7 @@ def price_options_view(languageID, ptID=None):
     if ptID is None:
         return options
 
-    result = sqlSelect("SELECT `PricingBasis`, `NotesEnabled`, `NotesRequired`, `GuideRequired`, `AdultRequired` FROM `product_type` WHERE `ID` = %s;", (ptID,), True)
+    result = sqlSelect("SELECT `PricingBasis`, `NotesEnabled`, `NotesRequired`, `GuideRequired`, `AdultRequired`, `Duration` FROM `product_type` WHERE `ID` = %s;", (ptID,), True)
     if result['length'] > 0:
         row = result['data'][0]
         options['basis'] = row['PricingBasis'] or PRICING_FIXED
@@ -2617,6 +2618,7 @@ def price_options_view(languageID, ptID=None):
         options['notesRequired'] = row['NotesRequired']
         options['guideRequired'] = row['GuideRequired']
         options['adultRequired'] = row['AdultRequired']
+        options['duration'] = row['Duration']
 
     for table, column, key in [('v_price', 'vehicleID', 'vehiclePrices'), ('age_price', 'ageID', 'agePrices'), ('guide_price', 'languageID', 'guidePrices')]:
         result = sqlSelect(f"SELECT `{column}` AS `optionID`, `Price` FROM `{table}` WHERE `productTypeID` = %s;", (ptID,), True)
@@ -2627,6 +2629,24 @@ def price_options_view(languageID, ptID=None):
     if result['length'] > 0:
         options['allowedAges'] = {row['ageID'] for row in result['data']}
     return options
+
+
+MAX_DURATION_DAYS = 365
+
+
+# The duration fields of the form (durationDays, durationHours, durationMinutes; empty = 0):
+# (minutes, None) or (None, error message). Required: more than 0
+def duration_from_form():
+    parts = []
+    for name, top in (('durationDays', MAX_DURATION_DAYS), ('durationHours', 23), ('durationMinutes', 59)):
+        value = (request.form.get(name) or '').strip() or '0'
+        if not value.isdigit() or int(value) > top:
+            return None, gettext('Please specify the duration: days, hours (0-23) and minutes (0-59)!')
+        parts.append(int(value))
+    minutes = parts[0] * 24 * 60 + parts[1] * 60 + parts[2]
+    if minutes < 1:
+        return None, gettext('Please specify the duration!')
+    return minutes, None
 
 
 # The prices of one kind of option in the form (<prefix><ID> = price; empty = not offered):
@@ -2656,6 +2676,12 @@ def price_options_from_form(languageID, ptID=None):
     basis = int(basis)
 
     options = {'basis': basis, 'price': None, 'vehiclePrices': {}, 'agePrices': {}}
+
+    # how long it takes (required): days, hours (0-23) and minutes (0-59), kept in minutes
+    duration, error = duration_from_form()
+    if error:
+        return None, error
+    options['duration'] = duration
     if basis == PRICING_FIXED:
         price = (request.form.get('price') or '').strip()
         if not price:
@@ -2722,8 +2748,8 @@ def price_options_from_form(languageID, ptID=None):
 # Saves the options of the price ptID (after its product_type row is saved): replaces its option prices
 # and who can join, and sets its basis, notes, guide and adult settings. Returns False if something failed
 def save_price_options(ptID, options):
-    result = sqlUpdate("UPDATE `product_type` SET `PricingBasis` = %s, `NotesEnabled` = %s, `NotesRequired` = %s, `GuideRequired` = %s, `AdultRequired` = %s WHERE `ID` = %s;",
-                       (options['basis'], options['notesEnabled'], options['notesRequired'], options['guideRequired'], options['adultRequired'], ptID))
+    result = sqlUpdate("UPDATE `product_type` SET `PricingBasis` = %s, `NotesEnabled` = %s, `NotesRequired` = %s, `GuideRequired` = %s, `AdultRequired` = %s, `Duration` = %s WHERE `ID` = %s;",
+                       (options['basis'], options['notesEnabled'], options['notesRequired'], options['guideRequired'], options['adultRequired'], options['duration'], ptID))
     if result['status'] == '-1':
         return False
 
@@ -5664,6 +5690,45 @@ def spss_categories_from_form(count):
     return categories
 
 
+# The prices' values a save of /edit-pts would remove: those of a specification left out of the form
+# (removed: True), and those that don't fit the category a specification changes to (empty values always
+# fit, and empty values of a removed one are no loss). rows: the specifications as saved (spssID, Text,
+# spssCategoryID); texts / categories: the form's, row by row (spssID_<i> says which saved specification a
+# row is; an ID given twice: the second row is a new one, as edit_pts saves it).
+# [{'spssID', 'name', 'removed', 'values': [{'ID' (product_type_details), 'price' ('Product: Price'), 'value'}]}]
+def spss_values_to_remove(rows, texts, categories):
+    saved = {row['spssID']: row for row in rows if row['spssID'] is not None}
+
+    def values_of(spssID):
+        found = sqlSelect("""SELECT `product_type_details`.`ID`, `product_type_details`.`Text`,
+                                    `product_type`.`Title` AS `ptTitle`, `product`.`Title` AS `prTitle`
+                             FROM `product_type_details`
+                                 LEFT JOIN `product_type` ON `product_type`.`ID` = `product_type_details`.`productTypeID`
+                                 LEFT JOIN `product` ON `product`.`ID` = `product_type`.`Product_ID`
+                             WHERE `product_type_details`.`spssID` = %s
+                             ORDER BY `product`.`Title`, `product_type`.`Order`;""", (spssID,), True)['data']
+        return [{'ID': v['ID'], 'price': ': '.join(t for t in (v['prTitle'], v['ptTitle']) if t), 'value': (v['Text'] or '').strip()}
+                for v in found]
+
+    items, seen = [], set()
+    for i, name in enumerate(texts):
+        spssID = to_int(request.form.get('spssID_' + str(i)))
+        row = saved.get(spssID)
+        if row is None or spssID in seen:
+            continue
+        seen.add(spssID)
+        if categories[i] != row['spssCategoryID']:
+            bad = [v for v in values_of(spssID) if spss_value_error(name, categories[i], v['value'])]
+            if bad:
+                items.append({'spssID': spssID, 'name': name, 'removed': False, 'values': bad})
+    for spssID, row in saved.items():
+        if spssID not in seen:
+            values = [v for v in values_of(spssID) if v['value'] != '']
+            if values:
+                items.append({'spssID': spssID, 'name': row['Text'], 'removed': True, 'values': values})
+    return items
+
+
 # Edit product type specification (subproduct)
 @app.route("/edit-pts/<ptsRefKey>", methods=['GET'])
 @login_required
@@ -5828,6 +5893,7 @@ def edit_pts():
                     `sub_product_specifications`.`ID` AS `spssID`,
                     `sub_product_specifications`.`Status` AS `spssStatus`,
                     `sub_product_specifications`.`spssCategoryID`,
+                    `sub_product_specifications`.`Order` AS `spssOrder`,
                     `spss_relatives`.`Ref_Key` AS `spssRefKey`
                 FROM `sub_product_specification`
                     LEFT JOIN `sps_relatives` ON `sps_relatives`.`SPS_ID` = `sub_product_specification`.`ID` 
@@ -5839,6 +5905,19 @@ def edit_pts():
     sqlValTuple = (languageID, spsID)
     result = sqlSelect(sqlQueryPtss, sqlValTuple, True)
 
+    # Saved values on prices this save would remove: those of a removed specification, and those that
+    # don't fit a changed category (58 for a Yes / No). They are deleted only after the admin agreed
+    # (confirmClear = 1); until then nothing is saved and the answer (status 2) lists them, so the admin
+    # can still stop.
+    unfitting = spss_values_to_remove(result['data'], spss_texts_from_form(), spsCategories)
+    if unfitting and request.form.get('confirmClear') != '1':
+        response = {'status': '2', 'answer': gettext('Saving removes these saved values:'),
+                    'items': [{'name': item['name'], 'removed': item['removed'],
+                               'values': [{'price': v['price'], 'value': v['value']} for v in item['values']]}
+                              for item in unfitting],
+                    'newCSRFtoken': newCSRFtoken}
+        return jsonify(response)
+
     if spsName != result['data'][0]['Name']:
         sqlQueryUpdate = "UPDATE `sub_product_specification` SET `Name` = %s WHERE `ID` = %s;"
         sqlValTupleUpdate = (spsName, spsID)
@@ -5849,62 +5928,66 @@ def edit_pts():
             return jsonify(response)
         
 
-    sqlQuerySpssUpdate = "UPDATE `sub_product_specifications` SET `Name` = %s, `spssCategoryID` = %s WHERE `ID` = %s "
-    sqlQuerySpssInsert = "INSERT INTO `sub_product_specifications` (`Name`, `Order`, `spsID`, `Status`, `spssCategoryID`) VALUES (%s, %s, %s, %s, %s)"  
+    # Each row of the form is a specification by its ID (spssID_<i>, empty for a new one), in the order
+    # the rows are in: an existing one keeps its ID, so the values the prices have for it
+    # (product_type_details.spssID) stay with it however the rows are moved; its name, category and
+    # Order are updated. Rows without an ID are added, and specifications left out are deleted with
+    # their values.
+    sqlQuerySpssUpdate = "UPDATE `sub_product_specifications` SET `Name` = %s, `spssCategoryID` = %s, `Order` = %s WHERE `ID` = %s;"
+    sqlQuerySpssInsert = "INSERT INTO `sub_product_specifications` (`Name`, `Order`, `spsID`, `Status`, `spssCategoryID`) VALUES (%s, %s, %s, %s, %s)"
     sqlQuerySPSSRelativeInsert = "INSERT INTO `spss_relatives` (`SPSS_ID`, `Ref_Key`, `Language_ID`, `User_ID`, `Status`) VALUES (%s, %s, %s, %s, %s)"
-    
-    RefKey = result['data'][-1:][0]['spssRefKey']
-    dataChecker = copy.deepcopy(result['data'])  
-    i = 0
-    
-    while True:
-        spsText = request.form.get('text_' + str(i))
-        if not spsText:
-            break
-        spsCategoryID = spsCategories[i]
 
-        if len(result['data']) > i:
-            if spsText != result['data'][i]['Text'] or spsCategoryID != result['data'][i]['spssCategoryID']:
-                sqlValTuple = (spsText, spsCategoryID, result['data'][i]['spssID'])
-                updateResult = sqlUpdate(sqlQuerySpssUpdate, sqlValTuple)
+    existing = {row['spssID']: row for row in result['data'] if row['spssID'] is not None}
+    RefKey = max([row['spssRefKey'] for row in result['data'] if row['spssRefKey'] is not None] or [0]) + 1
+    kept = set()
+    texts = spss_texts_from_form()
+    for i, spsText in enumerate(texts):
+        spsCategoryID = spsCategories[i]
+        spssID = to_int(request.form.get('spssID_' + str(i)))
+        if spssID in kept:
+            spssID = None   # the same ID twice: the second is a new one
+        row = existing.get(spssID)
+        if row is not None:
+            kept.add(spssID)
+            if spsText != row['Text'] or spsCategoryID != row['spssCategoryID'] or i != row['spssOrder']:
+                updateResult = sqlUpdate(sqlQuerySpssUpdate, (spsText, spsCategoryID, i, spssID))
                 if updateResult['status'] == '-1':
                     answer = gettext('Something went wrong. Please try again!')
                     response = {'status': '0', 'answer': answer, 'newCSRFtoken': newCSRFtoken}
                     return jsonify(response)
         else:
-            sqlValTuple = (spsText, i, spsID, 1, spsCategoryID)
-            resultInsert = sqlInsert(sqlQuerySpssInsert, sqlValTuple)
+            resultInsert = sqlInsert(sqlQuerySpssInsert, (spsText, i, spsID, 1, spsCategoryID))
             if resultInsert['status'] == 0:
                 answer = gettext('Something went wrong. Please try again!')
                 response = {'status': '0', 'answer': answer, 'newCSRFtoken': newCSRFtoken}
                 return jsonify(response)
 
-            spssID = resultInsert['inserted_id']
-
-            sqlValTupleSPSRel = (spssID, RefKey, languageID, userID, 1)
-            insertResult = sqlInsert(sqlQuerySPSSRelativeInsert, sqlValTupleSPSRel)
+            insertResult = sqlInsert(sqlQuerySPSSRelativeInsert, (resultInsert['inserted_id'], RefKey, languageID, userID, 1))
             if insertResult['status'] == 0:
                 answer = gettext('Something went wrong. Please try again!')
                 response = {'status': '0', 'answer': answer, 'newCSRFtoken': newCSRFtoken}
                 return jsonify(response)
-            
             RefKey = RefKey + 1
-    
-        if len(dataChecker):
-            dataChecker.pop(0)
 
-        i = i + 1
+    for item in unfitting:
+        for value in item['values']:
+            if sqlDelete("DELETE FROM `product_type_details` WHERE `ID` = %s;", (value['ID'],))['status'] == '-1':
+                answer = gettext('Something went wrong. Please try again!')
+                response = {'status': '0', 'answer': answer, 'newCSRFtoken': newCSRFtoken}
+                return jsonify(response)
 
-    if len(dataChecker) > 0:
-        for row in dataChecker:
-            sqlQueryDel = "DELETE FROM `sub_product_specifications` WHERE `ID` = %s;"
-            sqlValTuple = (row['spssID'],)
-            resultDel = sqlDelete(sqlQueryDel, sqlValTuple)
+    for spssID in existing:
+        if spssID in kept:
+            continue
+        for sqlQueryDel in ("DELETE FROM `product_type_details` WHERE `spssID` = %s;",
+                            "DELETE FROM `spss_relatives` WHERE `SPSS_ID` = %s;",
+                            "DELETE FROM `sub_product_specifications` WHERE `ID` = %s;"):
+            resultDel = sqlDelete(sqlQueryDel, (spssID,))
             if resultDel['status'] == '-1':
                 answer = gettext('Something went wrong. Please try again!')
                 response = {'status': '0', 'answer': answer, 'newCSRFtoken': newCSRFtoken}
                 return jsonify(response)
-            
+
     response = {'status': '1', 'answer': gettext('Done!'), 'newCSRFtoken': newCSRFtoken}
     return jsonify(response)
 
@@ -6927,8 +7010,12 @@ def getSlides(PrID, languageID):
                         (SELECT SUM(`quantity`.`Quantity`) FROM `quantity` WHERE `quantity`.`ptRefKey` = `product_type_relatives`.`PT_Ref_Key` AND `quantity`.`expDate` >= CURDATE()) AS `Quantity`
                     FROM `product_type`
                         LEFT JOIN `product_type_relatives` ON `product_type_relatives`.`PT_ID` = `product_type`.`ID` 
-                        LEFT JOIN `product_type_details` ON `product_type`.`ID` = `product_type_details`.`ProductTypeID`
-                        LEFT JOIN `sub_product_specifications` ON `product_type_details`.`spssID` = `sub_product_specifications`.`ID`
+                        -- a price's values of the specifications that still exist (a value whose
+                        -- specification was removed on Edit Service Type Specification is not shown)
+                        LEFT JOIN (`product_type_details`
+                                   JOIN `sub_product_specifications` ON `product_type_details`.`spssID` = `sub_product_specifications`.`ID`
+                                       AND `sub_product_specifications`.`Status` = 1)
+                            ON `product_type`.`ID` = `product_type_details`.`ProductTypeID`
                         LEFT JOIN `product` ON `product`.`ID` = `product_type`.`Product_ID`
                     WHERE `product_type`.`Product_ID` = %s
                            AND `product_type_relatives`.`Language_ID` = %s
@@ -6937,6 +7024,7 @@ def getSlides(PrID, languageID):
                     ;
                     """
     sqlValTupleSpss = (PrID, PrID, languageID)
+    print(sqlValTupleSpss)
     resultSpss = sqlSelect(sqlQuerySpss, sqlValTupleSpss, True)
 
     # What can be booked with each price: vehicles, age groups, guides (booking.py, static/JS/booking.js)

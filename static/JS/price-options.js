@@ -191,20 +191,42 @@
             const basis = selectedBasis(root);
             formData.append('pricingBasis', basis);
 
+            // how long it takes (required): days, hours 0-23, minutes 0-59, more than 0 in all
             let error = null;
+            const durationField = document.getElementById('durationField');
+            if (durationField) {
+                const parts = [...durationField.querySelectorAll('input[type="number"]')];
+                let total = 0;
+                parts.forEach(input => {
+                    const text = input.value.trim();
+                    const value = text === '' ? 0 : Number(text);
+                    const bad = !Number.isInteger(value) || value < 0 || value > Number(input.max);
+                    input.classList.toggle('invalid', bad);
+                    if (bad && !error) {
+                        error = t.durationParts;
+                    }
+                    total += bad ? 0 : value;
+                    formData.append(input.name, text);
+                });
+                if (!error && total === 0) {
+                    parts.forEach(input => input.classList.add('invalid'));
+                    error = t.duration;
+                }
+            }
+
             if (basis === '0') {
                 const priceInput = document.getElementById('price');
                 priceInput.classList.remove('invalid');
                 if (priceInput.value.trim() === '' || Number(priceInput.value) < 0) {
                     priceInput.classList.add('invalid');
-                    error = t.specifyPrice;
+                    error = error || t.specifyPrice;
                 } else {
                     formData.append('price', priceInput.value.trim());
                 }
             } else if (basis === '1') {
-                error = collectOptionPrices(root.querySelector('[data-basis-panel="1"]'), 'vprice_', formData, t, t.oneVehicle);
+                error = collectOptionPrices(root.querySelector('[data-basis-panel="1"]'), 'vprice_', formData, t, t.oneVehicle) || error;
             } else {
-                error = collectOptionPrices(root.querySelector('[data-basis-panel="2"]'), 'ageprice_', formData, t, t.oneAge);
+                error = collectOptionPrices(root.querySelector('[data-basis-panel="2"]'), 'ageprice_', formData, t, t.oneAge) || error;
             }
 
             // without "No guide" at least one guide language must have a price

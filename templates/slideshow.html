@@ -38,6 +38,14 @@
   {%- endif -%}
 {%- endmacro %}
 
+{#- How long the price takes, next to its price (booking.py duration_label); nothing when it isn't set -#}
+{% macro card_duration(ptID) -%}
+  {%- set options = (bookingData or {}).get(ptID) -%}
+  {%- if options and options['duration'] -%}
+    <p class="pt-duration"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span class="pt-duration__label">{{ _('Duration') }}: </span>{{ options['duration'] }}</p>
+  {%- endif -%}
+{%- endmacro %}
+
 {% set Title = Title %}
 {% set ptTitleStyle = '' %}
 
@@ -197,6 +205,7 @@
                  
         >{{ resultSpss.data[0].ptTitle }}</h2>
         <p class="price">{{ card_price(resultSpss.data[0]['ptID'], resultSpss.data[0].Price) }}</p>
+        {{ card_duration(resultSpss.data[0]['ptID']) }}
         <p class="inStock">
           {% if resultSpss.data[0].Quantity %}
             {% if resultSpss.data[0].Quantity < 9 %}
@@ -243,6 +252,7 @@
                     data-bs-content="<a href='{{ url_for('edit_price', ptID=ns.flag) }}  '>{{ _('Edit Price') }}</a> <a href='{{ url_for('add_to_store', ptID=ns.flag) }}' target='_BLANK'>{{ _('Add To Store') }}</a>"
               >{{ row['ptTitle'] }}</h2>
               <p class="price">{{ card_price(row['ptID'], row.Price) }}</p>
+              {{ card_duration(row['ptID']) }}
               <p class="inStock">
                 {% if row['Quantity'] %}
                   {% if row['Quantity'] < 9 %}

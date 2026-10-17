@@ -51,6 +51,7 @@ CREATE TABLE `product_type` (
     `NotesRequired` INT NOT NULL DEFAULT 0, -- 1 => additional notes are required (only when `NotesEnabled` = 1)
     `GuideRequired` INT NOT NULL DEFAULT 0, -- 1 => a guide is required: "No guide" is not offered
     `AdultRequired` INT NOT NULL DEFAULT 0, -- 1 => a booking needs at least one adult (Adult or Senior)
+    `Duration` INT, -- how long it takes, in minutes (Add / Edit Price: days, hours, minutes)
     PRIMARY KEY (`ID`)
 ) ENGINE=InnoDB;
 ALTER TABLE `product_type` AUTO_INCREMENT = 1;

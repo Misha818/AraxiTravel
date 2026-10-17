@@ -43,6 +43,79 @@
         display: none !important;
     }
 
+    /* "Values will be removed": the last chance to stop a category change (clearDialog) */
+    .sps-clear {
+        width: min(520px, calc(100% - 32px));
+        max-height: calc(100% - 32px);
+        padding: 22px 22px 18px;
+        color: var(--ink-900);
+        text-align: left;
+        border: 1px solid var(--cream-200, #e8e1d4);
+        border-radius: 14px;
+        box-shadow: 0 18px 50px rgba(7, 35, 57, .25);
+    }
+
+    .sps-clear::backdrop {
+        background: rgba(7, 35, 57, .45);
+    }
+
+    .sps-clear h2 {
+        margin: 0 0 8px 0;
+        font-size: 19px;
+        text-align: left;
+    }
+
+    .sps-clear p {
+        margin: 0 0 10px 0;
+        font-size: 15px;
+        text-align: left;
+    }
+
+    .sps-clear ul {
+        margin: 0 0 12px 0;
+        padding-left: 20px;
+        font-size: 15px;
+    }
+
+    .sps-clear li ul {
+        margin: 4px 0 8px 0;
+        color: var(--ink-600);
+    }
+
+    .sps-clear__actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 6px;
+    }
+
+    .sps-clear__actions button {
+        min-height: 42px;
+        padding: 0 18px;
+        font-size: 15px;
+        font-weight: 600;
+        border-radius: 999px;
+        cursor: pointer;
+    }
+
+    .sps-clear__cancel {
+        color: var(--navy-900, #072339);
+        background: #fff;
+        border: 1px solid var(--navy-900, #072339);
+    }
+
+    .sps-clear__confirm {
+        color: #fff;
+        background: #b3261e;
+        border: 1px solid #b3261e;
+    }
+
+    .sps-clear__actions button:focus-visible {
+        outline: 3px solid rgba(7, 35, 57, .35);
+        outline-offset: 2px;
+    }
+
     .sps-card .pr-name,
     .sps-card .parent {
         margin-bottom: 10px;
@@ -188,6 +261,19 @@
     <!-- End of dynamic fields -->
     
 </form>
+
+<dialog class="sps-clear" id="clearDialog" aria-labelledby="clearDialogTitle" data-removed="{{ _('removed') }}">
+    <form method="dialog">
+        <h2 id="clearDialogTitle">{{ _('Saved values will be removed') }}</h2>
+        <p data-clear-text></p>
+        <ul data-clear-list></ul>
+        <p>{{ _('Those prices will show nothing for these specifications until their values are entered again on Edit Price.') }}</p>
+        <div class="sps-clear__actions">
+            <button type="submit" value="cancel" class="sps-clear__cancel" autofocus>{{ _('Cancel') }}</button>
+            <button type="submit" value="confirm" class="sps-clear__confirm">{{ _('Remove values and save') }}</button>
+        </div>
+    </form>
+</dialog>
 
 <div class="containerH sps-actions">
 
@@ -351,6 +437,14 @@
             console.log(`${key}: ${value}`);
         }
 
+        sendSpecifications(formData);
+    };
+
+    // Saving: a save that would remove values on prices (a removed specification, or a category change
+    // they don't fit) is answered with status 2 and those values; the admin is asked (clearDialog) and,
+    // on "Remove values and save", it is sent again with confirmClear = 1, which removes them. Cancel
+    // saves nothing.
+    function sendSpecifications(formData) {
         // Create a new XMLHttpRequest object
         let xhr = new XMLHttpRequest();
         
@@ -362,6 +456,16 @@
         xhr.onload = function () {
             if (xhr.status === 200) {
                 const response = JSON.parse(xhr.responseText);
+                csrfToken = response.newCSRFtoken || csrfToken;
+                if (response.status === '2') {
+                    askToClear(response).then(confirmed => {
+                        if (confirmed) {
+                            formData.set('confirmClear', '1');
+                            sendSpecifications(formData);
+                        }
+                    });
+                    return;
+                }
                 if (response.status === '1') {
                     alert(response.answer);
                     location.reload();
@@ -390,7 +494,47 @@
 
         // Send the request with the JSON data
         xhr.send(formData);
-    };
+    }
+
+    // The dialog listing what would be removed: each specification (removed, or with its new category)
+    // and the prices' values that would go. Resolves true for "Remove values and save"
+    function askToClear(response) {
+        const dialog = document.getElementById('clearDialog');
+        const rows = [...document.querySelectorAll('#myForm .parent')];
+        dialog.querySelector('[data-clear-text]').textContent = response.answer;
+        const list = dialog.querySelector('[data-clear-list]');
+        list.replaceChildren();
+        response.items.forEach(item => {
+            const li = document.createElement('li');
+            // the category it changes to, as its row's select shows it
+            const row = item.removed ? null : rows.find(r => r.querySelector('input[type="text"]').value === item.name);
+            const select = row ? row.querySelector('select.spss-category') : null;
+            const strong = document.createElement('strong');
+            strong.textContent = item.name;
+            li.appendChild(strong);
+            if (item.removed) {
+                li.appendChild(document.createTextNode(' (' + dialog.dataset.removed + ')'));
+            } else if (select && select.selectedIndex > 0) {
+                li.appendChild(document.createTextNode(' → ' + select.options[select.selectedIndex].text));
+            }
+            const values = document.createElement('ul');
+            item.values.forEach(v => {
+                const valueItem = document.createElement('li');
+                valueItem.textContent = v.price + ': ' + v.value;
+                values.appendChild(valueItem);
+            });
+            li.appendChild(values);
+            list.appendChild(li);
+        });
+        if (typeof dialog.showModal !== 'function') {
+            return Promise.resolve(window.confirm(response.answer + ' ' + response.items.map(i => i.name).join(', ')));
+        }
+        return new Promise(resolve => {
+            dialog.addEventListener('close', () => resolve(dialog.returnValue === 'confirm'), { once: true });
+            dialog.returnValue = '';
+            dialog.showModal();
+        });
+    }
 
         
         let num = parseInt("{{ num }}", 10); // total count of mobile elements.

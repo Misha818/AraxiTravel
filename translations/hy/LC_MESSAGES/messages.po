@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-17 09:49+0400\n"
+"POT-Creation-Date: 2026-10-17 13:22+0400\n"
 "PO-Revision-Date: 2025-04-05 00:48+0400\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: hy\n"
@@ -32,7 +32,7 @@ msgid ""
 "minutes."
 msgstr ""
 
-#: app.py:336 app.py:4817 app.py:4967 templates/login.html:164
+#: app.py:336 app.py:4843 app.py:4993 templates/login.html:164
 msgid "Please specify username"
 msgstr "Խնդրում ենք մուտքագրել օգտանունը"
 
@@ -54,24 +54,25 @@ msgstr "Սահմանաչափը գերազանցված է"
 #: app.py:2225 app.py:2243 app.py:2257 app.py:2261 app.py:2294 app.py:2334
 #: app.py:2340 app.py:2351 app.py:2357 app.py:2368 app.py:2387 app.py:2398
 #: app.py:2472 app.py:2479 app.py:2485 app.py:2490 app.py:2503 app.py:2516
-#: app.py:2521 app.py:2644 app.py:2701 app.py:3060 app.py:3129 app.py:3186
-#: app.py:3195 app.py:3206 app.py:3222 app.py:3253 app.py:3268 app.py:3275
-#: app.py:3410 app.py:3418 app.py:3557 app.py:3562 app.py:3567 app.py:3608
-#: app.py:3620 app.py:3635 app.py:3786 app.py:4626 app.py:5716 app.py:5731
-#: app.py:5744 app.py:5764 app.py:5773 app.py:5795 app.py:5847 app.py:5871
-#: app.py:5878 app.py:5887 app.py:5904 app.py:6135 app.py:6138 app.py:6164
-#: app.py:6170 app.py:6174 app.py:6208 app.py:6212 app.py:6227 app.py:6234
-#: app.py:6238 app.py:6534 app.py:6540 app.py:6614 app.py:6689 app.py:6745
-#: app.py:6966 app.py:6981 app.py:7015 app.py:7090 app.py:7339 app.py:7412
-#: app.py:7480 app.py:7496 app.py:7517 app.py:7653 app.py:7674 app.py:7697
-#: app.py:7758 app.py:7778 app.py:7784 app.py:7787 app.py:7791 app.py:7807
-#: app.py:7865 app.py:7888 app.py:7894 app.py:7897 app.py:7901 app.py:8094
-#: app.py:8102 app.py:8192 app.py:8360 app.py:8368 app.py:8380 app.py:8386
-#: app.py:8436 app.py:8444 app.py:8452 app.py:8470 app.py:8691 app.py:8698
-#: app.py:8711 booking.py:177 cart.py:113 sysadmin.py:173 sysadmin.py:610
-#: sysadmin.py:647 sysadmin.py:1437 templates/_booking_text.html:30
-#: templates/add-price.html:680 templates/edit-price.html:782
-#: templates/vehicle.html:268 templates/vehicle.html:282
+#: app.py:2521 app.py:2664 app.py:2727 app.py:3086 app.py:3155 app.py:3212
+#: app.py:3221 app.py:3232 app.py:3248 app.py:3279 app.py:3294 app.py:3301
+#: app.py:3436 app.py:3444 app.py:3583 app.py:3588 app.py:3593 app.py:3634
+#: app.py:3646 app.py:3661 app.py:3812 app.py:4652 app.py:5781 app.py:5796
+#: app.py:5809 app.py:5829 app.py:5838 app.py:5860 app.py:5926 app.py:5955
+#: app.py:5961 app.py:5967 app.py:5975 app.py:5987 app.py:6218 app.py:6221
+#: app.py:6247 app.py:6253 app.py:6257 app.py:6291 app.py:6295 app.py:6310
+#: app.py:6317 app.py:6321 app.py:6617 app.py:6623 app.py:6697 app.py:6772
+#: app.py:6828 app.py:7054 app.py:7069 app.py:7103 app.py:7178 app.py:7429
+#: app.py:7502 app.py:7570 app.py:7586 app.py:7607 app.py:7743 app.py:7764
+#: app.py:7787 app.py:7848 app.py:7868 app.py:7874 app.py:7877 app.py:7881
+#: app.py:7897 app.py:7955 app.py:7978 app.py:7984 app.py:7987 app.py:7991
+#: app.py:8184 app.py:8192 app.py:8282 app.py:8450 app.py:8458 app.py:8470
+#: app.py:8476 app.py:8526 app.py:8534 app.py:8542 app.py:8560 app.py:8781
+#: app.py:8788 app.py:8801 booking.py:270 cart.py:113 sysadmin.py:173
+#: sysadmin.py:610 sysadmin.py:647 sysadmin.py:1437
+#: templates/_booking_text.html:30 templates/add-price.html:681
+#: templates/edit-price.html:783 templates/vehicle.html:268
+#: templates/vehicle.html:282
 msgid "Something went wrong. Please try again!"
 msgstr "Ինչ-որ բան սխալ է։ Խնդրում ենք փորձել ավելի ուշ։"
 
@@ -109,8 +110,8 @@ msgstr "Ինչ-որ բան սխալ է։ Խնդրում ենք փորձել ավ
 msgid "The phone numbers do not match."
 msgstr "Հեռախոսահամարները չեն համընկնում"
 
-#: app.py:1349 app.py:2373 app.py:2410 app.py:4186 app.py:4537 app.py:4675
-#: app.py:6620 app.py:8351 app.py:8427 templates/index.html:217
+#: app.py:1349 app.py:2373 app.py:2410 app.py:4212 app.py:4563 app.py:4701
+#: app.py:6703 app.py:8441 app.py:8517 templates/index.html:217
 msgid "Invalid email format"
 msgstr "Էլ. փոստի ձևաչափը անվավեր է"
 
@@ -118,7 +119,7 @@ msgstr "Էլ. փոստի ձևաչափը անվավեր է"
 msgid "Invalid value for "
 msgstr "Անվավեր արժեք "
 
-#: app.py:1464 app.py:8135 templates/buy-now.html:137
+#: app.py:1464 app.py:8225 templates/buy-now.html:137
 #: templates/checkout.html:136
 msgid "Invalid Promo Code"
 msgstr "Անվավեր պռոմո կոդ"
@@ -162,98 +163,106 @@ msgstr "Էլ․ փոստը հաջողությամբ խմբագրվեց։"
 msgid "Not enough stock to restore this order. The status was not changed."
 msgstr ""
 
-#: app.py:2646 templates/_price_options.html:189
+#: app.py:2644 templates/_price_options.html:229
+msgid "Please specify the duration: days, hours (0-23) and minutes (0-59)!"
+msgstr "Նշեք տևողությունը՝ օրեր, ժամեր (0-23) և րոպեներ (0-59)։"
+
+#: app.py:2648 templates/_price_options.html:228
+msgid "Please specify the duration!"
+msgstr "Նշեք տևողությունը։"
+
+#: app.py:2666 templates/_price_options.html:210
 msgid "Prices must be whole numbers, 0 or higher!"
 msgstr "Գները պետք է լինեն ամբողջ թվեր՝ 0 կամ ավելի։"
 
-#: app.py:2655
+#: app.py:2675
 msgid "Please choose how the price is set!"
 msgstr "Խնդրում ենք ընտրել, թե ինչպես է սահմանվում գինը։"
 
-#: app.py:2662 app.py:2666
+#: app.py:2688 app.py:2692
 msgid "Please specify price!"
 msgstr "Խնդրում ենք մուտքագրել գինը։"
 
-#: app.py:2668
+#: app.py:2694
 msgid "The price should be 0 or higher!"
 msgstr "Գինը պետք է լինի 0 կամ բարձր։"
 
-#: app.py:2675 templates/_price_options.html:190
+#: app.py:2701 templates/_price_options.html:211
 msgid "Please specify the price of at least one vehicle!"
 msgstr "Խնդրում ենք նշել առնվազն մեկ տրանսպորտային միջոցի գինը։"
 
-#: app.py:2682 templates/_price_options.html:191
+#: app.py:2708 templates/_price_options.html:212
 msgid "Please specify the price of at least one age group!"
 msgstr "Խնդրում ենք նշել առնվազն մեկ տարիքային խմբի գինը։"
 
-#: app.py:2691 templates/_price_options.html:192
+#: app.py:2717 templates/_price_options.html:213
 msgid ""
 "A guide is required: please specify the price of at least one guide "
 "language!"
 msgstr "Գիդը պարտադիր է․ խնդրում ենք նշել գիդի առնվազն մեկ լեզվի գինը։"
 
-#: app.py:2704 templates/_price_options.html:193
+#: app.py:2730 templates/_price_options.html:214
 msgid "Please choose who can join: at least one age group!"
 msgstr "Խնդրում ենք ընտրել, թե ով կարող է մասնակցել՝ առնվազն մեկ տարիքային խումբ։"
 
-#: app.py:2708 templates/_price_options.html:194
+#: app.py:2734 templates/_price_options.html:215
 msgid "An adult is required, so adults (Adult or Senior) must be able to join!"
 msgstr ""
 "Մեծահասակը պարտադիր է, ուստի մեծահասակները (Մեծահասակ կամ Տարեց) պետք է "
 "կարողանան մասնակցել։"
 
-#: app.py:2764
+#: app.py:2790
 #, python-format
 msgid "\"%(name)s\": please enter an address or a Google Maps link."
 msgstr "«%(name)s»՝ խնդրում ենք մուտքագրել հասցե կամ Google Maps հղում։"
 
-#: app.py:2768 sysadmin.py:1002
+#: app.py:2794 sysadmin.py:1002
 msgid "Text is too long for field "
 msgstr "Տեքստը չափազանց երկար է դաշտի համար "
 
-#: app.py:2768
+#: app.py:2794
 msgid "Max allowed characters are 255."
 msgstr "Առավելագույն թույլատրելի նիշերի քանակը 255 է։"
 
-#: app.py:2774 templates/_price_options.html:203
+#: app.py:2800 templates/_price_options.html:224
 #, python-format
 msgid "\"%(name)s\" must be a number."
 msgstr "«%(name)s» դաշտը պետք է լինի թիվ։"
 
-#: app.py:2776
+#: app.py:2802
 #, python-format
 msgid "\"%(name)s\" must be Yes or No."
 msgstr "«%(name)s» դաշտը պետք է լինի Այո կամ Ոչ։"
 
-#: app.py:2781 templates/_price_options.html:204
+#: app.py:2807 templates/_price_options.html:225
 #, python-format
 msgid "\"%(name)s\" must be a date."
 msgstr "«%(name)s» դաշտը պետք է լինի ամսաթիվ։"
 
-#: app.py:2782 templates/_price_options.html:205
+#: app.py:2808 templates/_price_options.html:226
 #, python-format
 msgid "\"%(name)s\" must be a date and time."
 msgstr "«%(name)s» դաշտը պետք է լինի ամսաթիվ և ժամ։"
 
-#: app.py:2837 app.py:3666 app.py:3684 app.py:3914 app.py:3944 app.py:3991
-#: app.py:4008 app.py:4486 app.py:4629 app.py:4702 app.py:4774 app.py:4901
-#: app.py:5015 app.py:5075 app.py:5133
+#: app.py:2863 app.py:3692 app.py:3710 app.py:3940 app.py:3970 app.py:4017
+#: app.py:4034 app.py:4512 app.py:4655 app.py:4728 app.py:4800 app.py:4927
+#: app.py:5041 app.py:5101 app.py:5159
 msgid "Something is wrong!"
 msgstr "Ինչ-որ բան սխալ է։"
 
-#: app.py:2840 products.py:809 products.py:920
+#: app.py:2866 products.py:810 products.py:877
 msgid "Update"
 msgstr "Թարմացնել"
 
-#: app.py:2840 products.py:810 products.py:921 templates/add-price.html:287
+#: app.py:2866 products.py:811 products.py:878 templates/add-price.html:288
 #: templates/add-role.html:224 templates/add-teammate.html:52
 #: templates/add_product.html:161 templates/add_product_category.html:163
 #: templates/add_product_lang.html:238 templates/add_slide.html:256
 #: templates/add_to_store.html:201 templates/assign-email.html:54
 #: templates/create-email.html:52 templates/create-promo-code.html:156
-#: templates/edit-position.html:228 templates/edit-price.html:308
+#: templates/edit-position.html:228 templates/edit-price.html:309
 #: templates/edit-profile.html:59 templates/edit-promo-code.html:231
-#: templates/edit-pts.html:196 templates/edit-role.html:228
+#: templates/edit-pts.html:282 templates/edit-role.html:228
 #: templates/edit-teammate.html:76 templates/edit_product_category.html:195
 #: templates/edit_slide.html:321 templates/edit_store.html:196
 #: templates/pr_thumbnail.html:412 templates/product.html:699
@@ -263,133 +272,133 @@ msgstr "Թարմացնել"
 msgid "Saving..."
 msgstr "Պահպանվում է ..."
 
-#: app.py:2981
+#: app.py:3007
 msgid "To continue translate the product first"
 msgstr "Նախքան շարունակեկը թարգմանեք ծառայության մասին տեղեկատվությունը"
 
-#: app.py:3047 templates/add-price.html:733 templates/edit-price.html:842
+#: app.py:3073 templates/add-price.html:734 templates/edit-price.html:843
 #, python-format
 msgid "\"%(name)s\" is %(size)s MB: an image can be at most %(max)s MB."
 msgstr ""
 "«%(name)s» պատկերի չափը %(size)s ՄԲ է․ պատկերը կարող է լինել "
 "առավելագույնը %(max)s ՄԲ։"
 
-#: app.py:3064
+#: app.py:3090
 msgid "Please specify the title!"
 msgstr "Խնդրում ենք մուտքագրել անվանումը։"
 
-#: app.py:3069 app.py:3441 app.py:3741 app.py:3792
+#: app.py:3095 app.py:3467 app.py:3767 app.py:3818
 msgid "Max allowed number of chars for title is 20"
 msgstr "Ծառայության անվան տառերի առավելագույն թույլատրելի քանակ - "
 
-#: app.py:3082 app.py:3450
+#: app.py:3108 app.py:3476
 msgid "Product Type Title Already Exists!"
 msgstr "Ծառայության տեսակի անվանումը արդեն գոյություն ունի։"
 
-#: app.py:3094 app.py:3459 templates/add-price.html:728
-#: templates/edit-price.html:836
+#: app.py:3120 app.py:3485 templates/add-price.html:729
+#: templates/edit-price.html:837
 msgid "At least one image should be uploaded"
 msgstr "Պահանջվում է վերբեռնել առնվազն մեկ նկար"
 
-#: app.py:3244
+#: app.py:3270
 #, fuzzy
 msgid "Something went wrong. Please try again! 1"
 msgstr "Ինչ-որ բան սխալ է։ Խնդրում ենք փորձել ավելի ուշ։"
 
-#: app.py:3278 app.py:3646 app.py:3994 app.py:4700 app.py:4772 app.py:5908
-#: app.py:6176 app.py:6240 app.py:6557 app.py:8685 products.py:240
+#: app.py:3304 app.py:3672 app.py:4020 app.py:4726 app.py:4798 app.py:5991
+#: app.py:6259 app.py:6323 app.py:6640 app.py:8775 products.py:241
 #: templates/edit_store.html:279
 msgid "Done!"
 msgstr "Կատարված է"
 
-#: app.py:3382
+#: app.py:3408
 msgid "To continue, please, add at least one product category."
 msgstr ""
 "Շարունակելու համար խնդրում ենք ավելացնել կամ թարգմանել առնվազն մեկ "
 "ծառայության կատեգորիա։"
 
-#: app.py:3422
+#: app.py:3448
 msgid "Nothing was uploaded!"
 msgstr "Ոչինչ չի վերբեռնվել։"
 
-#: app.py:3437
+#: app.py:3463
 msgid "Please specify title!"
 msgstr "Խնդրում ենք մուտքագրել անվանումը։"
 
-#: app.py:3738
+#: app.py:3764
 msgid "Title is empty!"
 msgstr "Ծառայության անվանումը դատարկ է։"
 
-#: app.py:3744
+#: app.py:3770
 msgid "Link is empty!"
 msgstr "Հղումը դատարկ է։"
 
-#: app.py:3747 app.py:3798
+#: app.py:3773 app.py:3824
 msgid "Please Choose Product Category!"
 msgstr "Խնդրում ենք ընտրել ծառայության կատեգորիա։"
 
-#: app.py:3789
+#: app.py:3815
 msgid "Product name is empty!"
 msgstr "Ծառայության անվանումը դատարկ է։"
 
-#: app.py:3795
+#: app.py:3821
 msgid "Product link is empty!"
 msgstr "Ծառայության հղումը դատարկ է։"
 
-#: app.py:3855
+#: app.py:3881
 msgid "Category name is empty!"
 msgstr "Կատեգորիայի անվանումը դատարկ է։"
 
-#: app.py:3920
+#: app.py:3946
 msgid "Category Name is empty!"
 msgstr "Կատեգորիայի անվանումը դատարկ է։"
 
-#: app.py:3925 products.py:210
+#: app.py:3951 products.py:211
 msgid "Category Name Exists!"
 msgstr "Կատեգորիայի անվանումը արդեն գոյություն ունի։"
 
-#: app.py:4033
+#: app.py:4059
 msgid "Product is published"
 msgstr "Ծառայությունը հրապարակված է։"
 
-#: app.py:4035
+#: app.py:4061
 msgid "Product is unpublished"
 msgstr "Ծառայության հրապարակումը դադարեցված է։"
 
-#: app.py:4155 app.py:4357 app.py:4443 app.py:4449 app.py:4520 app.py:4658
-#: app.py:4730 app.py:5089 app.py:5095
+#: app.py:4181 app.py:4383 app.py:4469 app.py:4475 app.py:4546 app.py:4684
+#: app.py:4756 app.py:5115 app.py:5121
 msgid "Something wrong!"
 msgstr "Ինչ-որ բան սխալ է։"
 
-#: app.py:4162
+#: app.py:4188
 msgid "Please specify the first name"
 msgstr "Խնդրում ենք մուտքագրել անվանումը։"
 
-#: app.py:4169 app.py:4811 app.py:4963
+#: app.py:4195 app.py:4837 app.py:4989
 msgid "Please specify the last name"
 msgstr "Խնդրում ենք մուտքագրել ազգանվանումը։"
 
-#: app.py:4176 app.py:4527 app.py:4665 app.py:4737
+#: app.py:4202 app.py:4553 app.py:4691 app.py:4763
 msgid "Please specify email"
 msgstr "Խնդրում ենք մուտքագրել էլ. փոստի հասցեն։"
 
-#: app.py:4208
+#: app.py:4234
 msgid "Please specify the position!"
 msgstr "Խնդրում ենք մուտքագրել պաշտոնը"
 
-#: app.py:4215
+#: app.py:4241
 msgid "Something is wrong, please try again!"
 msgstr "Ինչ-որ բան սխալ է, խնդրում ենք փորձել կրկին։"
 
-#: app.py:4232
+#: app.py:4258
 msgid "You can not change the position of the last CEO!"
 msgstr "Դուք չէք կարող փոխել միակ գործադիր տնօրենի պաշտոնը"
 
-#: app.py:4236
+#: app.py:4262
 msgid "You can not deactivate the last CEO!"
 msgstr "Դուք չեք կարող ապաակտիվացնել միակ գերծադիր տնօրենի հաշիվը"
 
-#: app.py:4319 app.py:4644 templates/add-teammate.html:45
+#: app.py:4345 app.py:4670 templates/add-teammate.html:45
 #: templates/affiliates.html:150 templates/affiliates.html:196
 #: templates/corporate-emails.html:470 templates/corporate-emails.html:489
 #: templates/edit-position.html:204 templates/edit-position.html:205
@@ -398,19 +407,19 @@ msgstr "Դուք չեք կարող ապաակտիվացնել միակ գերծ�
 msgid "Position"
 msgstr "Պաշտոն"
 
-#: app.py:4343
+#: app.py:4369
 msgid "Rol"
 msgstr "Գործառնույթ"
 
-#: app.py:4363 app.py:4541 app.py:5101
+#: app.py:4389 app.py:4567 app.py:5127
 msgid "Please specify the role"
 msgstr "Խնդրում ենք մուտքագրել գործառնույթը։"
 
-#: app.py:4369 app.py:5107
+#: app.py:4395 app.py:5133
 msgid "Please choose at least on action"
 msgstr "Խնդրում ենք ընտրել առնվազն մեկ գործողություն։"
 
-#: app.py:4390 app.py:5129 templates/add_product.html:289
+#: app.py:4416 app.py:5155 templates/add_product.html:289
 #: templates/add_product_category.html:309 templates/add_product_lang.html:344
 #: templates/add_slide.html:395 templates/edit-profile.html:220
 #: templates/edit-teammate.html:273 templates/edit_product_category.html:457
@@ -419,16 +428,16 @@ msgstr "Խնդրում ենք ընտրել առնվազն մեկ գործողո�
 msgid "Done"
 msgstr "Կատարված է"
 
-#: app.py:4455
+#: app.py:4481
 msgid "Please specify the position"
 msgstr "Խնդրում ենք մուտքագրել պաշտոնը։"
 
-#: app.py:4461
+#: app.py:4487
 msgid "Please choose at least on role"
 msgstr "Խնդրում ենք ընտրել առնվազն մեկ գործառնույթ։"
 
-#: app.py:4507 templates/affiliates.html:139 templates/affiliates.html:183
-#: templates/confirmation-page.html:361 templates/edit-pts.html:169
+#: app.py:4533 templates/affiliates.html:139 templates/affiliates.html:183
+#: templates/confirmation-page.html:361 templates/edit-pts.html:242
 #: templates/product-categories.html:198 templates/product-categories.html:231
 #: templates/product-type-specifications.html:190
 #: templates/product-type-specifications.html:228
@@ -438,36 +447,36 @@ msgstr "Խնդրում ենք ընտրել առնվազն մեկ գործառն�
 msgid "Name"
 msgstr "Անուն"
 
-#: app.py:4585
+#: app.py:4611
 msgid "Teammate Signup Invitation"
 msgstr "Թիմակցի գրանցման հրավեր"
 
-#: app.py:4590 app.py:4602 app.py:6655 app.py:6659 sysadmin.py:1853
+#: app.py:4616 app.py:4628 app.py:6738 app.py:6742 sysadmin.py:1853
 #: sysadmin.py:1858 sysadmin.py:1890 templates/_site_footer.html:16
 #: templates/_site_header.html:13 templates/action-names-translate.html:77
 #: templates/public.html:67
 msgid "company"
 msgstr "Araxi Travel"
 
-#: app.py:4591 templates/action-names-translate.html:74
+#: app.py:4617 templates/action-names-translate.html:74
 msgid "Click here to sign up"
 msgstr "Սեղմեք այստեղ գրանցվելու համար։"
 
-#: app.py:4593
+#: app.py:4619
 msgid "Hello dear"
 msgstr "Բարի գալուստ հարգելի՛ թիմակից"
 
-#: app.py:4594
+#: app.py:4620
 msgid "We are thrilled to invite you to join the Mammy’s Bread team! "
 msgstr "Մենք ուրախ ենք հրավիրել ձեզ միանալու Իվենտորիայի թիմին։ "
 
-#: app.py:4595
+#: app.py:4621
 msgid ""
 "Simply click the button below to finish setting up your profile and get "
 "started:"
 msgstr "Սեղմեք ստորև նշված կոճակը գրանցման գործընթացը ավարտելու համար։"
 
-#: app.py:4596 sysadmin.py:1864 templates/action-names-translate.html:80
+#: app.py:4622 sysadmin.py:1864 templates/action-names-translate.html:80
 msgid ""
 "If you’re having trouble with the button above, copy and paste the URL "
 "below into your web browser."
@@ -475,346 +484,350 @@ msgstr ""
 "Եթե ​​վերևում նշված կոճակի հետ կապված խնդիրներ ունեք, պատճենեք և տեղադրեք"
 " ստորև նշված հղումը ձեր վեբ զննարկիչում։"
 
-#: app.py:4597 templates/action-names-translate.html:81
+#: app.py:4623 templates/action-names-translate.html:81
 msgid "cheers"
 msgstr "Հարգանքներով"
 
-#: app.py:4599 sysadmin.py:1867 templates/action-names-translate.html:82
+#: app.py:4625 sysadmin.py:1867 templates/action-names-translate.html:82
 msgid "Araxi Travel Team"
 msgstr "Իվենտորիայի թիմ"
 
-#: app.py:4600 app.py:4601 templates/edit-profile.html:35
+#: app.py:4626 app.py:4627 templates/edit-profile.html:35
 #: templates/teammate-signup.html:27 templates/teammate-signup.html:35
 msgid "Teammate Signup"
 msgstr "Թիմակցի գրանցում"
 
-#: app.py:4603 app.py:6660 app.py:6662 sysadmin.py:1891
+#: app.py:4629 app.py:6743 app.py:6745 sysadmin.py:1891
 #: templates/_site_footer.html:49 templates/public.html:175
 msgid "Your Company. All rights reserved."
 msgstr "Araxi Travel։ Բոլոր իրավունքները պաշտպանված են։"
 
-#: app.py:4624 app.py:6687
+#: app.py:4650 app.py:6770
 msgid "Email sent successfully!"
 msgstr "Նամակը հաջողությամբ ուղարկվեց։"
 
-#: app.py:4741
+#: app.py:4767
 msgid "Please specify an employee"
 msgstr "Խնդրում ենք մուտքագրել աշխատակցին"
 
-#: app.py:4753
+#: app.py:4779
 msgid "Email does not exist"
 msgstr "Էլ․ հասցեն գոյություն չունի"
 
-#: app.py:4761
+#: app.py:4787
 msgid "Email is already assigned to the employee"
 msgstr "Էլ․ հասցեն արդեն կցված է աշխատակցին"
 
-#: app.py:4805 app.py:4958
+#: app.py:4831 app.py:4984
 msgid "Please specify firstname"
 msgstr "Խնդրում ենք մուտքագրել անվանումը։"
 
-#: app.py:4828 app.py:4978
+#: app.py:4854 app.py:5004
 msgid "Username exists"
 msgstr "օգտանունը արդեն գոյություն ունի։"
 
-#: app.py:4833 app.py:4983
+#: app.py:4859 app.py:5009
 msgid "Please specify Password"
 msgstr "Խնդրում ենք մուտքագրել գաղտնաբառը։"
 
-#: app.py:4842 app.py:4998
+#: app.py:4868 app.py:5024
 msgid "Password confirmation field is empty"
 msgstr "Գաղտնաբառի հաստատման դաշտը դատարկ է։"
 
-#: app.py:4846 app.py:4989
+#: app.py:4872 app.py:5015
 msgid "Passwords do not match!"
 msgstr "Գաղտնաբառերը չեն համընկնում։"
 
-#: app.py:4850 app.py:5002
+#: app.py:4876 app.py:5028
 msgid "Please specify prefared language"
 msgstr "Խնդրում ենք մուտքագրել նախընտրելի լեզուն։"
 
-#: app.py:4862 app.py:5035
+#: app.py:4888 app.py:5061
 msgid "File should be in PNG or JPG/JPEG format"
 msgstr "Ֆայլը պետք է լինի PNG կամ JPG/JPEG ձևաչափով։"
 
-#: app.py:4868 app.py:5041 templates/add_product.html:213
+#: app.py:4894 app.py:5067 templates/add_product.html:213
 #: templates/edit-profile.html:113 templates/edit-teammate.html:161
 #: templates/teammate-signup.html:95
 msgid "File size should not exceed 1MB."
 msgstr "Ֆայլի չափը չպետք է գերազանցի 1ՄԲ։"
 
-#: app.py:4885
+#: app.py:4911
 msgid "The URL is expired"
 msgstr "Հղումը ժամկետանց է։"
 
-#: app.py:5019
+#: app.py:5045
 msgid "Incorrect password"
 msgstr "Գաղտնաբառը սխալ է"
 
-#: app.py:5241 app.py:5293
+#: app.py:5267 app.py:5319
 msgid "Voided"
 msgstr "Չեղարկված"
 
-#: app.py:5242 app.py:5294 sysadmin.py:1641
+#: app.py:5268 app.py:5320 sysadmin.py:1641
 msgid "Pending"
 msgstr "Սպասման մեջ"
 
-#: app.py:5243 app.py:5295
+#: app.py:5269 app.py:5321
 msgid "Approved"
 msgstr "Հաստատված"
 
-#: app.py:5244 app.py:5296
+#: app.py:5270 app.py:5322
 msgid "Settled"
 msgstr "Վճարված"
 
-#: app.py:5751
+#: app.py:5816
 msgid "Order Changed Successfully!"
 msgstr "Հաջորդականությունը փոխվեց։"
 
-#: app.py:5777
+#: app.py:5842
 msgid "Status changed successfully!"
 msgstr "Կարգավիճակը հաջողությամբ փոփոխվել է։"
 
-#: app.py:5789 app.py:6701 templates/edit-pts.html:261
+#: app.py:5854 app.py:6784 templates/edit-pts.html:347
 #: templates/sp-specifications.html:316
 msgid "Please specify subproduct situation name!"
 msgstr "Խնդրում ենք մուտքագրել ծառայության տեսակի բնութագրի անվանվանումը։"
 
-#: app.py:5810 app.py:6715
+#: app.py:5875 app.py:6798
 msgid "Subproduct situation name exists!"
 msgstr "Ծառայության տեսակի բնութագրի անվանումը գոյություն ունի։"
 
-#: app.py:5817 app.py:6722
+#: app.py:5882 app.py:6805
 msgid "Please select a category for every specification!"
 msgstr "Խնդրում ենք ընտրել կատեգորիա յուրաքանչյուր բնութագրի համար։"
 
-#: app.py:6030 app.py:6142
+#: app.py:5914
+msgid "Saving removes these saved values:"
+msgstr "Պահպանելիս կհեռացվեն այս պահված արժեքները․"
+
+#: app.py:6113 app.py:6225
 msgid "Please specify the vehicle type!"
 msgstr "Խնդրում ենք նշել տրանսպորտային միջոցի տեսակը։"
 
-#: app.py:6032 app.py:6144 booking.py:234 sysadmin.py:616
+#: app.py:6115 app.py:6227 booking.py:327 sysadmin.py:616
 #, fuzzy
 msgid "The text is too long."
 msgstr "Տեքստը չափազանց երկար է դաշտի համար "
 
-#: app.py:6036
+#: app.py:6119
 #, python-format
 msgid "Please specify the number of seats (1 to %(max)s)!"
 msgstr "Խնդրում ենք նշել նստատեղերի քանակը (1-ից %(max)s)։"
 
-#: app.py:6040 app.py:6152 app.py:6218
+#: app.py:6123 app.py:6235 app.py:6301
 msgid "Please choose the display order from the list!"
 msgstr "Խնդրում ենք ընտրել ցուցադրման հերթականությունը ցանկից։"
 
-#: app.py:6158 app.py:6221
+#: app.py:6241 app.py:6304
 msgid "This vehicle already exists!"
 msgstr "Այս տրանսպորտային միջոցն արդեն գոյություն ունի։"
 
-#: app.py:6292 templates/index.html:216
+#: app.py:6375 templates/index.html:216
 msgid "Invalid email address!"
 msgstr "Խնդրում ենք մուտքագրել վավեր էլ. փոստի հասցե։"
 
-#: app.py:6377
+#: app.py:6460
 msgid "Invalid email format!"
 msgstr "Էլ. փոստի ձևաչափը անվավեր է"
 
-#: app.py:6588
+#: app.py:6671
 msgid "No email address found associated with your account!"
 msgstr "Ձեր հաշվին կից էլ․ հասցե չի հայտնաբերվել"
 
-#: app.py:6596 templates/send-email.html:667
+#: app.py:6679 templates/send-email.html:667
 msgid "Please specify sender email address!"
 msgstr "Խնդրում ենք մուտքագրել ուղարկողի էլ. փոստը"
 
-#: app.py:6599 templates/send-email.html:678
+#: app.py:6682 templates/send-email.html:678
 msgid "Please specify recipient email address!"
 msgstr "Խնդրում ենք մուտքագրել հասցեատիրոջ էլ. փոստի հասցե։"
 
-#: app.py:6624 templates/send-email.html:689
+#: app.py:6707 templates/send-email.html:689
 msgid "Please specify subject!"
 msgstr "Խնդրում ենք մուտքագրել էլ. նամակի թեման։"
 
-#: app.py:6627
+#: app.py:6710
 msgid "Please specify email content!"
 msgstr "Խնդրում ենք մուտքագրել էլ. փոստի բովանդակությունը։"
 
-#: app.py:6656
+#: app.py:6739
 msgid "Continue Shopping"
 msgstr "Շարունակել գնումները"
 
-#: app.py:6657
+#: app.py:6740
 msgid "Contact US"
 msgstr "Կապ"
 
-#: app.py:6663 templates/action-names-translate.html:76
+#: app.py:6746 templates/action-names-translate.html:76
 msgid "unsubscribe"
 msgstr "հրաժարվել բաժանորդագրությունից։"
 
-#: app.py:6736
+#: app.py:6819
 msgid "The current subproduct situation has already been translated!"
 msgstr "Համապատասխան ծառայության տեսակի բնութագիրն արդեն թարգմանվել է"
 
-#: app.py:6828
+#: app.py:6911
 msgid "The password must be between "
 msgstr "Գաղտնաբառի երկարությունը պետք է լինի "
 
-#: app.py:6828
+#: app.py:6911
 msgid " and "
 msgstr " և "
 
-#: app.py:6828
+#: app.py:6911
 msgid " characters long."
 msgstr " նիշերի միջակայքում"
 
-#: app.py:6832
+#: app.py:6915
 msgid "The password must contain at least one digit."
 msgstr "Գաղտնաբառը պետք է պարունակի առնվազն մեկ թիվ։"
 
-#: app.py:6835
+#: app.py:6918
 msgid "The password must contain at least one uppercase letter."
 msgstr "Գաղտնաբառը պետք է պարունակի առնվազն մեկ մեծատառ։"
 
-#: app.py:6838
+#: app.py:6921
 msgid "The password must contain at least one lowercase letter."
 msgstr "Գաղտնաբառը պետք է պարունակի առնվազն մեկ փոքրատառ։"
 
-#: app.py:6841
+#: app.py:6924
 msgid "The password must contain at least one special character."
 msgstr "Գաղտնաբառը պետք է պարունակի առնվազն մեկ հատուկ նշան։"
 
-#: app.py:7205
+#: app.py:7295
 msgid "This booking is already in your cart."
 msgstr "Այս ամրագրումն արդեն զամբյուղում է։"
 
-#: app.py:7207
+#: app.py:7297
 msgid "Your cart is full. Please book or remove something first."
 msgstr "Ձեր զամբյուղը լեցուն է։ Նախ ամրագրեք կամ հեռացրեք որևէ բան։"
 
-#: app.py:7214
+#: app.py:7304
 msgid "Added to your cart"
 msgstr "Ավելացված է զամբյուղում"
 
-#: app.py:7313 app.py:8302
+#: app.py:7403 app.py:8392
 msgid ""
 "You have already added this product to the basket. You can change the "
 "quantity if You would like to."
 msgstr "Դուք արդեն ավելացրել եք այս ծառայությունը զամբյուղ։ Կարող եք փոխել քանակը։"
 
-#: app.py:7315 app.py:8304 templates/buy-now.html:83 templates/buy-now.html:625
+#: app.py:7405 app.py:8394 templates/buy-now.html:83 templates/buy-now.html:625
 #: templates/cart.html:37 templates/checkout.html:86
 #: templates/checkout.html:486
 msgid "In Basket"
 msgstr "Զամբյուղում է"
 
-#: app.py:7316 app.py:8207
+#: app.py:7406 app.py:8297
 msgid "The seller doesn't have that many left."
 msgstr "Բոլոր տեղերը զբաղված են, այս պահին կարող եք հետևել մեր թարմացումներին։"
 
-#: app.py:7455 app.py:7460
+#: app.py:7545 app.py:7550
 msgid "The specified amount is unavailable."
 msgstr "Նշված քանակը հասանելի չէ։"
 
-#: app.py:7484 app.py:7641
+#: app.py:7574 app.py:7731
 msgid "Please Specify Product Type"
 msgstr "Խնդրում ենք մուտքագրել ծառայության տեսակը։"
 
-#: app.py:7488 app.py:7645
+#: app.py:7578 app.py:7735
 msgid "Please Specify Store"
 msgstr "Խնդրում ենք մուտքագրել տոմսարկղը։"
 
-#: app.py:7492 app.py:7649
+#: app.py:7582 app.py:7739
 msgid "Please Specify Quantity"
 msgstr "Խնդրում ենք մուտքագրել քանակը։"
 
-#: app.py:7499 app.py:7656
+#: app.py:7589 app.py:7746
 msgid "Quantity should be greater than Zero"
 msgstr "Քանակը պետք է լինի 0-ից մեծ։"
 
-#: app.py:7503 app.py:7660
+#: app.py:7593 app.py:7750
 msgid "Please Specify Production Date"
 msgstr "Խնդրում ենք նշել մեկնարկի ամսաթիվը։"
 
-#: app.py:7507 app.py:7664
+#: app.py:7597 app.py:7754
 msgid "Please Specify Expiration Date"
 msgstr "Խնդրում ենք մուտքագրել ժամկետի սպառման ամսաթիվը։"
 
-#: app.py:7513 app.py:7670
+#: app.py:7603 app.py:7760
 msgid "Please Specify Max Allowed Quantity"
 msgstr "Խնդրում ենք մուտքագրել առավելագույն թույլատրելի քանակը։"
 
-#: app.py:7520 app.py:7677
+#: app.py:7610 app.py:7767
 msgid "Max Allowed Quantity should be greater than Zero"
 msgstr "Առավելագույն թույլատրելի քանակը պետք է լինի 0-ից մեծ։"
 
-#: app.py:7713
+#: app.py:7803
 msgid "Add more products?"
 msgstr ""
 "Քանակը հաջողությամբ ավելացվեց։ Ցանկանու՞մ եք ավելացնել ևս մեկ գին այս "
 "ծառայության համար"
 
-#: app.py:7769 app.py:7879
+#: app.py:7859 app.py:7969
 msgid "code exists"
 msgstr "Պռոմո կոդը արդեն գոյություն ունի։"
 
-#: app.py:7828
+#: app.py:7918
 msgid "Promo Code Created Successfully"
 msgstr "Պռոմո կոդը հաջողությամբ ստեղծվել է։"
 
-#: app.py:8007
+#: app.py:8097
 msgid "Promo Code updated successfully!"
 msgstr "Պռոմո կոդը հաջողությամբ թարմացվել է։"
 
-#: app.py:8219
+#: app.py:8309
 msgid "Maximum available quantity for single purchase is "
 msgstr "Մեկ գնումի համար առավելագույն հասանելի քանակըշն է "
 
-#: app.py:8225
+#: app.py:8315
 msgid "Out of stock"
 msgstr "Առկա չէ"
 
-#: app.py:8231
+#: app.py:8321
 msgid "Maximum available quantity is "
 msgstr "Առավելագույն հասանելի քանակը "
 
-#: app.py:8231
+#: app.py:8321
 msgid "item added to the cart"
 msgstr "ծառայությունը ավելացվել է զամբյուղ։"
 
-#: app.py:8269 templates/index.html:18 templates/index.html:26
+#: app.py:8359 templates/index.html:18 templates/index.html:26
 msgid "site name"
 msgstr "Araxi Travel"
 
-#: app.py:8341 app.py:8404
+#: app.py:8431 app.py:8494
 msgid "Please specify email!"
 msgstr "Խնդրում ենք մուտքագրել էլ. փոստի հասցեն։"
 
-#: app.py:8389
+#: app.py:8479
 msgid "You have subscribed successfully!"
 msgstr "Դուք հաջողությամբ բաժանորդագրվել եք։"
 
-#: app.py:8408
+#: app.py:8498
 msgid "Please specify your name!"
 msgstr "Խնդրում ենք մուտքագրել Ձեր անունը"
 
-#: app.py:8412
+#: app.py:8502
 msgid "Please specify the subject!"
 msgstr "Խնդրում ենք մուտքագրել թեման։"
 
-#: app.py:8416
+#: app.py:8506
 msgid "Please specify the message!"
 msgstr "Խնդրում ենք մուտքագրել հաղորդագրությունը։"
 
-#: app.py:8461
+#: app.py:8551
 msgid "Thank you for your message! We will contact you as soon as possible."
 msgstr ""
 "Շնորհակալություն հաղորդագրության համար։ Մենք կկապնվենք ձեզ հետ "
 "հնարավորինս շուտ։"
 
-#: app.py:8538
+#: app.py:8628
 msgid "Out of stock."
 msgstr "Առկա չէ"
 
-#: app.py:8744
+#: app.py:8834
 msgid "Nothing to show"
 msgstr "Տվյալները բացակայում են։"
 
@@ -846,50 +859,89 @@ msgstr "Խնդրում ենք ընտրել ամսաթիվը։"
 msgid "This date is not available. Please choose another date."
 msgstr "Այս ամսաթիվը հասանելի չէ։ Խնդրում ենք ընտրել այլ ամսաթիվ։"
 
+#: booking.py:167
+#, python-format
+msgid "%(hours)s h %(minutes)s min"
+msgstr "%(hours)s ժ %(minutes)s ր"
+
+#: booking.py:169
+#, python-format
+msgid "%(hours)s h"
+msgstr "%(hours)s ժ"
+
+#: booking.py:170
+#, python-format
+msgid "%(minutes)s min"
+msgstr "%(minutes)s ր"
+
+#: booking.py:180
+msgid "Half day"
+msgstr "Կես օր"
+
+#: booking.py:182
+msgid "Full day"
+msgstr "Ամբողջ օր"
+
+#: booking.py:185 booking.py:188
+#, python-format
+msgid "%(num)s day"
+msgid_plural "%(num)s days"
+msgstr[0] "%(num)s օր"
+
+#: booking.py:187
+#, python-format
+msgid "%(num)s½ days"
+msgstr "%(num)s½ օր"
+
 #: booking.py:188
+#, python-format
+msgid "%(days)s and %(time)s"
+msgstr "%(days)s և %(time)s"
+
+#: booking.py:281
 msgid "Please choose the age group of every person!"
 msgstr "Խնդրում ենք ընտրել յուրաքանչյուր անձի տարիքային խումբը։"
 
-#: booking.py:192 templates/_booking_text.html:22
+#: booking.py:285 templates/_booking_text.html:22
 msgid "At least one adult (16+) is required."
 msgstr "Պարտադիր է առնվազն մեկ մեծահասակ (16+)։"
 
-#: booking.py:198 templates/_booking_text.html:14
+#: booking.py:291 templates/_booking_text.html:14
 msgid "Please choose a vehicle!"
 msgstr "Խնդրում ենք ընտրել տրանսպորտային միջոց։"
 
-#: booking.py:200 templates/_booking_text.html:24
+#: booking.py:293 templates/_booking_text.html:24
 #, python-format
 msgid "%(vehicle)s takes at most %(seats)s people."
 msgstr "%(vehicle)s-ը տեղավորում է առավելագույնը %(seats)s մարդ։"
 
-#: booking.py:202 booking.py:284 templates/_price_options.html:71
+#: booking.py:295 booking.py:378 templates/_price_options.html:71
 #: templates/order-details.html:205
 #, python-format
 msgid "%(num)s seat"
 msgid_plural "%(num)s seats"
 msgstr[0] "%(num)s նստատեղ"
 
-#: booking.py:217
+#: booking.py:310
 msgid "A guide is required: please choose a guide language."
 msgstr "Գիդը պարտադիր է․ խնդրում ենք ընտրել գիդի լեզուն։"
 
-#: booking.py:221
+#: booking.py:314
 msgid "This guide language is not offered."
 msgstr "Այս լեզվով գիդ չի առաջարկվում։"
 
-#: booking.py:223 templates/_booking_text.html:9
+#: booking.py:316 templates/_booking_text.html:9
 #: templates/_price_options.html:120 templates/_price_options.html:123
 #: templates/_price_options.html:152 templates/cart.html:73
 #: templates/order-details.html:217
 msgid "Guide"
 msgstr "Գիդ"
 
-#: booking.py:231 templates/buy-now.html:183
+#: booking.py:324 templates/buy-now.html:183
 msgid "Please agree to the terms and conditions."
 msgstr "Խնդրում ենք համաձայնել պայմաններին և դրույթներին։"
 
-#: booking.py:236 templates/buy-now.html:175
+#: booking.py:329 templates/_booking_text.html:42 templates/buy-now.html:175
 msgid "Please write the additional notes."
 msgstr "Խնդրում ենք գրել լրացուցիչ նշումները։"
 
@@ -897,12 +949,12 @@ msgstr "Խնդրում ենք գրել լրացուցիչ նշումները։"
 msgid "Please choose who is coming."
 msgstr "Խնդրում ենք նշել, թե ովքեր են գալիս։"
 
-#: products.py:165
+#: products.py:166
 msgid "Category Exists!"
 msgstr "Կատեգորիան արդեն գոյություն ունի։"
 
-#: products.py:635 products.py:654 products.py:659 products.py:716
-#: products.py:721
+#: products.py:636 products.py:655 products.py:660 products.py:717
+#: products.py:722
 msgid "Something Wrong!"
 msgstr "Ինչ-որ բան սխալ է։"
 
@@ -1003,7 +1055,7 @@ msgstr "Հարգանքով"
 
 #: templates/_booking_text.html:7 templates/_price_options.html:25
 #: templates/_price_options.html:127 templates/_price_options.html:135
-#: templates/_price_options.html:186 templates/cart.html:31
+#: templates/_price_options.html:207 templates/cart.html:31
 msgid "Free"
 msgstr "Անվճար"
 
@@ -1018,6 +1070,7 @@ msgid "Vehicle"
 msgstr "Տրանսպորտային միջոց"
 
 #: templates/_booking_text.html:11 templates/_product_hero.html:23
+#: templates/slideshow.html:37
 #, python-format
 msgid "From %(price)s"
 msgstr "%(price)s-ից"
@@ -1028,7 +1081,7 @@ msgid "%(price)s per person"
 msgstr "%(price)s մեկ անձի համար"
 
 #: templates/_booking_text.html:13 templates/cart.html:99
-#: templates/slideshow.html:187 templates/slideshow.html:240
+#: templates/slideshow.html:34
 msgid "Participation is free"
 msgstr "Մասնակցությունն անվճար է"
 
@@ -1122,6 +1175,17 @@ msgstr "Այո, նույն օրը"
 msgid "Not chosen"
 msgstr "Ընտրված չէ"
 
+#: templates/_booking_text.html:40 templates/_price_options.html:189
+#: templates/buy-now.html:172 templates/order-details.html:230
+#: templates/product.html:1563 templates/send-email.html:404
+#: templates/transfer-funds.html:157 templates/transfer-funds.html:261
+msgid "Additional notes"
+msgstr "Լրացուցիչ նշումներ"
+
+#: templates/_booking_text.html:41 templates/buy-now.html:174
+msgid "Anything we should know, e.g. where to pick you up or special needs"
+msgstr "Այն, ինչ պետք է իմանանք, օր.՝ որտեղից վերցնել ձեզ կամ հատուկ կարիքներ"
+
 #: templates/_pagination.html:17
 #, fuzzy
 msgid "Pages"
@@ -1139,7 +1203,7 @@ msgstr "Հաջորդ սլայդ"
 
 #: templates/_price_options.html:25 templates/_price_options.html:36
 #: templates/_price_options.html:127 templates/_price_options.html:135
-#: templates/_price_options.html:155 templates/_price_options.html:187
+#: templates/_price_options.html:155 templates/_price_options.html:208
 msgid "Not offered"
 msgstr "Չի առաջարկվում"
 
@@ -1257,42 +1321,59 @@ msgstr ""
 "Անջատեք, եթե այս ծառայությունը պահանջում է գիդ․ այդ դեպքում հաճախորդները "
 "պետք է ընտրեն գիդի լեզուներից մեկը։"
 
-#: templates/_price_options.html:168 templates/buy-now.html:172
-#: templates/order-details.html:230 templates/product.html:1563
-#: templates/send-email.html:404 templates/transfer-funds.html:157
-#: templates/transfer-funds.html:261
-msgid "Additional notes"
-msgstr "Լրացուցիչ նշումներ"
+#: templates/_price_options.html:169
+msgid "Days"
+msgstr "Օր"
 
-#: templates/_price_options.html:171
+#: templates/_price_options.html:169
+msgid "Hours"
+msgstr "Ժամ"
+
+#: templates/_price_options.html:169
+msgid "Minutes"
+msgstr "Րոպե"
+
+#: templates/_price_options.html:171 templates/slideshow.html:45
+msgid "Duration"
+msgstr "Տևողություն"
+
+#: templates/_price_options.html:181
+msgid ""
+"Under 3 hours it is shown in hours and minutes, from 3 hours as a half "
+"day, from 6 hours as a full day."
+msgstr ""
+"3 ժամից պակասը ցուցադրվում է ժամերով և րոպեներով, 3 ժամից՝ որպես կես օր, "
+"6 ժամից՝ որպես ամբողջ օր։"
+
+#: templates/_price_options.html:192
 msgid "Clients can write additional notes"
 msgstr "Հաճախորդները կարող են գրել լրացուցիչ նշումներ"
 
-#: templates/_price_options.html:176
+#: templates/_price_options.html:197
 msgid "Notes are required"
 msgstr "Նշումները պարտադիր են"
 
-#: templates/_price_options.html:188
+#: templates/_price_options.html:209
 msgid "Please specify Price"
 msgstr "Խնդրում ենք մուտքագրել գինը"
 
-#: templates/_price_options.html:195 templates/slideshow.html:6
+#: templates/_price_options.html:216 templates/slideshow.html:6
 msgid "Yes"
 msgstr "Այո"
 
-#: templates/_price_options.html:196 templates/slideshow.html:6
+#: templates/_price_options.html:217 templates/slideshow.html:6
 msgid "No"
 msgstr "Ոչ"
 
-#: templates/_price_options.html:197
+#: templates/_price_options.html:218
 msgid "Choose"
 msgstr "Ընտրեք"
 
-#: templates/_price_options.html:198
+#: templates/_price_options.html:219
 msgid "Address, or a Google Maps link or \"Embed a map\" code"
 msgstr "Հասցե, Google Maps հղում կամ «Embed a map» կոդ"
 
-#: templates/_price_options.html:199
+#: templates/_price_options.html:220
 msgid ""
 "Google Maps: Share › Embed a map › Copy HTML, then paste it here. An "
 "address works too."
@@ -1300,11 +1381,11 @@ msgstr ""
 "Google Maps՝ Share › Embed a map › Copy HTML, ապա տեղադրեք այստեղ։ Կարող "
 "եք գրել նաև հասցե։"
 
-#: templates/_price_options.html:200
+#: templates/_price_options.html:221
 msgid "Please enter an address or a Google Maps link."
 msgstr "Խնդրում ենք մուտքագրել հասցե կամ Google Maps հղում։"
 
-#: templates/_price_options.html:201
+#: templates/_price_options.html:222
 msgid ""
 "Short links (maps.app.goo.gl) can not be shown as a map. In Google Maps "
 "choose Share › Embed a map › Copy HTML and paste that, or write the "
@@ -1314,11 +1395,11 @@ msgstr ""
 "Google Maps-ում ընտրեք Share › Embed a map › Copy HTML և տեղադրեք այն, "
 "կամ գրեք հասցեն։"
 
-#: templates/_price_options.html:202 templates/slideshow.html:10
+#: templates/_price_options.html:223 templates/slideshow.html:10
 msgid "Map"
 msgstr "Քարտեզ"
 
-#: templates/_price_options.html:206 templates/edit-pts.html:337
+#: templates/_price_options.html:227 templates/edit-pts.html:423
 #: templates/sp-specifications.html:389 templates/vehicle.html:255
 msgid "Please improve all red fields!"
 msgstr "Խնդրում ենք ուղղել բոլոր կարմիր դաշտերը։"
@@ -1426,7 +1507,7 @@ msgid "Add Product Category"
 msgstr "Ավելացնել ծառայության կատեգորիա"
 
 #: templates/action-names-translate.html:15
-#: templates/add_product_category.html:115 templates/edit-pts.html:175
+#: templates/add_product_category.html:115 templates/edit-pts.html:248
 #: templates/edit_product_category.html:150
 #: templates/product-type-specifications.html:3
 #: templates/sp-specifications.html:210
@@ -1444,9 +1525,9 @@ msgid "Store"
 msgstr "Տոմսարկղ"
 
 #: templates/action-names-translate.html:18 templates/add_to_store.html:3
-#: templates/add_to_store.html:119 templates/slideshow.html:121
-#: templates/slideshow.html:128 templates/slideshow.html:182
-#: templates/slideshow.html:236 templates/store.html:286
+#: templates/add_to_store.html:119 templates/slideshow.html:143
+#: templates/slideshow.html:150 templates/slideshow.html:204
+#: templates/slideshow.html:252 templates/store.html:286
 #: templates/store.html:538
 msgid "Add To Store"
 msgstr "Կցել տոմսարկղին"
@@ -1563,7 +1644,7 @@ msgstr "Գործադիր տնօրեն"
 msgid "Edit Product Category"
 msgstr "Խմբագրել ծառայության կատեգորիան"
 
-#: templates/action-names-translate.html:44 templates/edit-pts.html:167
+#: templates/action-names-translate.html:44 templates/edit-pts.html:240
 msgid "Edit Product Type Specification"
 msgstr "Խմբագրել ծառայության տեսակի բնութագիրը"
 
@@ -1583,9 +1664,9 @@ msgid "Edit Role"
 msgstr "Խմբագրել գործառնույթը"
 
 #: templates/action-names-translate.html:48 templates/edit-price.html:6
-#: templates/edit-price.html:201 templates/slideshow.html:121
-#: templates/slideshow.html:128 templates/slideshow.html:182
-#: templates/slideshow.html:236
+#: templates/edit-price.html:201 templates/slideshow.html:143
+#: templates/slideshow.html:150 templates/slideshow.html:204
+#: templates/slideshow.html:252
 msgid "Edit Price"
 msgstr "Խմբագրել գինը"
 
@@ -1714,36 +1795,36 @@ msgstr "Ավելացնել ծառայության տեսակի անվանում�
 msgid "Max allowed number of chars is 20"
 msgstr "Առավելագույն թույլատրելի նիշերի քանակը 40 է։"
 
-#: templates/add-price.html:218 templates/edit-price.html:218
+#: templates/add-price.html:219 templates/edit-price.html:219
 #: templates/product.html:694
 msgid "Click here to upload files"
 msgstr "Սեղմեք այստեղ նկարներ վերբեռնելու համար։"
 
-#: templates/add-price.html:222 templates/edit-price.html:238
+#: templates/add-price.html:223 templates/edit-price.html:239
 msgid "Select payment methods"
 msgstr "Ընտրեք վճարման եղանակ"
 
-#: templates/add-price.html:235 templates/edit-price.html:256
+#: templates/add-price.html:236 templates/edit-price.html:257
 msgid "Choose product type specification"
 msgstr "Ընտրեք ծառայության տեսակի բնութագիրը։"
 
-#: templates/add-price.html:270 templates/edit-price.html:291
+#: templates/add-price.html:271 templates/edit-price.html:292
 msgid "Translate Product Type Specification Name"
 msgstr "Թարգմանել ծառայության տեսակի բնութագրի անվանումը։"
 
-#: templates/add-price.html:278 templates/edit-price.html:299
+#: templates/add-price.html:279 templates/edit-price.html:300
 msgid "You have not entered any product type specification yet."
 msgstr "Դուք դեռ չեք մուտքագրել որևէ ծառայության տեսակի բնութագիր։"
 
-#: templates/add-price.html:279 templates/edit-price.html:300
+#: templates/add-price.html:280 templates/edit-price.html:301
 msgid "Click on the link below to add a product category!"
 msgstr "Սեղմեք ներքևի հղման վրա ծառայության կատեգորիա ավելացնելու համար։"
 
-#: templates/add-price.html:280 templates/edit-price.html:301
+#: templates/add-price.html:281 templates/edit-price.html:302
 msgid "Add Product Type Specifications"
 msgstr "Ավելացնել ծառայության տեսակի բնութագրեր։"
 
-#: templates/add-price.html:286 templates/add-role.html:223
+#: templates/add-price.html:287 templates/add-role.html:223
 #: templates/add-teammate.html:51 templates/add_product.html:160
 #: templates/add_product_category.html:162 templates/add_product_lang.html:237
 #: templates/add_slide.html:255 templates/add_to_store.html:200
@@ -1757,9 +1838,9 @@ msgstr "Ավելացնել ծառայության տեսակի բնութագր�
 #: templates/checkout.html:1232 templates/checkout.html:1247
 #: templates/checkout.html:1253 templates/corporate-emails.html:606
 #: templates/create-email.html:51 templates/create-promo-code.html:155
-#: templates/edit-position.html:227 templates/edit-price.html:307
+#: templates/edit-position.html:227 templates/edit-price.html:308
 #: templates/edit-profile.html:58 templates/edit-promo-code.html:230
-#: templates/edit-pts.html:195 templates/edit-role.html:227
+#: templates/edit-pts.html:281 templates/edit-role.html:227
 #: templates/edit-teammate.html:75 templates/edit_product_category.html:194
 #: templates/edit_slide.html:320 templates/edit_store.html:195
 #: templates/index.html:206 templates/order-details.html:546
@@ -1777,22 +1858,22 @@ msgstr "Ավելացնել ծառայության տեսակի բնութագր�
 msgid "Submit"
 msgstr "Հաստատել"
 
-#: templates/add-price.html:292 templates/edit-price.html:313
+#: templates/add-price.html:293 templates/edit-price.html:314
 #: templates/edit-profile.html:61 templates/edit_product_category.html:198
 #: templates/pr_thumbnail.html:417
 msgid "Back"
 msgstr "Հետ"
 
-#: templates/add-price.html:515 templates/corporate-emails.html:408
-#: templates/edit-price.html:538 templates/emails.html:434
+#: templates/add-price.html:516 templates/corporate-emails.html:408
+#: templates/edit-price.html:539 templates/emails.html:434
 #: templates/product.html:894 templates/product.html:1019
-#: templates/slideshow.html:105 templates/transfers.html:456
+#: templates/slideshow.html:127 templates/transfers.html:456
 msgid "Close"
 msgstr "Փակել"
 
-#: templates/add-price.html:527 templates/add_product.html:288
+#: templates/add-price.html:528 templates/add_product.html:288
 #: templates/add_product_category.html:308 templates/add_product_lang.html:343
-#: templates/add_slide.html:394 templates/edit-price.html:550
+#: templates/add_slide.html:394 templates/edit-price.html:551
 #: templates/edit-profile.html:219 templates/edit-teammate.html:272
 #: templates/edit_product_category.html:456 templates/edit_slide.html:584
 #: templates/pr_thumbnail.html:664 templates/product.html:906
@@ -1800,15 +1881,15 @@ msgstr "Փակել"
 msgid "Crop"
 msgstr "Կտրել"
 
-#: templates/add-price.html:687 templates/edit-price.html:789
+#: templates/add-price.html:688 templates/edit-price.html:790
 msgid "Your session has expired. Please reload the page and try again."
 msgstr "Ձեր սեսիան ավարտվել է։ Խնդրում ենք թարմացնել էջը և կրկին փորձել։"
 
-#: templates/add-price.html:710 templates/edit-price.html:818
+#: templates/add-price.html:711 templates/edit-price.html:819
 msgid "Please specify Title"
 msgstr "Խնդրում ենք մուտքագրել անվանումը"
 
-#: templates/add-price.html:819 templates/edit-price.html:930
+#: templates/add-price.html:820 templates/edit-price.html:931
 msgid ""
 "All changes in specifications fields will be lost, would you like to "
 "continue?"
@@ -2203,7 +2284,7 @@ msgid "All"
 msgstr "Բոլորը"
 
 #: templates/admin_panel.html:909 templates/admin_panel.html:910
-#: templates/slideshow.html:82
+#: templates/slideshow.html:104
 msgid "Full screen"
 msgstr "Լիաէկրան"
 
@@ -2546,10 +2627,6 @@ msgstr "Օրինակ"
 #: templates/buy-now.html:160
 msgid "Choose payment method"
 msgstr "Ընտրեք վճարման եղանակ"
-
-#: templates/buy-now.html:174
-msgid "Anything we should know, e.g. where to pick you up or special needs"
-msgstr "Այն, ինչ պետք է իմանանք, օր.՝ որտեղից վերցնել ձեզ կամ հատուկ կարիքներ"
 
 #: templates/buy-now.html:179
 msgid "terms and conditions"
@@ -2972,17 +3049,41 @@ msgstr "Պարգևավճար"
 msgid "Edit Product Type Specifications"
 msgstr "Խմբագրել ծառայության տեսակի բնութագրերը"
 
-#: templates/edit-pts.html:172 templates/sp-specifications.html:5
+#: templates/edit-pts.html:245 templates/sp-specifications.html:5
 msgid "Product Type Situation name"
 msgstr "Ծառայության տեսակի բնութագրի անվանումը"
 
-#: templates/edit-pts.html:184 templates/sp-specifications.html:221
+#: templates/edit-pts.html:257 templates/sp-specifications.html:221
 #: templates/sp-specifications.html:234
 #, fuzzy
 msgid "Remove"
 msgstr "գործառնույթ"
 
-#: templates/edit-pts.html:194 templates/sp-specifications.html:242
+#: templates/edit-pts.html:265
+msgid "removed"
+msgstr "հեռացված"
+
+#: templates/edit-pts.html:267
+msgid "Saved values will be removed"
+msgstr "Պահված արժեքները կհեռացվեն"
+
+#: templates/edit-pts.html:270
+msgid ""
+"Those prices will show nothing for these specifications until their "
+"values are entered again on Edit Price."
+msgstr ""
+"Այդ գները այս բնութագրերի համար ոչինչ չեն ցուցադրի, մինչև դրանց արժեքները"
+" նորից մուտքագրվեն «Խմբագրել գինը» էջում։"
+
+#: templates/edit-pts.html:272
+msgid "Cancel"
+msgstr "Չեղարկել"
+
+#: templates/edit-pts.html:273
+msgid "Remove values and save"
+msgstr "Հեռացնել արժեքները և պահպանել"
+
+#: templates/edit-pts.html:280 templates/sp-specifications.html:242
 #, fuzzy
 msgid "Add"
 msgstr "Ավելացված է"
@@ -3596,46 +3697,46 @@ msgstr "վերջնաժամկետ"
 msgid "Past"
 msgstr "Անցած"
 
-#: templates/slideshow.html:20 templates/slideshow.html:204
-#: templates/slideshow.html:256
+#: templates/slideshow.html:20 templates/slideshow.html:220
+#: templates/slideshow.html:267
 msgid "Add to cart"
 msgstr "Ավելացնել"
 
-#: templates/slideshow.html:59
+#: templates/slideshow.html:81
 msgid "No spot left"
 msgstr "Տեղերը սպառված են"
 
-#: templates/slideshow.html:62 templates/slideshow.html:64
-#: templates/slideshow.html:68
+#: templates/slideshow.html:84 templates/slideshow.html:86
+#: templates/slideshow.html:90
 msgid "Gallery"
 msgstr "Պատկերասրահ"
 
-#: templates/slideshow.html:76 templates/slideshow.html:99
+#: templates/slideshow.html:98 templates/slideshow.html:121
 msgid "Previous photo"
 msgstr "Նախորդ լուսանկարը"
 
-#: templates/slideshow.html:79 templates/slideshow.html:102
+#: templates/slideshow.html:101 templates/slideshow.html:124
 msgid "Next photo"
 msgstr "Հաջորդ լուսանկարը"
 
-#: templates/slideshow.html:89
+#: templates/slideshow.html:111
 #, python-format
 msgid "Photo %(num)s"
 msgstr "Լուսանկար %(num)s"
 
-#: templates/slideshow.html:97
+#: templates/slideshow.html:119
 msgid "Photo viewer"
 msgstr "Լուսանկարների դիտում"
 
-#: templates/slideshow.html:196 templates/slideshow.html:248
+#: templates/slideshow.html:212 templates/slideshow.html:259
 msgid "left in stock"
 msgstr "տեղ է մնացել"
 
-#: templates/slideshow.html:208 templates/slideshow.html:260
+#: templates/slideshow.html:224 templates/slideshow.html:271
 msgid "For+1"
 msgstr " "
 
-#: templates/slideshow.html:212 templates/slideshow.html:264
+#: templates/slideshow.html:228 templates/slideshow.html:275
 msgid "person+1"
 msgstr "անձի համար"
 
@@ -4130,4 +4231,9 @@ msgstr ""
 
 #~ msgid "Proceed to Checkout"
 #~ msgstr "Դեպի վճարման էջ"
+
+#~ msgid "Changing the category removes the values that do not fit it:"
+#~ msgstr ""
+#~ "Կատեգորիան փոխելիս կհեռացվեն այն արժեքները,"
+#~ " որոնք չեն համապատասխանում նրան․"
 
