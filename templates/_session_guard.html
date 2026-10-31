@@ -1,0 +1,23 @@
+{# Included right after security.js in every layout (base, public, product, login, index).
+   static/JS/session-guard.js resends requests refused for an expired form token and asks
+   staff to sign in again when they were signed out, without losing the page. #}
+<script type="application/json" id="sessionGuardConfig">{{ {
+    'user': session.get('user_id'),
+    'secondsLeft': session_seconds_left(),
+    'loginUrl': url_for('login'),
+    'keepAliveUrl': url_for('session_keep_alive'),
+    'text': {
+        'stillThereTitle': _('Are you still there?'),
+        'stillThereText': _('For your security you will be signed out in %(time)s because of inactivity.', time='{time}'),
+        'staySignedIn': _('Stay signed in'),
+        'signedOutTitle': _('You were signed out'),
+        'signedOutText': _('For your security you were signed out after a period of inactivity. Sign in again in a new tab, then come back and press Continue. Your changes on this page are kept.'),
+        'stillSignedOut': _('You are still signed out. Sign in first, then press Continue.'),
+        'signIn': _('Sign in'),
+        'continue': _('Continue'),
+        'cancel': _('Cancel'),
+        'otherUserTitle': _('Another user is signed in'),
+        'reload': _('Reload page')
+    }
+} | tojson }}</script>
+<script nonce="{{ csp_nonce() }}" src="{{ url_for('static', filename='JS/session-guard.js') }}"></script>

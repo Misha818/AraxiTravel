@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
     <script nonce="{{ csp_nonce() }}" src="{{ url_for('static', filename='JS/security.js') }}"></script>
+    {% include '_session_guard.html' %}
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script nonce="{{ csp_nonce() }}" src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 
@@ -225,6 +226,14 @@
               if (response.status === '1') {
                 saveButton.classList.toggle('hidden')
                 saving.classList.toggle('hidden')
+                  // Tell other open tabs (session-guard.js) that staff signed in again,
+                  // so a page waiting in its "You were signed out" dialog continues by itself
+                  try { localStorage.setItem('araxiSignedIn', String(Date.now())); } catch (e) {}
+                  // Opened from that dialog: close and go back to the page being worked on
+                  if (window.name === 'araxiSignIn' && window.opener) {
+                      window.close();
+                      return;
+                  }
                   // Handle success
                   let stuffURL = window.location.origin  + '/stuff';
                   location.href = stuffURL;

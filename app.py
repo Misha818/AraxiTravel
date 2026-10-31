@@ -5,7 +5,7 @@ from flask_babel import Babel, _, lazy_gettext as _l, gettext, format_date
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from products import productHeaderData, email_text, submit_notes_text, get_pr_order, slidesToEdit, checkCategoryName, checkProductCategoryName, get_RefKey_LangID_by_link, get_article_category_images, get_product_category_images, edit_p_h, submit_reach_text, submit_product_text, add_p_c_sql, edit_p_c_view, edit_a_c_view, edit_p_c_sql, get_product_categories, get_ar_thumbnail_images, get_pr_thumbnail_images, add_product, productDetails, constructPrData, add_product_lang
-from sysadmin import sanitize_html, sanitize_text_format, jsonSanitaizer, get_pt_payment_methods, get_payment_methods, is_valid_url, validate_request, send_confirmation_email, get_create_email_id, inline_css, init_sysadmin_context, check_rol_id, check_delivery_status, send_email_mailgun, getSupportedLangIDs, getLangdata, check_alias, get_order_status_list, get_affiliates, get_affiliate_reward_progress, get_promo_code_id_affiliateID, deletePUpdateP, reservePUpdateP, insertPUpdateP, insertIntoBuffer, calculate_price_promo, clientID_contactID, checkSPSSDataLen, replace_spaces_in_text_nodes, totalNumRows, countRows, filter_multy_dict, getLangdatabyID, supported_langs, get_full_website_name, generate_random_unique_string, get_meta_tags, removeRedundantFiles, checkForRedundantFiles, getFileName, fileUpload, get_ar_id_by_lang, get_pr_id_by_lang, getDefLang, getSupportedLangsPrefixes, getLangID, sqlSelect, sqlInsert, sqlUpdate, sqlDelete, get_pc_id_by_lang, get_pc_ref_key, login_required
+from sysadmin import sanitize_html, sanitize_text_format, jsonSanitaizer, get_pt_payment_methods, get_payment_methods, is_valid_url, validate_request, send_confirmation_email, get_create_email_id, inline_css, init_sysadmin_context, check_rol_id, check_delivery_status, send_email_mailgun, getSupportedLangIDs, getLangdata, check_alias, get_order_status_list, get_affiliates, get_affiliate_reward_progress, get_promo_code_id_affiliateID, deletePUpdateP, reservePUpdateP, insertPUpdateP, insertIntoBuffer, calculate_price_promo, clientID_contactID, checkSPSSDataLen, replace_spaces_in_text_nodes, totalNumRows, countRows, filter_multy_dict, getLangdatabyID, supported_langs, get_full_website_name, generate_random_unique_string, get_meta_tags, removeRedundantFiles, checkForRedundantFiles, getFileName, fileUpload, get_ar_id_by_lang, get_pr_id_by_lang, getDefLang, getSupportedLangsPrefixes, getLangID, sqlSelect, sqlInsert, sqlUpdate, sqlDelete, get_pc_id_by_lang, get_pc_ref_key, login_required, is_script_request, session_seconds_left
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 from werkzeug.datastructures import FileStorage
@@ -101,6 +101,12 @@ def inject_dynamic_data():
 def inject_current_year():
     return {'current_year': datetime.now(UTC).year}
 
+# Seconds until a signed-in staff member is signed out for inactivity (None when signed out),
+# for the "Are you still there?" warning in static/JS/session-guard.js
+@app.context_processor
+def inject_session_seconds_left():
+    return {'session_seconds_left': session_seconds_left}
+
 @app.context_processor
 def inject_supportedLangsData():
     supportedLangsData = supported_langs()
@@ -163,6 +169,12 @@ app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['SESSION_COOKIE_SECURE'] = os.getenv('SESSION_COOKIE_SECURE', '1') == '1'
 
+# CSRF tokens stay valid for the whole session instead of 1 hour (Flask-WTF's default).
+# The token protects by being unreadable to other sites, not by being short-lived; it is
+# still tied to the session and checked on every POST. Staff sign-in keeps its own
+# inactivity limit (login_required). A page left open no longer fails on its next click.
+app.config['WTF_CSRF_TIME_LIMIT'] = None
+
 # Upper bound for a whole request (slider uploads send several images at once)
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024
 app.config['BABEL_DEFAULT_LOCALE'] = defLang['Prefix']
@@ -197,7 +209,24 @@ orderStatusList = get_order_status_list()
 
 @app.errorhandler(CSRFError)
 def handle_csrf_error(e):
-    return render_template('csrf_error.html', reason=e.description), 400
+    # Requests sent by page scripts expect JSON: answer with a fresh token so
+    # static/JS/session-guard.js can resend the request once, unnoticed. The new token
+    # is only readable by this site's own pages (other sites can't read the response).
+    if is_script_request():
+        answer = gettext('Your session has expired. Please reload the page and try again.')
+        response = make_response(jsonify({'status': 'csrf', 'answer': answer, 'newCSRFtoken': generate_csrf()}), 400)
+        response.headers['X-Session-Error'] = 'csrf'
+        return response
+    return render_template('csrf_error.html', reason=e.description, current_locale=get_locale()), 400
+
+
+# "Stay signed in" in the warning shown by static/JS/session-guard.js a minute before staff
+# would be signed out. Only a click on that button calls it: login_required restarts the
+# inactivity period, as any other staff action does.
+@app.route('/session/keep-alive', methods=['POST'])
+@login_required
+def session_keep_alive():
+    return jsonify({'status': '1', 'newCSRFtoken': generate_csrf()})
 
 
 # All database connections stayed busy for MYSQL_POOL_TIMEOUT seconds (see araxitravel_db.py)

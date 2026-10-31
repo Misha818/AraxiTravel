@@ -1,4 +1,4 @@
-from flask import session, redirect, jsonify, request, g, abort, url_for
+from flask import session, redirect, jsonify, request, g, abort, url_for, make_response
 from flask_wtf.csrf import generate_csrf
 from markupsafe import escape
 from araxitravel_db import get_db
@@ -745,6 +745,36 @@ def session_expired():
     return elapsed > timedelta(minutes=session['exp_minutes'])
 
 
+def session_seconds_left():
+    """Seconds until a signed-in staff session ends for inactivity, None when signed out."""
+    if session.get('user_id') is None or session.get('started_at') is None or session.get('exp_minutes') is None:
+        return None
+    end = session['started_at'] + timedelta(minutes=session['exp_minutes'])
+    return max(0, int((end - datetime.now(timezone.utc)).total_seconds()))
+
+
+
+def is_script_request():
+    """
+    True for requests sent by page scripts (XHR / fetch), which expect JSON rather than
+    a redirect or an HTML page. static/JS/session-guard.js marks them with
+    X-Requested-With; every POST also carries the X-CSRFToken header.
+    """
+    return request.headers.get('X-Requested-With') == 'XMLHttpRequest' or 'X-CSRFToken' in request.headers
+
+
+def session_error_response(kind, answer, status):
+    """
+    JSON answer for a script request that can't go ahead. X-Session-Error tells
+    session-guard.js what to do: 'login' = signed out (ask to sign in, then resend),
+    'user' = another staff member is signed in now (reload the page).
+    """
+    response = jsonify({'status': '0', 'answer': answer, 'newCSRFtoken': generate_csrf()})
+    response.status_code = status
+    if kind:
+        response.headers['X-Session-Error'] = kind
+    return response
+
 
 def login_required(f):
     """
@@ -754,25 +784,39 @@ def login_required(f):
     """
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if session.get("user_id") is None or session.get('started_at') == None:
+        signedOut = session.get("user_id") is None or session.get('started_at') == None
+        if signedOut or session_expired() == True:
             session.clear()
+            if is_script_request():
+                return session_error_response('login', gettext('You were signed out. Please sign in again.'), 401)
             return redirect("/login")
-        
-        if session_expired() == True:
-            session.clear()
-            return redirect("/login")
-        
+
         userID = session.get("user_id")
+
+        # The page was opened by another staff member than the one signed in now
+        # (e.g. someone else signed in from another tab): never act as them.
+        pageUser = request.headers.get('X-Staff-User')
+        if pageUser and pageUser != str(userID):
+            return session_error_response('user', gettext('Another staff member has signed in in this browser since this page was opened. Reload the page to continue as them.'), 409)
+
         Action = f.__name__
 
-        exeptionActions = ['stuff', 'login', 'logout']
+        exeptionActions = ['stuff', 'login', 'logout', 'session_keep_alive']
 
         if Action not in exeptionActions:
             if permissions(userID, Action) == False:
+                if is_script_request():
+                    # permissions() signs out a disabled or removed account (session.clear())
+                    if session.get('user_id') is None:
+                        return session_error_response('login', gettext('You were signed out. Please sign in again.'), 401)
+                    return session_error_response('', gettext("You don't have permission to do this."), 403)
                 return redirect("/login")
-        
+
         session['started_at'] = datetime.now(timezone.utc)
-        return f(*args, **kwargs)
+        response = make_response(f(*args, **kwargs))
+        # session-guard.js warns staff a minute before they would be signed out
+        response.headers['X-Session-Expires-In'] = str(int(session['exp_minutes']) * 60)
+        return response
     
     return decorated_function
 

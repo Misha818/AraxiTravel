@@ -1,13 +1,81 @@
 <!DOCTYPE html>
-<html lang="en">
+{# Shown only when a form is submitted without page scripts (they get a JSON answer and
+   recover by themselves, see app.py handle_csrf_error and static/JS/session-guard.js).
+   Standalone: it can reach public visitors and staff alike. #}
+<html lang="{{ current_locale or 'en' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CSRF Error</title>
+    <meta name="robots" content="noindex">
+    <title>{{ _('This page has expired') }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/araxi-tokens.css') }}">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 16px;
+            box-sizing: border-box;
+            color: var(--navy-900);
+            font-family: var(--font-body, system-ui, sans-serif);
+            background: var(--cream-100);
+        }
+        .expired {
+            width: 100%;
+            max-width: 480px;
+            padding: 32px 28px;
+            box-sizing: border-box;
+            text-align: center;
+            background: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-card);
+        }
+        .expired h1 {
+            margin: 0 0 12px;
+            font: 400 clamp(1.5rem, 5vw, 2rem)/1.2 var(--font-display, Georgia, serif);
+        }
+        .expired p {
+            margin: 0 0 24px;
+            font-size: 16px;
+            line-height: 1.55;
+            color: var(--ink-600);
+        }
+        .expired__actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        .expired__actions a {
+            flex: 1 1 160px;
+            padding: 12px 20px;
+            font-weight: 600;
+            text-decoration: none;
+            color: var(--navy-800);
+            border: 1.5px solid currentColor;
+            border-radius: 999px;
+        }
+        .expired__actions a.primary {
+            color: var(--white);
+            background: var(--navy-800);
+            border-color: var(--navy-800);
+        }
+        .expired__actions a:focus-visible {
+            outline: 3px solid var(--river-400);
+            outline-offset: 2px;
+        }
+    </style>
 </head>
 <body>
-    <h1>CSRF Error</h1>
-    <p>{{ reason }}</p>
-    <p>It seems that the CSRF token is missing or invalid. Please try submitting the form again.</p>
+    <main class="expired">
+        <h1>{{ _('This page has expired') }}</h1>
+        <p>{{ _('Your session has ended, so your last action could not be completed for security reasons. Nothing was saved. Go back, reload the page and try again.') }}</p>
+        <div class="expired__actions">
+            <a class="primary" href="{{ request.referrer if request.referrer and request.referrer.startswith(request.host_url) else url_for('home') }}">{{ _('Go back and reload') }}</a>
+            <a href="{{ url_for('home') }}">{{ _('Home page') }}</a>
+        </div>
+    </main>
 </body>
 </html>
