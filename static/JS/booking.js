@@ -35,6 +35,12 @@
         return n === 1 ? T.onePerson : fill(T.people, { num: n });
     }
 
+    // who is coming in short, e.g. "Adult × 2, Child × 1" (the counters' summary, the buy-now basket)
+    function countsText(options, counts) {
+        // non-breaking spaces keep "Adult × 2" on one line when the text wraps
+        return options.ages.filter(a => counts[a.ID]).map(a => a.Name + ' × ' + counts[a.ID]).join(', ');
+    }
+
     function guideByID(options, id) {
         return options.guides.find(g => g.ID === Number(id)) || null;
     }
@@ -223,8 +229,7 @@
                 });
                 total.textContent = peopleText(sum);
                 // closed: who is coming in short, e.g. "Adult × 2, Child × 1"
-                const chosen = options.ages.filter(a => counts[a.ID]).map(a => a.Name + ' × ' + counts[a.ID]);
-                summary.textContent = chosen.length ? chosen.join(', ') : peopleText(0);
+                summary.textContent = countsText(options, counts) || peopleText(0);
             }
         };
     }
@@ -1004,41 +1009,50 @@
     }
 
     // ================= Buy-now page =================
-    // The page makes one ticket (.client-contact) per person and adds / removes them with its + / −
-    // (.tkt-add / .tkt-remove). Here the counters do that: every ticket is tagged with an age group
-    // (data-age), and the counts are the tags.
+    // The page asks for one main participant (as the cart's "Book all" does); who comes is the counters'
+    // count per age group, kept here. The page hears of the number of people through 'booking:people'.
     function initBuyNow(options) {
         const contacts = document.querySelector('.client-contacts');
         const card = document.getElementById('bookingCard');
         if (!contacts || !card) {
             return null;
         }
-        contacts.classList.add('bk-managed');
         let vehicle = options.vehicle;
         let guide = options.guide;
         let lastQuote = null;
         let lastError = null;
         let quoteRequest = 0;
         let stockMax = null;
-        // age groups waiting for a ticket: the chosen ones at first, then the ones added with +
-        let waiting = expandCounts(options, options.ageCounts || {});
-        let waitingTimer = null;
-
-        function tickets() {
-            return [...contacts.querySelectorAll('.client-contact')];
+        // how many of each age group come: {ageID: count}, as chosen on the service page
+        const going = Object.assign({}, options.ageCounts || {});
+        if (!sumCounts(going) && options.ages.length) {
+            going[(options.ages.find(a => a.Adult) || options.ages[0]).ID] = 1;
         }
 
-        // the counts: the tickets' age groups and the ones waiting for a ticket
         function counts() {
-            const c = {};
-            tickets().forEach(t => {
-                const id = Number(t.dataset.age);
-                if (id) {
-                    c[id] = (c[id] || 0) + 1;
-                }
-            });
-            waiting.forEach(id => { c[id] = (c[id] || 0) + 1; });
-            return c;
+            return Object.assign({}, going);
+        }
+
+        function people() {
+            return sumCounts(going);
+        }
+
+        // fewer may come (a smaller vehicle, less stock): the youngest go first, one always stays
+        function trimTo(max) {
+            const order = options.ages.map(a => a.ID);
+            while (people() > Math.max(max, 1)) {
+                going[order.find(id => (going[id] || 0) > 0)] -= 1;
+            }
+        }
+
+        // the counts changed: the counters, the price, and the page (basket line, promo code)
+        function changed() {
+            render();
+            refresh();
+            // people: the number; label: "2 people"; ages: "Infant × 1, Adult × 1"
+            document.dispatchEvent(new CustomEvent('booking:people', {
+                detail: { people: people(), label: peopleText(people()), ages: countsText(options, going) }
+            }));
         }
 
         // ---- the day: the one chosen on the service page, changeable here. Another day that the cart
@@ -1069,24 +1083,18 @@
 
         // ---- who is coming, vehicle and guide
         const counters = ageCounters(options, 'bkNow', (ageID, step) => {
-            const max = peopleLimit(options, stockMax, vehicle);
             if (step > 0) {
-                if (max === null || sumCounts(counts()) >= max) {
+                const max = peopleLimit(options, stockMax, vehicle);
+                if (max === null || people() >= max) {
                     lastError = limitMessage(options, stockMax, vehicle);
                     showMessage(lastError);
                     return;
                 }
-                waiting.push(ageID);
-                addTicket();
-            } else {
-                // the last ticket of this age group goes
-                const own = tickets().filter(t => Number(t.dataset.age) === ageID);
-                const ticket = own[own.length - 1];
-                if (ticket && tickets().length > 1) {
-                    ticket.querySelector('.tkt-remove').click();
-                }
+                going[ageID] = (going[ageID] || 0) + 1;
+            } else if ((going[ageID] || 0) > 0 && people() > 1) {
+                going[ageID] -= 1;
             }
-            render();
+            changed();
         });
         card.appendChild(counters.element);
         if (options.basis === PRICING_VEHICLE) {
@@ -1105,39 +1113,14 @@
                 // a smaller vehicle: the youngest go first
                 const max = peopleLimit(options, stockMax, vehicle);
                 if (max !== null) {
-                    const order = options.ages.map(a => a.ID);
-                    while (tickets().length > Math.max(max, 1)) {
-                        const id = order.find(i => tickets().some(t => Number(t.dataset.age) === i));
-                        const own = tickets().filter(t => Number(t.dataset.age) === id);
-                        own[own.length - 1].querySelector('.tkt-remove').click();
-                    }
+                    trimTo(max);
                 }
             }
             if (event.target.name === 'bkGuide') {
                 guide = Number(event.target.value);
             }
-            render();
-            refresh();
+            changed();
         });
-
-        // tickets the page couldn't add (no stock) aren't waited for
-        function waitForTickets() {
-            clearTimeout(waitingTimer);
-            waitingTimer = setTimeout(() => {
-                waiting = [];
-                render();
-                refresh();
-            }, 6000);
-        }
-
-        // a ticket more: the page's own + (it checks the stock), done once the ticket is there
-        function addTicket() {
-            const add = contacts.querySelector('.tkt-add');
-            if (add) {
-                add.click();
-            }
-            waitForTickets();
-        }
 
         // the stock / order limit, as the page works it out
         const stockData = new FormData();
@@ -1150,32 +1133,18 @@
                 if (row) {
                     const inStock = parseInt(row.quantity, 10) || 0;
                     stockMax = row.maxQuantity === null ? inStock : Math.min(parseInt(row.maxQuantity, 10), inStock);
+                    // more were chosen than can be booked now
+                    if (people() > stockMax) {
+                        trimTo(stockMax);
+                        lastError = limitMessage(options, stockMax, vehicle);
+                        showMessage(lastError);
+                        changed();
+                        return;
+                    }
                 }
                 render();
             })
             .catch(error => console.error(error));
-
-        // every ticket gets its age group (tag and label)
-        function tagTickets() {
-            tickets().forEach(t => {
-                if (!t.dataset.age) {
-                    const next = waiting.shift();
-                    const fallback = (options.ages.find(a => a.Adult) || options.ages[0] || {}).ID;
-                    t.dataset.age = String(next || fallback || '');
-                }
-                let tag = t.querySelector('.bk-age-tag');
-                if (!tag) {
-                    tag = document.createElement('p');
-                    tag.className = 'col-12 bk-age-tag';
-                    t.insertBefore(tag, t.firstChild);
-                }
-                const age = ageByID(options, t.dataset.age);
-                tag.textContent = T.ageGroup + ': ' + (age ? age.Name + (age.Range ? ' (' + age.Range + ')' : '') : '');
-            });
-            if (!waiting.length) {
-                clearTimeout(waitingTimer);
-            }
-        }
 
         function render() {
             counters.render(counts(), peopleLimit(options, stockMax, vehicle), 1);
@@ -1247,15 +1216,13 @@
             }
         }
 
-        // the age group of every ticket, in the tickets' order
+        // the age group of every person, oldest groups first
         function ages() {
-            return tickets().map(t => Number(t.dataset.age) || 0);
+            return expandCounts(options, going);
         }
 
         function refresh() {
-            const people = tickets().length;
-            // tickets still being added
-            if (!people || waiting.length) {
+            if (!people()) {
                 return;
             }
             if (options.basis === PRICING_VEHICLE && !vehicleByID(options, vehicle)) {
@@ -1265,7 +1232,7 @@
             const request = ++quoteRequest;
             const formData = new FormData();
             formData.append('ptID', options.ptRefKey);
-            formData.append('people', people);
+            formData.append('people', people());
             formData.append('vehicle', vehicle || '');
             formData.append('guide', guide || 0);
             formData.append('ages', ages().join(','));
@@ -1290,19 +1257,8 @@
                 .catch(error => console.error(error));
         }
 
-        // tickets are added and removed by the page: tag them, update the counters and the price
-        new MutationObserver(() => {
-            tagTickets();
-            render();
-            refresh();
-        }).observe(contacts, { childList: true, subtree: false });
-        tagTickets();
-        render();
         showQuote(null);
-        // the page makes the first tickets a moment later
-        if (waiting.length) {
-            waitForTickets();
-        }
+        changed();
 
         // ---- notes and terms. The notes are written on the price card or in the cart (noteStore), not here:
         // the page only shows them (#bookingNotesView), and when the price requires them and there are none,

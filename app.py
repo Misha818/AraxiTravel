@@ -101,6 +101,11 @@ def inject_dynamic_data():
 def inject_current_year():
     return {'current_year': datetime.now(UTC).year}
 
+# The company's contact address (INFO_EMAIL in .env, read in sysadmin.py) for every template
+@app.context_processor
+def inject_info_email():
+    return {'info_email': INFO_EMAIL}
+
 # Seconds until a signed-in staff member is signed out for inactivity (None when signed out),
 # for the "Are you still there?" warning in static/JS/session-guard.js
 @app.context_processor
@@ -186,7 +191,7 @@ PAGINATION_BUTTONS_COUNT = os.getenv('PAGINATION_BUTTONS_COUNT')
 MAIN_CURRENCY = os.getenv('MAIN_CURRENCY')
 
 # MAX_ALLOWED_QUANTITY (from .env) is defined in sysadmin.py, which the checkout code there also uses
-from sysadmin import MAX_ALLOWED_QUANTITY
+from sysadmin import MAX_ALLOWED_QUANTITY, INFO_EMAIL
 from booking import get_bookings, order_tickets, booking_options, booking_quote, booking_choices_error, save_booking, client_options, parse_booking_date, to_int, NO_GUIDE
 from cart import read_cart, write_cart, cart_count, cart_view, cart_items_on, cart_bookings, new_cart_item, same_booking, parse_age_counts, iso_date, MAX_CART_ITEMS
 
@@ -1353,6 +1358,17 @@ def checkout():
         if not data['contact_list'] or len(data['ptData']) == 0:
             return jsonify({'status': "0", 'answer': gettext('Something went wrong. Please try again!'), 'newCSRFtoken': newCSRFtoken})
         
+        # The buy-now page (it sends 'booking') asks for one main participant, as the cart's "Book all"
+        # does: who comes is the booking's age list, not one contact per person. Its fields on the page
+        # are firstname_1, lastname_1, ... (keyList marks them)
+        if data.get('booking') is not None:
+            if not isinstance(data['contact_list'], list) or len(data['contact_list']) != 1:
+                return jsonify({'status': "0", 'answer': gettext('Something went wrong. Please try again!'), 'newCSRFtoken': newCSRFtoken})
+            contact, mistake = lead_contact_from(data['contact_list'][0])
+            if mistake:
+                return jsonify({'status': "-1", 'keyList': [key + '_1' for key in mistake[0]], 'answer': mistake[1], 'newCSRFtoken': newCSRFtoken})
+            data['contact_list'] = [contact]
+
         # Check contacts validity from contactList
         emailPattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
         i = 1
@@ -1417,13 +1433,17 @@ def checkout():
             if answer is None:
                 bookingDate, answer = parse_booking_date(booking.get('date'), bookingOptions['ptRefKey'])
             if answer is None:
-                bookingQuote = booking_quote(bookingOptions, len(data['contact_list']), booking.get('vehicle'),
-                                             booking.get('guide', NO_GUIDE), booking.get('ages'))
+                ages = booking.get('ages')
+                bookingQuote = booking_quote(bookingOptions, len(ages) if isinstance(ages, list) else 0, booking.get('vehicle'),
+                                             booking.get('guide', NO_GUIDE), ages)
                 answer = None if bookingQuote['ok'] else bookingQuote['error']
             if answer:
                 return jsonify({'status': "0", 'answer': answer, 'newCSRFtoken': newCSRFtoken})
             # one unit (person) of the order costs total / people
             priceOverrides = {bookingOptions['ptRefKey']: bookingQuote['total'] / bookingQuote['people']}
+            # the stock taken is the booking's people (as "Book all" does), not the number of contacts
+            data['ptData'] = [{'ptID': bookingOptions['ptRefKey'], 'quantity': bookingQuote['people'],
+                               'unitPrice': bookingQuote['total'] / bookingQuote['people']}]
         elif bookingOptions is not None:
             # every bookable price needs its booking (who comes, from the groups that can join)
             return jsonify({'status': "0", 'answer': gettext('Something went wrong. Please try again!'), 'newCSRFtoken': newCSRFtoken})
@@ -4654,7 +4674,7 @@ def add_teammate():
                 "langPrefix": session.get('lang', 'en'),
                 "template": "static.html",
                 "subject": gettext("Teammate Signup Invitation"),
-                "mail_from": "info@araxitravel.am",
+                "mail_from": INFO_EMAIL,
                 "mail_to_email": Email,
                 "main_url": get_full_website_name(),
                 "logo_url": get_full_website_name() + '/static/images/logo.png',
@@ -8482,7 +8502,10 @@ def get_promo_discounts():
         if isinstance(booking, dict) and len(products) == 1:
             options = booking_options(products[0]['ptID'], languageID)
             if options is not None:
-                quote = booking_quote(options, products[0]['quantity'], booking.get('vehicle'), booking.get('guide', NO_GUIDE), booking.get('ages'))
+                # who comes is the booking's age list (one main participant is entered, not one per person)
+                ages = booking.get('ages')
+                people = len(ages) if isinstance(ages, list) else products[0]['quantity']
+                quote = booking_quote(options, people, booking.get('vehicle'), booking.get('guide', NO_GUIDE), ages)
                 if quote['ok']:
                     linePrices[options['ptRefKey']] = quote['total']
 
@@ -9098,7 +9121,7 @@ def get_activities():
 #         'langPrefix': 'hy',
 #         'template': 'static.html',
 #         'subject': 'Teammate Signup Invitation',
-#         'mail_from': 'info@araxitravel.am',
+#         'mail_from': INFO_EMAIL,
 #         'mail_from_user': 'CEO TEST',
 #         'mail_to': 'Mishayil Movsisyan',
 #         'mail_to_email': 'misha818m@gmail.com',
@@ -9137,7 +9160,7 @@ def get_activities():
         # 'template': 'typed.html',
 
         # 'subject': 'Testing typed email functionality',
-        # 'mail_from': 'info@araxitravel.am',
+        # 'mail_from': INFO_EMAIL,
         # 'mail_from_user': 'Satti Matti',
         # 'mail_to_email': 'mishatab7@gmail.com',
         # 'main_url': 'http://127.0.0.1:5000',
@@ -9205,7 +9228,7 @@ def get_activities():
     #     'type': 'gmail',
     #     'template': 'dynemic.html',
     #     'subject': 'Վճարման հաստատում',
-    #     'mail_from': 'info@araxitravel.am',
+    #     'mail_from': INFO_EMAIL,
     #     'mail_from_user': 'Մայրիկի Հացը',
     #     'mail_to': 'Jhon Matti',
     #     'mail_to_email': 'mishatab7@gmail.com',

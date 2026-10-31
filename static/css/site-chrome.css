@@ -39,6 +39,13 @@ html.menu-open { overflow: hidden; }
 .site-footer :where(ul) { margin: 0; padding: 0; list-style: none; }
 .site-header :where(a),
 .site-footer :where(a) { color: inherit; }
+/* ...on hover and focus too: pages that load Bootstrap (e.g. buy-now) would otherwise turn the logo, the
+   menu and the language links link-blue through Bootstrap's more specific a:hover. Links with their own
+   hover colour (.cart-link, .site-footer__col a, the current language) come later or weigh more */
+.site-header :where(a):hover,
+.site-header :where(a):focus,
+.site-footer :where(a):hover,
+.site-footer :where(a):focus { color: inherit; }
 .site-header :where(img),
 .site-footer :where(img) { max-width: 100%; display: block; }
 .site-footer :where(h3, p) { margin: 0; }

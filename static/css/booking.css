@@ -308,18 +308,6 @@
     display: none;
 }
 
-/* buy-now: the counters add and remove the tickets, each shows its age group */
-.bk-managed .tkt-add,
-.bk-managed .tkt-remove {
-    display: none !important;
-}
-
-.bk-age-tag {
-    margin: 0;
-    font-weight: 700;
-    color: var(--river-600);
-}
-
 .bk-message {
     margin: 0;
     color: var(--ochre-600, #a9733a);

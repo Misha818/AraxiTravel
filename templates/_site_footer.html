@@ -35,7 +35,7 @@
         <div class="site-footer__col">
             <h3>{{ _('Follow us') }}</h3>
             <ul>
-                <li><a href="mailto:info@araxitravel.am">info@araxitravel.am</a></li>
+                {% if info_email %}<li><a href="mailto:{{ info_email }}">{{ info_email }}</a></li>{% endif %}
                 {% for key, label in [('TG', 'Telegram'), ('INS', 'Instagram'), ('FB', 'Facebook'), ('IN', 'LinkedIn')] %}
                     {% if site_contacts[key] %}
                     <li><a href="{{ site_contacts[key] }}" target="_blank" rel="noopener">{{ label }}</a></li>

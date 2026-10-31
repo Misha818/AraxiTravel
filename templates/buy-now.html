@@ -125,10 +125,21 @@ body {
   border-radius: 18px;
   box-shadow: var(--shadow-card, 0 10px 30px rgba(7, 35, 57, .08));
 }
-.bn .bk-age-tag {
+/* who is coming, under the tour's name in the basket: "2 people · Infant × 1, Adult × 1" */
+.bn .bn-basket-people {
+  display: block;
+  margin-top: 4px;
   font-size: 13px;
-  letter-spacing: .04em;
-  color: var(--ochre-600, #a8743d);
+  line-height: 1.4;
+  text-align: left;
+  color: var(--ink-600, #4a5b69);
+}
+/* "The person we contact about this booking." under the main participant's heading */
+.bn .bn-lead-hint {
+  margin: -4px 0 12px;
+  font-size: 14px;
+  text-align: left;
+  color: var(--ink-600, #4a5b69);
 }
 /* fields */
 .bn .form-label {
@@ -456,9 +467,50 @@ body {
             <div id="bookingCard"></div>
             {% endif %}
             <form class="needs-validation" novalidate>
-              <span class="client-contacts">
-                  
-              </span>
+              {# One main participant, as on the cart's "Book all" (cart-checkout.html): who comes is chosen
+                 with the counters above (static/JS/booking.js) #}
+              <div class="client-contacts">
+                <div class="ticket-wrap">
+                  <h4 class="mb-3">{{ _('Main participant') }}</h4>
+                  <p class="bn-lead-hint">{{ _('The person we contact about this booking.') }}</p>
+                  <div class="row g-3 client-contact" data-idx="1">
+                    <div class="col-sm-6">
+                      <label for="firstname_1" class="form-label">{{ _('First name') }} *</label>
+                      <input type="text" class="form-control" id="firstname_1" autocomplete="given-name" required>
+                      <div class="invalid-feedback">{{ _('Valid first name is required.') }}</div>
+                    </div>
+
+                    <div class="col-sm-6">
+                      <label for="lastname_1" class="form-label">{{ _('Last name') }} *</label>
+                      <input type="text" class="form-control" id="lastname_1" autocomplete="family-name" required>
+                      <div class="invalid-feedback">{{ _('Valid last name is required.') }}</div>
+                    </div>
+
+                    <div class="col-sm-6">
+                      <label for="phone_1" class="form-label">{{ _('Phone Number') }} *</label>
+                      <div class="input-group">
+                        <input type="number" id="phone_1" class="form-control my-phone-control" autocomplete="tel" required>
+                        <div class="invalid-feedback invalid-feedback-p">{{ _('Please enter valid phone number!') }}</div>
+                      </div>
+                    </div>
+
+                    <div class="col-sm-6">
+                      <label for="confirm_phone_1" class="form-label">{{ _('Confirm Phone Number') }} *</label>
+                      <div class="input-group">
+                        <input type="number" id="confirm_phone_1" class="form-control my-phone-control" autocomplete="tel" required>
+                        <div class="invalid-feedback invalid-feedback-phone">{{ _('Please enter valid phone number!') }}</div>
+                        <div class="invalid-feedback" id="match-control_1">{{ _('Phone numbers do not match!') }}</div>
+                      </div>
+                    </div>
+
+                    <div class="col-12">
+                      <label for="email_1" class="form-label">{{ _('Email') }} *</label>
+                      <input type="email" class="form-control" id="email_1" autocomplete="email" required>
+                      <div class="invalid-feedback">{{ _('Please enter a valid email address!') }}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
                   
                   <hr class="my-4 paymentElements">
                   <select class="pay_method form-select paymentElements" id="payment_methods" aria-label="Default select example" style="margin-bottom: 10px;" required>
@@ -510,6 +562,37 @@ body {
 <script nonce="{{ csp_nonce() }}">
 
 let prDataGlobal = JSON.parse('{{ prDataGlobal | tojson | safe }}');
+// Who comes is chosen with the booking's counters (static/JS/booking.js, 'booking:people'): the order's
+// quantity follows them, the basket says who is coming under the tour's name ("2 people · Infant × 1,
+// Adult × 1"), and a promo code already entered is worked out again
+let basketPeople = null;
+
+function showBasketPeople() {
+  const title = document.querySelector('#product_' + prDataGlobal.ptID);
+  if (!title || !basketPeople) {
+    return;   // the basket is drawn a moment later (it calls this again)
+  }
+  let line = title.parentNode.querySelector('.bn-basket-people');
+  if (!line) {
+    line = document.createElement('small');
+    line.className = 'bn-basket-people';
+    title.after(line);
+  }
+  line.textContent = basketPeople.ages ? basketPeople.label + ' · ' + basketPeople.ages : basketPeople.label;
+}
+
+document.addEventListener('booking:people', (event) => {
+  basketPeople = event.detail;
+  showBasketPeople();
+  if (prDataGlobal.quantity === event.detail.people) {
+    return;
+  }
+  prDataGlobal.quantity = event.detail.people;
+  const promo = document.querySelector('#promo');
+  if (promo && promo.value) {
+    submit_promo();
+  }
+});
 let totalPriceGlobal = 1;
 let prData = []
 let ptQuantity;
@@ -1190,7 +1273,8 @@ async function get_pt_quantity(ptID, quantity) {
                             h6.className = "my-0";
                             h6.id = "product_" + row['ptID'];
                             h6.style.textAlign = "left";
-                            h6.textContent = prName + ` (${amount})`;
+                            // the tour's name; who is coming goes on its own line under it (showBasketPeople)
+                            h6.textContent = prName;
 
                             // Append the h6 to the div
                             div.appendChild(h6);
@@ -1206,6 +1290,7 @@ async function get_pt_quantity(ptID, quantity) {
 
                             // Finally, append the li to the checkout basket element
                             checkoutBasket.appendChild(li);
+                            showBasketPeople();
 
                         }
                     });
@@ -1587,205 +1672,13 @@ async function get_pt_quantity(ptID, quantity) {
   
   document.addEventListener('DOMContentLoaded', function() {  
 
-  let totalQuantity = prDataGlobal.quantity;
-
-  const container = document.querySelector('.client-contacts');
-
-  // Template for one ticket block
-  const blockHTML = (n) => `
-    <h4 class="mb-3"><span>{{ _('Ticket') }} &#x2116;</span><span class="tkt-num" id="tkt_n_${n}">${n}</span></h4>
-    <div class="row g-3 client-contact" data-idx="${n}">
-      <div class="col-sm-6">
-        <label for="firstname_${n}" class="form-label">{{ _('First name') }} *</label>
-        <input type="text" class="form-control" id="firstname_${n}" required>
-        <div class="invalid-feedback">{{ _('Valid first name is required.') }}</div>
-      </div>
-
-      <div class="col-sm-6">
-        <label for="lastname_${n}" class="form-label">{{ _('Last name') }} *</label>
-        <input type="text" class="form-control" id="lastname_${n}" required>
-        <div class="invalid-feedback">{{ _('Valid last name is required.') }}</div>
-      </div>
-
-      <div class="col-sm-6">
-        <label for="phone_${n}" class="form-label">{{ _('Phone Number') }} *</label>
-        <div class="input-group">
-          <input type="number" id="phone_${n}" class="form-control my-phone-control" required>
-          <div class="invalid-feedback invalid-feedback-p">{{ _('Please enter valid phone number!') }}</div>
-        </div>
-      </div>
-
-      <div class="col-sm-6">
-        <label for="confirm_phone_${n}" class="form-label">{{ _('Confirm Phone Number') }} *</label>
-        <div class="input-group">
-          <input type="number" id="confirm_phone_${n}" class="form-control my-phone-control" required>
-          <div class="invalid-feedback invalid-feedback-phone">{{ _('Please enter valid phone number!') }}</div>
-          <div class="invalid-feedback" id="match-control_${n}">{{ _('Phone numbers do not match!') }}</div>
-        </div>
-      </div>
-
-      <div class="col-12">
-        <label for="email_${n}" class="form-label">{{ _('Email') }}</label>
-        <input type="email" class="form-control" id="email_${n}" required>
-        <div class="invalid-feedback">{{ _('Please enter a valid email address!') }}</div>
-      </div>
-
-      <div class="add_remove" role="group" aria-label="Quantity">
-        <div class="tkt-remove" tabindex="0" aria-label="Remove">−</div>
-      </div>
-    </div>
-  `;
-
-  function addBlock(n) {
-    if (document.querySelector('.tkt-add')) {
-      document.querySelector('.tkt-add').remove();
-    }
-    const wrapper = document.createElement('div');
-    wrapper.className = 'ticket-wrap';
-    wrapper.innerHTML = blockHTML(n);
-    container.appendChild(wrapper);
-    
-    const list = document.querySelectorAll('.add_remove');
-    const last = list.length ? list[list.length - 1] : null;
-    if (last) {
-      const btn = document.createElement('div');
-      btn.className = 'tkt-add';
-      btn.tabIndex = 0;
-      btn.setAttribute('aria-label', 'Add');
-      btn.textContent = '+';           // en dash minus
-      last.appendChild(btn);
-    }
-  }
-
-  function reindex() {
-    const blocks = container.querySelectorAll('.client-contact');
-    blocks.forEach((blk, i) => {
-      const n = i + 1;
-      blk.dataset.idx = n;
-
-      // Update header number
-      const numSpan = blk.previousElementSibling?.matches('h4.mb-3') 
-        ? blk.previousElementSibling.querySelector('.tkt-num') 
-        : blk.querySelector('.tkt-num');
-      if (numSpan) { numSpan.id = `tkt_n_${n}`; numSpan.textContent = n; }
-
-      // Update IDs + labels
-      const pairs = [
-        ['firstname', 'First name'],
-        ['lastname',  'Last name'],
-        ['phone',     'Phone Number'],
-        ['confirm_phone','Confirm Phone Number'],
-        ['email',     'Email'],
-        ['match-control', 'Phone numbers do not match!']
-      ];
-      pairs.forEach(([base]) => {
-        const input = blk.querySelector(`[id^="${base}_"]`);
-        const label = blk.querySelector(`label[for^="${base}_"]`);
-        if (input)  input.id  = `${base}_${n}`;
-        if (label)  label.setAttribute('for', `${base}_${n}`);
-      });
-    });
-  }
-
-  // Click handling for + / − (event delegation)
-  container.addEventListener('click', (e) => {
-    if (e.target.classList.contains('tkt-add')) {
-        get_pt_quantity(prDataGlobal.ptID, totalQuantity + 1)
-          .then(response => {
-            if (response.status === 1) {
-              let maxAllowdQuantity = response.data.data[0].maxQuantity;
-              if (maxAllowdQuantity === null) {
-                maxAllowdQuantity = parseInt(response.data.data[0].quantity);
-              }
-              if (maxAllowdQuantity >= totalQuantity + 1) {
-                totalQuantity = totalQuantity + 1;
-                addBlock(totalQuantity);
-                let old_quantity = document.querySelector('#product_' + prDataGlobal.ptID.toString()).textContent;
-                let new_quantity = old_quantity.split('(')[0] + ` (${totalQuantity})`;
-                document.querySelector('#product_' + prDataGlobal.ptID.toString()).textContent = new_quantity;
-                document.querySelector('.text-muted').textContent = totalQuantity * response.data.data[0].Price;
-
-                prDataGlobal.quantity = totalQuantity;
-
-                if (document.querySelector('#promo')) {
-                  if (document.querySelector('#promo').value) {
-                    submit_promo();
-                  }
-                }
-
-              } 
-              
-              else {
-                totalQuantity = maxAllowdQuantity;
-                alert(`{{ _('Max allowed quantity to purchase') }} ${maxAllowdQuantity}`)
-              }
-            } 
-          }) 
-          .catch(error => console.error(error));
-
-      return;
-    }
-    if (e.target.classList.contains('tkt-remove')) {
-      const block = e.target.closest('.ticket-wrap');
-      if (!block) return;
-      // Don’t remove the last remaining block
-      if (container.querySelectorAll('.client-contact').length > 1) {
-        block.remove();
-        reindex();
-        totalQuantity = totalQuantity - 1;
-        let old_quantity = document.querySelector('#product_' + prDataGlobal.ptID.toString()).textContent;
-        let new_quantity = old_quantity.split('(')[0] + ` (${totalQuantity})`;
-        document.querySelector('#product_' + prDataGlobal.ptID.toString()).textContent = new_quantity;
-        document.querySelector('.text-muted').textContent = totalQuantity * ptQuantity.Price;
-
-        prDataGlobal.quantity = totalQuantity;
-
-        if (document.querySelector('#promo')) {
-          if (document.querySelector('#promo').value) {
-            submit_promo();
-          }
-        }
-      }
-
-      if (!document.querySelector('.tkt-add')) {
-        const list = document.querySelectorAll('.add_remove');
-        const last = list.length ? list[list.length - 1] : null;
-        if (last) {
-          const btn = document.createElement('div');
-          btn.className = 'tkt-add';
-          btn.tabIndex = 0;
-          btn.setAttribute('aria-label', 'Add');
-          btn.textContent = '+';           // en dash minus
-          last.appendChild(btn);
-        }
-      }
-       
-    }
-  });
-
+  // the price's stock row: its price (ptQuantity.Price) decides whether payment is needed
   get_pt_quantity(prDataGlobal.ptID, prDataGlobal.quantity)
     .then(response => {
       if (response.status === 1) {
-        ptQuantity = response.data.data[0]; 
-        
-        let maxAllowdQuantity = response.data.data[0].maxQuantity;
-        if (maxAllowdQuantity === null) {
-          maxAllowdQuantity = parseInt(response.data.data[0].quantity);
-        }
-          
-        if (maxAllowdQuantity >= totalQuantity) {
-          for(let i = 0; i < prDataGlobal.quantity; i++) {
-            addBlock(i+1);
-          }
-        } else {
-          totalQuantity = maxAllowdQuantity;
-          alert(`{{ _('Max allowed quantity to purchase') }} ${maxAllowdQuantity}`)
-          for(let i = 0; i < maxAllowdQuantity; i++) {
-            addBlock(i+1);
-          }
-        }
-      } 
-    }) 
+        ptQuantity = response.data.data[0];
+      }
+    })
     .catch(error => console.error(error));
 
 

@@ -44,6 +44,12 @@ os.makedirs(target_directory, exist_ok=True)
 
 MAIN_CURRENCY = os.getenv('MAIN_CURRENCY')
 
+# The company's contact address (INFO_EMAIL in .env): the sender of the app's emails and the address the
+# site shows (templates get it as info_email, app.py inject_info_email)
+INFO_EMAIL = (os.getenv('INFO_EMAIL') or '').strip()
+if not INFO_EMAIL:
+    logging.warning('INFO_EMAIL is not set in .env: emails have no sender address and the site shows no contact email')
+
 # The most of one price that a single purchase may take (MAX_ALLOWED_QUANTITY in .env).
 # Add to Store offers it as the stock's limit, and stock saved without a limit is capped at it
 # everywhere a purchase is checked; otherwise the quantity dropdown lists every unit in stock
@@ -1902,7 +1908,7 @@ def send_confirmation_email(pdID, trackOrderUrl):
         "type": "gmail",
         "template": "static.html",
         "subject": gettext("Payment Confirmation"),
-        "mail_from": "info@araxitravel.am",
+        "mail_from": INFO_EMAIL,
         "mail_from_user": gettext("company"),
         "mail_to": result['data'][0]['FirstName'] + ' ' + result['data'][0]['LastName'],
         "mail_to_email": result['data'][0]['email'],

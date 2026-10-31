@@ -111,7 +111,7 @@
             <a href="https://facebook.com" class="fa fa-facebook" style="color: #1877F2;" target="_blank"></a>
             <a href="https://instagram.com" class="fa fa-instagram" style="color: #E1306C;" target="_blank"></a>
             <a href="https://linkedin.com" class="fa fa-linkedin" style="color: #0A66C2; font-size: 2.6rem; padding-left: unset;" target="_blank"></a>
-            <a href="mailto:info@araxitravel.am" class="fa fa-envelope" style="color: #e1d7cc; font-size: 2.6rem; padding-left: unset;" target="_blank"></a>
+            {% if info_email %}<a href="mailto:{{ info_email }}" class="fa fa-envelope" style="color: #e1d7cc; font-size: 2.6rem; padding-left: unset;" target="_blank"></a>{% endif %}
 
       </div>
       </div>
