@@ -175,8 +175,8 @@ MAIN_CURRENCY = os.getenv('MAIN_CURRENCY')
 
 # MAX_ALLOWED_QUANTITY (from .env) is defined in sysadmin.py, which the checkout code there also uses
 from sysadmin import MAX_ALLOWED_QUANTITY
-from booking import get_booking, booking_options, booking_quote, booking_choices_error, save_booking, client_options, parse_booking_date, to_int, NO_GUIDE
-from cart import read_cart, write_cart, cart_count, cart_view, cart_items_on, new_cart_item, same_booking, parse_age_counts, iso_date, MAX_CART_ITEMS
+from booking import get_bookings, order_tickets, booking_options, booking_quote, booking_choices_error, save_booking, client_options, parse_booking_date, to_int, NO_GUIDE
+from cart import read_cart, write_cart, cart_count, cart_view, cart_items_on, cart_bookings, new_cart_item, same_booking, parse_age_counts, iso_date, MAX_CART_ITEMS
 
 SMAIL_API_KEY = os.getenv('SMAIL_API_KEY')
 SMAIL_API = os.getenv('SMAIL_API')
@@ -1472,75 +1472,82 @@ def checkout():
         if bookingQuote is not None and save_booking(pdID, bookingOptions, bookingQuote, booking.get('notes'), True, bookingDate) is None:
             app.logger.error("Order %s: the booking details could not be saved", pdID)
         
-        # Send data to bank api
-        # recive answer from api 
-        bank_answer_status = 1
-        # insert data to purchace_history
+        return complete_order(pdID, amount, newCSRFtoken)
 
-        if bank_answer_status == 1:
-            paymentData = {
-                'finalPrice': amount,
-                'paymentMethod': 'Visa',
-                'CMD': 4242,
-                'paymentStatus': 1
-            }
-            purchseData = insertPUpdateP(pdID, paymentData)
-            if purchseData['status'] == '0':
-                # Recording the sale failed and was rolled back: nothing of the order was saved,
-                # but its stock is still reserved. What happens to that stock depends on the money:
-                # the bank step above is a stand-in that takes no money; when a real bank is
-                # connected, set this from its answer
-                paymentTaken = False
 
-                if paymentTaken:
-                    # The customer has paid: don't cancel. The order stays "waiting for payment"
-                    # with its stock reserved, so staff can finish recording it or refund it
-                    app.logger.error("Order %s: payment received but recording the sale failed. "
-                                  "Stock stays reserved; finish the order or refund it", pdID)
-                    return jsonify({'status': "0", 'answer': gettext("Your payment was received, but we couldn't complete your order. Please don't pay again: our team will contact you."), 'newCSRFtoken': newCSRFtoken})
+# The order pdID, its stock reserved (insertIntoBuffer) for `amount`: paid (the bank step is still a stand-in)
+# and recorded, with its confirmation-page link. Returns the answer for the page, as jsonify: status 1 with
+# pdID (the link's code; None when it couldn't be saved, the answer says what to do), or status 0
+def complete_order(pdID, amount, newCSRFtoken):
+    # Send data to bank api
+    # recive answer from api 
+    bank_answer_status = 1
+    # insert data to purchace_history
 
-                # No money taken: give the stock back and cancel the order (removing any sale
-                # records, though after the rollback there should be none)
-                deletePUpdateP(pdID, removeSaleRecords=True)
-                return jsonify({'status': "0", 'answer': gettext('Something went wrong. Please try again!'), 'newCSRFtoken': newCSRFtoken})
-        
+    if bank_answer_status == 1:
+        paymentData = {
+            'finalPrice': amount,
+            'paymentMethod': 'Visa',
+            'CMD': 4242,
+            'paymentStatus': 1
+        }
+        purchseData = insertPUpdateP(pdID, paymentData)
+        if purchseData['status'] == '0':
+            # Recording the sale failed and was rolled back: nothing of the order was saved,
+            # but its stock is still reserved. What happens to that stock depends on the money:
+            # the bank step above is a stand-in that takes no money; when a real bank is
+            # connected, set this from its answer
+            paymentTaken = False
 
-            # answer = gettext('Payment passed successfully') + ' ' + str(amount) + ' ' + MAIN_CURRENCY
-            purchseData = json.dumps(purchseData['answer'])
+            if paymentTaken:
+                # The customer has paid: don't cancel. The order stays "waiting for payment"
+                # with its stock reserved, so staff can finish recording it or refund it
+                app.logger.error("Order %s: payment received but recording the sale failed. "
+                              "Stock stays reserved; finish the order or refund it", pdID)
+                return jsonify({'status': "0", 'answer': gettext("Your payment was received, but we couldn't complete your order. Please don't pay again: our team will contact you."), 'newCSRFtoken': newCSRFtoken})
 
-            # The order is paid and recorded from here on, so a failure below must never tell the
-            # customer to try again (they would pay twice). Saving the confirmation-page link is
-            # retried with a fresh link (a clash with another link or a short database hiccup)
-            sqlInsertBuffer = "INSERT INTO `pd_buffer` (`pdID`, `Url`) VALUES (%s, %s);"
-            uniqueURL = None
-            for _ in range(3):
-                candidateURL = generate_random_unique_string('pd_buffer')
-                if sqlInsert(sqlInsertBuffer, (pdID, candidateURL))['status'] == 1:
-                    uniqueURL = candidateURL
-                    break
+            # No money taken: give the stock back and cancel the order (removing any sale
+            # records, though after the rollback there should be none)
+            deletePUpdateP(pdID, removeSaleRecords=True)
+            return jsonify({'status': "0", 'answer': gettext('Something went wrong. Please try again!'), 'newCSRFtoken': newCSRFtoken})
 
-            if uniqueURL is None:
-                # Paid and recorded, but there is no confirmation page: answer "paid" without a
-                # link, so the page shows this message, empties the cart and offers no second payment
-                app.logger.error("Order %s: paid and recorded, but its confirmation-page link could not be saved. "
-                                 "Send the customer the order details", pdID)
-                answer = gettext("Your payment was received and your order is confirmed, but we couldn't open your order page. Please don't pay again: our team will send you the order details. Order number: %(order)s", order=pdID)
-                return jsonify({'status': "1", 'pdID': None, 'answer': answer, 'purchseData': purchseData, 'newCSRFtoken': newCSRFtoken})
 
-            trackOrderUrl = get_full_website_name() + '/confirmation-page/' + uniqueURL
+        # answer = gettext('Payment passed successfully') + ' ' + str(amount) + ' ' + MAIN_CURRENCY
+        purchseData = json.dumps(purchseData['answer'])
 
-            # if data['contact_list'][0].get('email'):
-            #     send_confirmation_email(pdID, trackOrderUrl)
+        # The order is paid and recorded from here on, so a failure below must never tell the
+        # customer to try again (they would pay twice). Saving the confirmation-page link is
+        # retried with a fresh link (a clash with another link or a short database hiccup)
+        sqlInsertBuffer = "INSERT INTO `pd_buffer` (`pdID`, `Url`) VALUES (%s, %s);"
+        uniqueURL = None
+        for _ in range(3):
+            candidateURL = generate_random_unique_string('pd_buffer')
+            if sqlInsert(sqlInsertBuffer, (pdID, candidateURL))['status'] == 1:
+                uniqueURL = candidateURL
+                break
 
-            return jsonify({'status': "1", 'pdID': uniqueURL, 'purchseData': purchseData, 'newCSRFtoken': newCSRFtoken})    
-                
+        if uniqueURL is None:
+            # Paid and recorded, but there is no confirmation page: answer "paid" without a
+            # link, so the page shows this message, empties the cart and offers no second payment
+            app.logger.error("Order %s: paid and recorded, but its confirmation-page link could not be saved. "
+                             "Send the customer the order details", pdID)
+            answer = gettext("Your payment was received and your order is confirmed, but we couldn't open your order page. Please don't pay again: our team will send you the order details. Order number: %(order)s", order=pdID)
+            return jsonify({'status': "1", 'pdID': None, 'answer': answer, 'purchseData': purchseData, 'newCSRFtoken': newCSRFtoken})
 
-        # delete from bufer and update table quantity
-        # update payment_details with id pdID
-        deletePUpdateP(pdID)        
-        answer = gettext('Payment failed')
-        return jsonify({'status': "0", 'answer': answer, 'newCSRFtoken': newCSRFtoken})    
-        
+        trackOrderUrl = get_full_website_name() + '/confirmation-page/' + uniqueURL
+
+        # if data['contact_list'][0].get('email'):
+        #     send_confirmation_email(pdID, trackOrderUrl)
+
+        return jsonify({'status': "1", 'pdID': uniqueURL, 'purchseData': purchseData, 'newCSRFtoken': newCSRFtoken})    
+
+
+    # delete from bufer and update table quantity
+    # update payment_details with id pdID
+    deletePUpdateP(pdID)        
+    answer = gettext('Payment failed')
+    return jsonify({'status': "0", 'answer': answer, 'newCSRFtoken': newCSRFtoken})
+
 
 @app.route('/confirmation-page/<pdID>', methods=['GET'])
 @validate_request
@@ -1611,7 +1618,9 @@ def confirmation_page(pdID):
     """
     resultPtDetails = sqlSelect(sqlQueryPtDetails, (ptID, languageID), True)
 
-    return render_template('confirmation-page.html', result=result['data'], resultPtDetails=resultPtDetails, pdUrl=pdUrl, mainCurrency = MAIN_CURRENCY, newCSRFtoken=newCSRFtoken,  current_locale=get_locale())
+    # what each ticket says about its booking (booking.py order_tickets); none for orders made before bookings were kept
+    tickets = order_tickets(pdID, languageID, MAIN_CURRENCY)
+    return render_template('confirmation-page.html', result=result['data'], resultPtDetails=resultPtDetails, tickets=tickets, pdUrl=pdUrl, mainCurrency = MAIN_CURRENCY, newCSRFtoken=newCSRFtoken,  current_locale=get_locale())
 
 
 @app.route('/orders/<filter>', methods=['Get'])
@@ -2029,7 +2038,7 @@ def ticket(pdID):
         return render_template('error.html')
     
     sideBar = side_bar_stuff()
-    return render_template('ticket-details.html', sideBar=sideBar, result=result['data'], mainCurrency = MAIN_CURRENCY, newCSRFtoken=newCSRFtoken,  current_locale=get_locale())
+    return render_template('ticket-details.html', sideBar=sideBar, result=result['data'], bookings=get_bookings(result['data'][0]['ID']), mainCurrency = MAIN_CURRENCY, newCSRFtoken=newCSRFtoken,  current_locale=get_locale())
     
 
 @app.route('/order-details/<pdID>', methods=['GET'])
@@ -2085,7 +2094,7 @@ def order_details(pdID):
         return render_template('error.html')
     
     sideBar = side_bar_stuff()
-    return render_template('order-details.html', sideBar=sideBar, result=result['data'], booking=get_booking(pdID), mainCurrency = MAIN_CURRENCY, newCSRFtoken=newCSRFtoken,  current_locale=get_locale())
+    return render_template('order-details.html', sideBar=sideBar, result=result['data'], bookings=get_bookings(pdID), mainCurrency = MAIN_CURRENCY, newCSRFtoken=newCSRFtoken,  current_locale=get_locale())
     
 
 @app.route('/affiliate-order-details/<pdID>', methods=['GET'])
@@ -5484,6 +5493,31 @@ def products():
         return render_template('products.html', result=result, mainCurrency=MAIN_CURRENCY, translated=translated, languageID=languageID, DefLangID=DefLangID, sideBar=sideBar, newCSRFtoken=newCSRFtoken, current_locale=get_locale()) 
 
 
+def parse_store_date(raw):
+    """
+    Date from the store filter pickers (flatpickr 'm-d-Y', e.g. 10-31-2026) as a date.
+    ISO and m/d/Y are accepted too. None when it can't be read, so a mistyped date
+    matches no rows instead of making MySQL reject the whole query.
+    """
+    for fmt in ('%m-%d-%Y', '%Y-%m-%d', '%m/%d/%Y'):
+        try:
+            return datetime.strptime(raw, fmt).date()
+        except ValueError:
+            pass
+    return None
+
+
+def store_date_filters(form):
+    """WHERE fragment and values for the store's production / expiration / add date filters."""
+    sql, values = '', []
+    for field in ('productionDate', 'expDate', 'addDate'):
+        raw = (form.get(field) or '').strip()
+        if raw:
+            sql += f' AND `quantity`.`{field}` = %s '
+            values.append(parse_store_date(raw))
+    return sql, values
+
+
 @app.route('/store', methods=['GET', 'POST'])
 @login_required
 @validate_request
@@ -5553,17 +5587,9 @@ def store():
             sqlValList.append(request.form.get('storeID'))
             storeFilter = " AND `storeID` = %s "
 
-        if request.form.get('productionDate'):
-            filters = filters + ' AND `productionDate` = %s ' 
-            sqlValList.append(request.form.get('productionDate'))
-
-        if request.form.get('expDate'):
-            filters = filters + ' AND `expDate` = %s ' 
-            sqlValList.append(request.form.get('expDate'))
-
-        if request.form.get('addDate'):
-            filters = filters + ' AND `addDate` = %s ' 
-            sqlValList.append(request.form.get('addDate'))
+        dateFilters, dateValues = store_date_filters(request.form)
+        filters = filters + dateFilters
+        sqlValList.extend(dateValues)
 
         if request.form.get('productID'):
             filters = filters + ' AND `product`.`ID` = %s ' 
@@ -6387,6 +6413,8 @@ def emails(filters):
             protoTuple = [languageID, 0]
 
         sqlValTuple = tuple(protoTuple)     
+        # Shared by the listing and its count: the email filter needs the emails join
+        messagesFrom = "`client_messages` LEFT JOIN `emails` ON `client_messages`.`emailID` = `emails`.`ID`"
         sqlQuery =  f"""SELECT 
                         `client_messages`.`ID`, 
                         `client_messages`.`Subject`,
@@ -6394,8 +6422,7 @@ def emails(filters):
                         `client_messages`.`Date`,
                         `client_messages`.`Status`,
                         `emails`.`email`
-                    FROM `client_messages`
-                        LEFT JOIN `emails` ON `client_messages`.`emailID` = `emails`.`ID`
+                    FROM {messagesFrom}
                     {where + eStatus + emailInWhere}
                     ORDER BY `client_messages`.`ID` DESC
                     LIMIT {rowsToSelect}, {int(PAGINATION)};
@@ -6403,7 +6430,7 @@ def emails(filters):
         
         result = sqlSelect(sqlQuery, sqlValTuple, True)
         
-        numRows = totalNumRows('client_messages', where+eStatus+emailInWhere, sqlValTuple)        
+        numRows = countRows(messagesFrom, where+eStatus+emailInWhere, sqlValTuple)        
 
         sideBar = side_bar_stuff()
         return render_template('emails.html', result=result, eStatus=eStatusVal, email=email, message=message, sideBar=sideBar, numRows=numRows, page=int(page), pagination=int(PAGINATION), pbc=int(PAGINATION_BUTTONS_COUNT), newCSRFtoken=newCSRFtoken, languageID=languageID, current_locale=get_locale())
@@ -7189,17 +7216,9 @@ def get_product_types_quantity():
     sqlValList.append(prID)
     sqlValList.append(languageID)
 
-    if request.form.get('productionDate'):
-        filters = filters + ' AND `quantity`.`productionDate` = %s ' 
-        sqlValList.append(request.form.get('productionDate'))
-
-    if request.form.get('expDate'):
-        filters = filters + ' AND `quantity`.`expDate` = %s ' 
-        sqlValList.append(request.form.get('expDate'))
-
-    if request.form.get('addDate'):
-        filters = filters + ' AND `quantity`.`addDate` = %s ' 
-        sqlValList.append(request.form.get('addDate'))
+    dateFilters, dateValues = store_date_filters(request.form)
+    filters = filters + dateFilters
+    sqlValList.extend(dateValues)
 
     if request.form.get('storeID'):
         filters = filters + ' AND `quantity`.`storeID` = %s ' 
@@ -7266,7 +7285,9 @@ def cart(productTypesQuantity=None):
         if productTypesQuantity is not None:
             return redirect(url_for('cart'))
         items = cart_view(read_cart(request), getLangID())
-        return render_template('cart.html', items=items, MAIN_CURRENCY=MAIN_CURRENCY, current_locale=get_locale())
+        # what each item's "Edit" starts from (static/JS/booking.js initCartPage)
+        editData = {item['id']: item['edit'] for item in items if item['edit']}
+        return render_template('cart.html', items=items, editData=editData, MAIN_CURRENCY=MAIN_CURRENCY, current_locale=get_locale())
 
     else:
         # the price and stock of ptID-quantity pairs (the buy-now page's order summary)
@@ -7320,6 +7341,209 @@ def cart_date_check():
             items = [item for item in items if not (same and same_booking(same, item))]
         titles = cart_items_on(items, request.form.get('date'), getLangID(), request.form.get('except', ''))
     return jsonify({'status': '1', 'items': titles, 'newCSRFtoken': generate_csrf()})
+
+
+# "Save" of a cart item's Edit on the cart page: the item `id` gets the new choices (the same fields as
+# /cart/add), checked like a booking. Status 2: the cart already has this booking; status 3 (with the
+# titles): other bookings are for that day, asked first and sent again with sameDay=1
+@app.route("/cart/update", methods=["POST"])
+@validate_request
+def cart_update():
+    newCSRFtoken = generate_csrf()
+    items = read_cart(request)
+    itemID = request.form.get('id', '')
+    if not any(item['id'] == itemID for item in items):
+        return jsonify({'status': '0', 'answer': gettext('This booking is no longer in your cart.'), 'newCSRFtoken': newCSRFtoken})
+    item, answer = new_cart_item(request.form.get('ptID', ''), request.form.get('vehicle'), request.form.get('guide', NO_GUIDE),
+                                 parse_age_counts(request.form.get('ages')), request.form.get('date'), getLangID())
+    if item is None:
+        return jsonify({'status': '0', 'answer': answer, 'newCSRFtoken': newCSRFtoken})
+    item['id'] = itemID
+    others = [old for old in items if old['id'] != itemID]
+    if any(same_booking(item, old) for old in others):
+        return jsonify({'status': '2', 'answer': gettext('This booking is already in your cart.'), 'newCSRFtoken': newCSRFtoken})
+    sameDay = cart_items_on(others, item['d'], getLangID())
+    if sameDay and request.form.get('sameDay') != '1':
+        return jsonify({'status': '3', 'items': sameDay, 'newCSRFtoken': newCSRFtoken})
+
+    items = [item if old['id'] == itemID else old for old in items]
+    response = jsonify({'status': '1', 'answer': gettext('Your booking was updated.'), 'count': len(items), 'newCSRFtoken': newCSRFtoken})
+    return write_cart(response, items)
+
+
+# The payment methods every one of these bookings can be paid with (a price without its own list takes
+# them all, as on the buy-now page): [{ID, method}]
+def cart_payment_methods(bookings):
+    allMethods = get_payment_methods('`ID`, `method`')['data']
+    allowed = {row['ID'] for row in allMethods}
+    for booking in bookings:
+        own = get_pt_payment_methods(booking['options']['ptRefKey'])['data']
+        if own:
+            allowed &= {row['ID'] for row in own}
+    return [row for row in allMethods if row['ID'] in allowed]
+
+
+LEAD_CONTACT_FIELDS = ('firstname', 'lastname', 'phone', 'confirm_phone', 'email')
+
+
+# The lead contact of a "Book all" order: (contact, None) or (None, (fields with a mistake, message))
+def lead_contact_from(data):
+    contact = {key: str(data.get(key) or '').strip() for key in LEAD_CONTACT_FIELDS} if isinstance(data, dict) else None
+    if contact is None:
+        return None, (list(LEAD_CONTACT_FIELDS), gettext('Please fill in the contact details.'))
+    wrong = [key for key in LEAD_CONTACT_FIELDS if not contact[key]]
+    answer = gettext('Please fill in the contact details.') if wrong else ''
+    if contact['phone'] and contact['phone'] != contact['confirm_phone']:
+        wrong += ['phone', 'confirm_phone']
+        answer = gettext('The phone numbers do not match.')
+    if contact['email'] and not re.match(r'^[\w\.-]+@[\w\.-]+\.\w+$', contact['email']):
+        wrong.append('email')
+        answer = gettext('Invalid email format')
+    if wrong:
+        return None, (sorted(set(wrong)), answer)
+    return contact, None
+
+
+# "Book all" on the cart page: every booking of the cart that can be booked now (cart.py cart_bookings) in
+# one order with one payment, for one lead contact. GET: the page (cart-checkout.html). POST data (JSON):
+# {contact: {firstname, lastname, phone, confirm_phone, email}, payment_method, terms, items: [the cart item
+# ids the page showed], notes: {item id: text}, promo: a promo code or ''}. The choices are read from the cart
+# itself; if it changed since the page was shown, nothing is ordered (status 4: reload). A promo code works as
+# on the buy-now page: insertIntoBuffer takes its discount off each booking's price it applies to, and the
+# order keeps the code and its affiliate. Booked items leave the cart.
+@app.route("/cart/checkout", methods=["GET", "POST"])
+@validate_request
+def cart_checkout():
+    if session.get('lang') == None:
+        setlang()
+    languageID = getLangID()
+    cart = read_cart(request)
+    bookings = cart_bookings(cart, languageID)
+    if request.method == 'GET':
+        if not bookings:
+            return redirect(url_for('cart'))
+        return render_template('cart-checkout.html', bookings=bookings, left=len(cart) - len(bookings),
+                               paymentMethods=cart_payment_methods(bookings), total=sum(b['quote']['total'] for b in bookings),
+                               MAIN_CURRENCY=MAIN_CURRENCY, current_locale=get_locale())
+
+    newCSRFtoken = generate_csrf()
+    somethingWrong = gettext('Something went wrong. Please try again!')
+    try:
+        data = json.loads(request.form.get('data') or '')
+    except json.JSONDecodeError:
+        data = None
+    if not isinstance(data, dict):
+        return jsonify({'status': '0', 'answer': somethingWrong, 'newCSRFtoken': newCSRFtoken})
+
+    ids = [b['item']['id'] for b in bookings]
+    if not bookings or not isinstance(data.get('items'), list) or sorted(map(str, data['items'])) != sorted(ids):
+        return jsonify({'status': '4', 'answer': gettext('Your cart has changed. Please check your bookings again.'), 'newCSRFtoken': newCSRFtoken})
+
+    contact, mistake = lead_contact_from(data.get('contact'))
+    if mistake:
+        return jsonify({'status': '-1', 'keyList': mistake[0], 'answer': mistake[1], 'newCSRFtoken': newCSRFtoken})
+    if data.get('terms') is not True:
+        return jsonify({'status': '0', 'answer': gettext('Please agree to the terms and conditions.'), 'newCSRFtoken': newCSRFtoken})
+
+    total = sum(b['quote']['total'] for b in bookings)
+    paymentMethod = str(data.get('payment_method') or '')
+    if paymentMethod not in {str(row['ID']) for row in cart_payment_methods(bookings)}:
+        if total > 0:
+            return jsonify({'status': '0', 'answer': gettext('Choose payment method'), 'newCSRFtoken': newCSRFtoken})
+        paymentMethod = False
+
+    promo = str(data.get('promo') or '').strip()
+    promoID, affiliateID = None, None
+    if promo:
+        promoRow = get_promo_code_id_affiliateID(promo)
+        if not promoRow or not promo_discounts(promo, {b['options']['ptRefKey'] for b in bookings}, languageID):
+            return jsonify({'status': '0', 'answer': gettext('Invalid Promo Code'), 'promo': True, 'newCSRFtoken': newCSRFtoken})
+        promoID, affiliateID = promoRow['ID'], promoRow['affiliateID']
+
+    notes = data.get('notes') if isinstance(data.get('notes'), dict) else {}
+    for booking in bookings:
+        answer = booking_choices_error(booking['options'], notes.get(booking['item']['id']), True)
+        if answer:
+            return jsonify({'status': '0', 'answer': booking['title'] + ': ' + answer, 'item': booking['item']['id'], 'newCSRFtoken': newCSRFtoken})
+
+    # the order, its lead contact, its stock (one row per booking, at the booking's price per person)
+    resultPD = sqlInsert("INSERT INTO `payment_details` (`promo_code_id`, `promo_code`, `affiliateID`, `Status`) VALUES (%s, %s, %s, %s);",
+                         (promoID, promo, affiliateID, 1))
+    if resultPD['status'] == 0:
+        return jsonify({'status': '0', 'answer': somethingWrong, 'newCSRFtoken': newCSRFtoken})
+    pdID = resultPD['inserted_id']
+    ccIDs = clientID_contactID(contact)
+    sqlInsert("INSERT INTO `event_clients` (`payment_details_id`, `clientID`, `contactID`, `Status`) VALUES (%s, %s, %s, %s);",
+              (pdID, ccIDs['clientID'], ccIDs['contactID'], 1))
+
+    order = {'promo': promo, 'contact_list': [contact],
+             'ptData': [{'ptID': b['options']['ptRefKey'], 'quantity': b['quote']['people'],
+                         'unitPrice': b['quote']['total'] / b['quote']['people']} for b in bookings]}
+    buffer = insertIntoBuffer(order, pdID, somethingWrong, languageID, paymentMethod, False)
+    if buffer['status'] != '1':
+        # nothing was reserved: the order is cancelled instead of being left "waiting for payment"
+        sqlUpdate("UPDATE `payment_details` SET `Status` = 0 WHERE `ID` = %s AND `Status` = 1;", (pdID,))
+        if buffer['status'] == '2':
+            return jsonify({'status': '0', 'answer': gettext('Invalid Promo Code'), 'promo': True, 'newCSRFtoken': newCSRFtoken})
+        return jsonify({'status': '0', 'answer': gettext('Some of these bookings are no longer available in this amount. Please check your cart.'),
+                        'newCSRFtoken': newCSRFtoken})
+
+    for booking in bookings:
+        if save_booking(pdID, booking['options'], booking['quote'], notes.get(booking['item']['id']), True, booking['date']) is None:
+            app.logger.error("Order %s: the booking details of %s could not be saved", pdID, booking['title'])
+
+    response = complete_order(pdID, buffer['totalPrice'], newCSRFtoken)
+    if (response.get_json() or {}).get('status') == '1':
+        write_cart(response, [item for item in cart if item['id'] not in ids])
+    return response
+
+
+# The discounts (%) a promo code gives on these prices: {ptRefKey: discount}, as the buy-now page's
+# /get-promo-discounts finds them (the code active and not expired, the discount active, the product
+# published); {} when the code gives none of them
+def promo_discounts(promo, ptRefKeys, languageID):
+    if not promo or not ptRefKeys:
+        return {}
+    result = sqlSelect("""SELECT `product_type_relatives`.`PT_Ref_Key` AS `ptRefKey`, `discount`.`discount`
+                          FROM `promo_code`
+                              JOIN `discount` ON `discount`.`promo_code_id` = `promo_code`.`ID`
+                              JOIN `product_type_relatives` ON `product_type_relatives`.`PT_Ref_Key` = `discount`.`ptRefKey`
+                              JOIN `product_type` ON `product_type`.`ID` = `product_type_relatives`.`PT_ID`
+                              JOIN `product` ON `product`.`ID` = `product_type`.`Product_ID`
+                          WHERE BINARY `promo_code`.`Promo` = %s
+                              AND `promo_code`.`expDate` >= CURRENT_DATE()
+                              AND `promo_code`.`Status` = 1
+                              AND `product`.`Product_Status` = 2
+                              AND `product_type_relatives`.`Language_ID` = %s
+                              AND FIND_IN_SET(`product_type_relatives`.`PT_Ref_Key`, %s)
+                              AND `discount`.`Status` = 1;""",
+                       (promo, languageID, ','.join(str(k) for k in ptRefKeys)), True)
+    return {row['ptRefKey']: float(row['discount'] or 0) for row in result['data']}
+
+
+# The promo code on the cart's "Book all" page (cart-checkout.html): what it takes off each booking of the
+# cart that can be booked now. Status 1: {items: [{id, discount (%), amount}], totalPrice, discountPrice};
+# status 0: the code gives none of them (answer says so)
+@app.route("/cart/promo", methods=["POST"])
+@validate_request
+def cart_promo():
+    newCSRFtoken = generate_csrf()
+    languageID = getLangID()
+    promo = (request.form.get('promo') or '').strip()
+    bookings = cart_bookings(read_cart(request), languageID)
+    if not promo:
+        return jsonify({'status': '0', 'answer': gettext('Enter Promo Code'), 'newCSRFtoken': newCSRFtoken})
+    discounts = promo_discounts(promo, {b['options']['ptRefKey'] for b in bookings}, languageID)
+    if not discounts:
+        return jsonify({'status': '0', 'answer': gettext('Invalid Promo Code'), 'newCSRFtoken': newCSRFtoken})
+    items, totalPrice, discountPrice = [], 0, 0
+    for b in bookings:
+        discount = discounts.get(b['options']['ptRefKey'], 0)
+        amount = b['quote']['total'] * discount / 100
+        items.append({'id': b['item']['id'], 'discount': discount, 'amount': amount})
+        totalPrice += b['quote']['total']
+        discountPrice += amount
+    return jsonify({'status': '1', 'items': items, 'totalPrice': totalPrice, 'discountPrice': discountPrice, 'newCSRFtoken': newCSRFtoken})
 
 
 # Removes the cart item `id` (the cart page, and the buy-now page once the item is booked)
@@ -7437,17 +7661,9 @@ def get_pt_quantities():
     sqlValList.append(ptID)
     sqlValList.append(languageID)
 
-    if request.form.get('productionDate'):
-        filters = filters + ' AND `quantity`.`productionDate` = %s ' 
-        sqlValList.append(request.form.get('productionDate'))
-
-    if request.form.get('expDate'):
-        filters = filters + ' AND `quantity`.`expDate` = %s ' 
-        sqlValList.append(request.form.get('expDate'))
-
-    if request.form.get('addDate'):
-        filters = filters + ' AND `quantity`.`addDate` = %s ' 
-        sqlValList.append(request.form.get('addDate'))
+    dateFilters, dateValues = store_date_filters(request.form)
+    filters = filters + dateFilters
+    sqlValList.extend(dateValues)
 
     if request.form.get('storeID'):
         filters = filters + ' AND `quantity`.`storeID` = %s ' 

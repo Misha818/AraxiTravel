@@ -9,340 +9,282 @@
 
     <meta name="robots" content="noindex, nofollow" />
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    {#- crossorigin: the ticket download (html-to-image) can read the fonts and put them in the image -#}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Marcellus&family=Noto+Sans+Armenian:wght@400;500;600&display=swap" rel="stylesheet" crossorigin="anonymous">
+    <!-- Header and footer of the landing page (templates/_site_header.html, _site_footer.html) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/site-chrome.css') }}">
     <style>
-        body {
-            background-color: #fdf6ec;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: #333;
-            font-family: 'Kurland', cursive, Georgia, 'Times New Roman', Times, serif; 
-            color:#333;
-        }
-        .card {
-            border: none;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.06);
-            border-radius: 16px;
-            animation: fadeIn 1s ease-in-out;
-            width: 1500px;
-        }
-        @keyframes fadeIn {
-            from {opacity: 0; transform: translateY(20px);}
-            to {opacity: 1; transform: translateY(0);}
-        }
-        .summary-item {
-            padding: 8px 0;
-            border-bottom: 1px solid #eceff3;
-        }
-        .summary-total {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #555;
-        }
-        .btn-primary {
-            background-color: #FCC628;
-            border: none;
-        }
-
-        .btn-primary:hover {
-            background-color: #ffaa00;
-            border: none;
-        }
-        .btn-outline-secondary:hover {
-            background-color: #FCC628;
-            border: none;
-        }
-
-        .btn-outline-secondary {
-            border-color: #FCC628;
-            color: #FCC628;
-        }
-
-        .text-success {
-            color: #212529!important;
-            margin-top: 15px!important;
-        }
-        .recommendation-card img {
-            border-top-left-radius: 12px;
-            border-top-right-radius: 12px;
-        }
-        .recommendation-card {
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-            border-radius: 12px;
-            transition: transform 0.3s;
-        }
-        .recommendation-card:hover {
-            transform: translateY(-5px);
-        }
-        .cp-price {
-            text-decoration: line-through !important;
-        }
-        .summary-item a {
-            color: black;
-            text-decoration: none;
-        }
-
-        
-        /* Remove all borders except the bottom border of rows */
-        table {
-            border-collapse: collapse;
-            width: 100%;
-        }
-
-        table th, table td {
-            border: none; /* Remove all cell borders */
-            padding: 8px; /* Add some padding for spacing */
-        }
-
-        table tbody tr {
-            border-bottom: 1px solid #ddd; /* Add a bottom border to each row */
-        }
-
-        table thead tr {
-            border-bottom: 2px solid #333; /* Add a thicker bottom border for the header */
-        }
-        thead {
-            border-top: unset;
-        }
-
-        a {
-            text-decoration: none;
-            color: #333;
-        }
-
-        @media (min-width: 770px) and (max-width: 1200px) {
-          .card {
-                background-color: unset!important;
-                box-shadow: unset!important;
-                padding-left: 15px !important;
-                padding-right: 15px !important;
-                width: 370px;
-            }
-        }
-
-        @media (max-width: 770px) {
-            td {
-                width: 100%!important;
-                font-size: 20px!important;
-                background-color: unset!important;
-                padding: 0.2rem .5rem!important;
-            }
-
-            tr td {
-                justify-content: unset!important;
-
-            }
-
-            tr:nth-child(even) {
-                background-color: unset!important;
-            }
-
-            td a {
-                font-size: 22px!important;
-                font-weight: 600!important;
-            }
-
-            .card {
-                background-color: unset!important;
-                box-shadow: unset!important;
-                padding-left: 15px !important;
-                padding-right: 15px !important;
-                width: 370px;
-            }
-
-            .summary-total {
-                justify-content: center !important;
-                align-items: center !important;
-                gap: 10px;
-                flex-wrap: wrap;
-            }
-
-            .deliveryInfo {
-                text-align: center;
-                margin-top: 20px;
-            }
-        } 
-
-
-
-
-
-
-        :root {
-      --border: 1px solid #d9d9d9;
-    }
-    html, body { margin: 0; height: 100%; }
+    /* ---- The page in the app's look (static/css/araxi-tokens.css, as the cart pages): cream background,
+       Marcellus title, Inter text, navy and ochre ---- */
     body {
-      font: 16px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      color: #111; background: #f6f7fb;
+      min-height: 100vh;
+      background-color: #fbf9f4 !important;
+    }
+    .site-footer {
+      margin-top: auto;
+    }
+    .cp {
+      box-sizing: border-box;
+      width: 100%;
+      max-width: 960px;
+      margin: calc(var(--header-h, 76px) + 40px) auto 64px;
+      padding: 0 var(--gutter, 20px);
+      font-family: var(--font-body, 'Inter', sans-serif);
+      color: var(--ink-900, #0b2338);
+      text-align: center;
+      animation: cp-in .6s var(--ease-out, ease-out);
+    }
+    @keyframes cp-in {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: none; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .cp { animation: none; }
+    }
+    .cp__check {
+      display: inline-grid;
+      place-items: center;
+      width: 64px;
+      height: 64px;
+      margin-bottom: 18px;
+      border-radius: 50%;
+      color: var(--ochre-600, #a8743d);
+      background: rgba(197, 144, 84, .14);
+      box-shadow: 0 0 0 8px rgba(197, 144, 84, .07);
+    }
+    .cp__check svg {
+      width: 30px;
+      height: 30px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2.4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .cp__eyebrow {
+      margin: 0 0 8px;
+      font: 600 12px/1.3 var(--font-body, 'Inter', sans-serif);
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--ochre-600, #a8743d);
+    }
+    .cp__title {
+      margin: 0 0 10px;
+      font: 400 clamp(2rem, 4.4vw, 2.8rem)/1.15 var(--font-display, 'Marcellus', serif);
+      color: var(--navy-900, #072339);
+      text-align: center;
+    }
+    .cp__lead {
+      max-width: 560px;
+      margin: 0 auto 6px;
+      font-size: 1.05rem;
+      line-height: 1.55;
+      color: var(--ink-600, #4a5a6a);
+      text-align: center;
     }
 
-    /* Toolbar */
+    /* "Download all": the app's outlined ochre button (booking.css .bk-btn) */
     #toolbar {
-      max-width: 1400px;
-      margin: 12px auto 0;
-      padding: 0 12px;
       display: flex;
-      justify-content: flex-end;
+      justify-content: center;
+      margin: 26px 0 22px;
+    }
+    #toolbar:empty {
+      margin-bottom: 30px;
     }
     .toolbar-btn {
-      padding: 10px 14px;
-      border: 1px solid #d0d0d0;
-      background: #fff;
-      border-radius: 10px;
-      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      height: 44px;
+      padding: 0 22px;
+      font: 600 15px/1 var(--font-body, 'Inter', sans-serif);
+      color: #c59054;
+      background: transparent;
+      border: 1.5px solid #c59054e6;
+      border-radius: 999px;
       cursor: pointer;
-      box-shadow: 0 2px 6px rgba(0,0,0,.06);
-      margin-bottom: 15px;
+      transition: background-color .2s, color .2s;
     }
-    .toolbar-btn:hover { box-shadow: 0 4px 12px rgba(0,0,0,.12); }
+    .toolbar-btn:hover {
+      color: #a8743d;
+      background-color: rgba(197, 144, 84, .1);
+    }
+    .toolbar-btn:focus-visible,
+    .ticket-action:focus-visible {
+      outline: 2px solid var(--navy-900, #072339);
+      outline-offset: 2px;
+    }
 
-   :root {
-  --card: 320px;   /* card width on ≥1200px screens; adjust as needed */
-  --gap: 16px;
-}
+    /* ---- Tickets: a wide "boarding pass" each, one under the other (generateTicket below). Colours and fonts
+       of the site (static/css/araxi-tokens.css): navy header with the event, the details in two columns, the QR
+       code on a tear-off stub at the right (under the details on phones) ---- */
+    #ticket-grid {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 26px;
+    }
+    #ticket-grid > * {
+      width: min(760px, 100%);
+      min-width: 0;
+    }
 
-/* Responsive grid (mobile/tablet) */
-#ticket-grid {
-  display: grid;
-  gap: var(--gap);
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-}
-
-/* Large screens: use flex so fewer than 4 cards center as a tight group */
-@media (min-width: 1200px) {
-  #ticket-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--gap);
-    justify-content: center;
-    /* cap row to exactly 4 columns worth of space and center it */
-    max-width: calc(4 * var(--card) + 3 * var(--gap));
-    margin-inline: auto;
-  }
-  /* make each card a fixed-width flex item */
-  #ticket-grid > * {
-    flex: 0 0 var(--card);
-    max-width: var(--card);
-  }
-}
-      
-    
-    #ticket-grid > * { min-width: 0; }
-
-    /* Ticket */
     .ticket-wrapper { position: relative; }
     .ticket-container {
-      background: #fff;
-      border-radius: 14px;
-      box-shadow: 0 4px 18px rgba(0,0,0,.08);;
-      overflow: hidden;
-      border: var(--border);
+      position: relative;
       display: grid;
-      grid-template-rows: auto 10px auto;
-    }
-
-    .ticket-card-1 {
-      margin: 14px 14px 0px 14px;
-      padding: 18px;
-      border-radius: 12px;
-      border: var(--border);
+      grid-template-columns: minmax(0, 1fr) 220px;
+      overflow: hidden;
+      font-family: 'Inter', 'Noto Sans Armenian', system-ui, sans-serif;
+      text-align: left;
+      color: #0b2338;
       background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 10px 30px rgba(7, 35, 57, .12);
     }
-    .ticket-card-2 {
-      margin: 0px 14px 14px 14px;
-      padding: 18px;
-      border-radius: 12px;
-      border: var(--border);
-      background: #fff;
+    .tk__main { min-width: 0; }
+    .tk__head {
+      padding: 20px 26px 18px;
+      color: #fff;
+      background: #072339;
     }
-
-    .ticket-header {
-      font-weight: 900;
-      font-size: 28px;
-      letter-spacing: .5px;
-      text-align: center;
-      padding-bottom: 10px;
-      border-bottom: 1px solid #e5e7eb;
+    .tk__brand {
+      font: 600 11px/1 'Inter', sans-serif;
+      letter-spacing: .32em;
+      color: #c59054;
     }
-
-    .details { 
-        margin-top: 12px; 
-        display: grid; 
-        gap: 5px; 
-        text-align: justify;
+    .tk__event {
+      margin-top: 8px;
+      font: 400 24px/1.25 'Marcellus', 'Noto Sans Armenian', Georgia, serif;
+      overflow-wrap: anywhere;
     }
-    .row { 
-        display: grid; 
-        /* grid-template-columns: 110px 1fr;  */
-        gap: 3px; 
-        align-items: baseline; 
+    .tk__name {
+      margin-top: 6px;
+      font-size: 14px;
+      color: #cfd8e3;
     }
-    .label { color: #6b7280; font-weight: 700; }
-    .value.bold { font-weight: 800; }
-    .status-ok { color: #16a34a; font-weight: 800; }
-    .value { overflow-wrap: anywhere; }
-
-    .qr-card { display: grid; place-items: center; row-gap: 10px; }
+    .tk__grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px 22px;
+      padding: 20px 26px 24px;
+    }
+    .tk__item.is-wide { grid-column: 1 / -1; }
+    .tk__label {
+      font: 600 10.5px/1.25 'Inter', sans-serif;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: #7a8696;
+    }
+    .tk__value {
+      margin-top: 3px;
+      font: 500 15px/1.4 'Inter', 'Noto Sans Armenian', sans-serif;
+      color: #0b2338;
+      overflow-wrap: anywhere;
+      white-space: pre-line;
+    }
+    .tk__value a { color: #1f6f99; }
+    .tk__item.is-price .tk__value {
+      font-size: 18px;
+      font-weight: 700;
+    }
+    /* the tear-off stub: dashed perforation with a notch at each end */
+    .tk__stub {
+      position: relative;
+      display: grid;
+      place-items: center;
+      align-content: center;
+      gap: 10px;
+      padding: 22px 18px 58px;
+      background: #fbf9f4;
+      border-left: 2px dashed #d9cdb8;
+    }
+    .tk__stub::before,
+    .tk__stub::after {
+      content: '';
+      position: absolute;
+      left: -13px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #fbf9f4;
+    }
+    .tk__stub::before { top: -12px; }
+    .tk__stub::after { bottom: -12px; }
     .qr-box {
-      width: 140px; height: 140px;
-      display: grid; place-items: center;
-      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      width: 150px;
+      height: 150px;
+      padding: 6px;
       background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 0 0 1px #eadfcb;
     }
-    .qr-box svg { display: block; width: 120px; height: 120px; }
+    .qr-box svg { display: block; width: 136px; height: 136px; }
+    .caption {
+      font: 600 13px/1.3 'Inter', sans-serif;
+      color: #0b2338;
+      text-align: center;
+    }
+    .url { font-size: 12px; color: #7a8696; white-space: nowrap; }
 
-    .caption { color: #374151; }
-    .url { color: #6b7280; font-size: 14px; }
+    @media (max-width: 640px) {
+      .ticket-container { grid-template-columns: minmax(0, 1fr); }
+      .tk__grid { grid-template-columns: minmax(0, 1fr); padding: 18px 20px 22px; }
+      .tk__head { padding: 18px 20px 16px; }
+      .tk__event { font-size: 21px; }
+      .tk__stub { border-left: 0; border-top: 2px dashed #d9cdb8; }
+      .tk__stub::before,
+      .tk__stub::after { top: -13px; bottom: auto; }
+      .tk__stub::before { left: -12px; }
+      .tk__stub::after { left: auto; right: -12px; }
+    }
 
-    /* Per-ticket button (ignored while capturing) */
+    /* Per-ticket button (ignored while capturing), at the stub's foot */
     .ticket-action {
       position: absolute;
-      right: 12px;
-      bottom: 12px;
+      right: 14px;
+      bottom: 14px;
       padding: 8px 12px;
-      border: 1px solid #d0d0d0;
+      border: 1px solid #eadfcb;
       background: #fff;
-      border-radius: 8px;
+      border-radius: 10px;
       font-weight: 600;
       cursor: pointer;
-      box-shadow: 0 2px 6px rgba(0,0,0,.08);
-      color: #E1306C;
+      box-shadow: 0 2px 6px rgba(7, 35, 57, .08);
+      color: #c59054;
     }
-    .ticket-action:hover { box-shadow: 0 4px 12px rgba(0,0,0,.14); }
+    .ticket-action:hover { box-shadow: 0 4px 12px rgba(7, 35, 57, .16); }
 
     </style>
 {% endblock %} 
 
 {% block content %} 
 
-<div class="py-5">
-    <div class="card p-5 text-center">
-        <h2 class="mb-3 text-success">🏷️ {{ _('Order Confirmed!') }} </h2>
-        <p class="mb-4">{{ _("Dear") + ' ' + result[0]['FirstName'] + ', ' + _('Thank you for shopping with us. We are preparing your order now!') }}</p>
-        <!-- <h6 class="text-muted">{{ _('Order') }} #{{ result[0]['ID'] }}</h6> -->
+{# read by public.html's header.js #}
+<input type="hidden" id="csrfToket" value="{{ csrf_token() }}">
+<input type="hidden" id="inBasketText" value="{{ _('In Basket') }}">
+<main class="cp">
+    <span class="cp__check" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg></span>
+    <p class="cp__eyebrow">{{ _('Order') }} #{{ result[0]['ID'] }}</p>
+    <h1 class="cp__title">{{ _('Your booking is confirmed') }}</h1>
+    {#- one ticket or several (booking.py order_tickets; an older order: one per row of its query) -#}
+    {% set ticketCount = tickets | length if tickets else result | length %}
+    <p class="cp__lead">
+      {%- if ticketCount > 1 -%}
+        {{ _('Dear %(name)s, thank you for booking with Araxi Travel! Your tickets are below: download them one by one or all at once.', name=result[0]['FirstName']) }}
+      {%- else -%}
+        {{ _('Dear %(name)s, thank you for booking with Araxi Travel! Your ticket is below: download it to keep it with you.', name=result[0]['FirstName']) }}
+      {%- endif -%}
+    </p>
 
-         <div id="toolbar"></div>
-        <div class="" id="ticket-grid"></div>
-            
-    </div>
-
-    <!-- <div class="mt-5">
-        <h5 class="mb-4">Recommended for You</h5>
-        <div class="row">
-            <div class="col-md-3 col-sm-6 mb-4">
-                <div class="card recommendation-card">
-                    <img src="https://via.placeholder.com/300" class="card-img-top" alt="Product">
-                    <div class="card-body">
-                        <h6 class="card-title">Stylish Product</h6>
-                        <a href="#" class="btn btn-sm btn-outline-secondary">View Product</a>
-                    </div>
-                </div>
-            </div>
-
-            
-        </div>
-    </div> -->
-</div>
+    <div id="toolbar"></div>
+    <div id="ticket-grid"></div>
+</main>
 <script nonce="{{ csp_nonce() }}" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script nonce="{{ csp_nonce() }}">
     const result = {{ result | tojson }};
@@ -357,6 +299,13 @@
         const hostWithWww = needsWww ? `www.${host}` : host;
         // -> "www.example.com" (or unchanged)
 
+        // one ticket per booking and ticket holder, with everything the price card showed (booking.py order_tickets)
+        const serverTickets = {{ tickets | tojson }};
+        if (serverTickets.length) {
+            return serverTickets.map(t => Object.assign(t, { qrUrl: hostWithWww + '/ticket/' + `{{ pdUrl }}`, footerText: hostWithWww }));
+        }
+
+        // an order made before bookings were kept: the price's specifications only
         const tktDetails = {{ resultPtDetails.data | tojson }};
         const nameTxt = `{{ _('Name') }}`;
         const eventTxt = `{{ _('Event') }}`;
@@ -605,7 +554,9 @@ function formatInternationalNumber(phoneNumber) {
       return `ticket-${idOrIndex}.jpg`;
     }
 
-    /** Build a ticket DOM and return its wrapper. */
+    /** Build a ticket DOM and return its wrapper: a "boarding pass" with the event and the holder in a navy
+     *  header, the details in two columns and the QR code on a tear-off stub. The rows are [label, value, link]
+     *  (booking.py order_tickets: name, event, then the booking); an older order's ticket gives its own fields */
     function generateTicket(ticket) {
       const wrapper = document.createElement('div');
       wrapper.className = 'ticket-wrapper';
@@ -613,67 +564,72 @@ function formatInternationalNumber(phoneNumber) {
       const container = document.createElement('div');
       container.className = 'ticket-container';
 
-      // Card 1: header + details
-      const card1 = document.createElement('div');
-      card1.className = 'ticket-card-1';
+      const omit = new Set(['index', 'qrUrl', 'footerText', 'rows']);
+      const rows = ticket.rows || Object.entries(ticket).filter(([k]) => !omit.has(k) && isNaN(+k));
+      const [nameRow, eventRow, ...details] = rows;
 
-      const header = document.createElement('div');
-      header.className = 'ticket-header';
-      header.textContent = 'ARAXI TRAVEL';
-      card1.appendChild(header);
+      // the header: brand, event, holder
+      const main = document.createElement('div');
+      main.className = 'tk__main';
+      const head = document.createElement('div');
+      head.className = 'tk__head';
+      const brand = document.createElement('div');
+      brand.className = 'tk__brand';
+      brand.textContent = 'ARAXI TRAVEL';
+      const eventEl = document.createElement('div');
+      eventEl.className = 'tk__event';
+      eventEl.textContent = eventRow ? eventRow[1] : '';
+      const nameEl = document.createElement('div');
+      nameEl.className = 'tk__name';
+      nameEl.textContent = nameRow ? nameRow[0] + ': ' + nameRow[1] : '';
+      head.append(brand, eventEl, nameEl);
+      main.appendChild(head);
 
-      const details = document.createElement('div');
-      details.className = 'details';
-
-        const omit = new Set(['index', 'qrUrl', 'footerText']);
-        const rows = Object.entries(ticket)
-            .filter(([k]) => !omit.has(k) && isNaN(+k)); // drop numeric keys if any
-
-    //   const rows = [
-    //     ['Event:', ticket.event],
-    //     ['Date:', ticket.date],
-    //     ['Amount:', ticket.amount],
-    //     ['Status:', ticket.status],
-    //     ['Status1:', ticket.status],
-    //     ['Status2:', ticket.status]
-    //   ];
-      rows.forEach(([label, value]) => {
-        const r = document.createElement('div'); r.className = 'row';
-        const l = document.createElement('div'); l.className = 'label'; l.textContent = label;
-        const v = document.createElement('div'); v.className = 'value'; v.textContent = value;
-        if (label === 'Amount:') v.classList.add('bold');
-        if (label === 'Status:' && /completed/i.test(value)) v.classList.add('status-ok');
-        r.append(l, v); details.appendChild(r);
+      // the details, two columns (a long value takes the whole row)
+      const grid = document.createElement('div');
+      grid.className = 'tk__grid';
+      const priceLabel = {{ _('Price') | tojson }};
+      details.forEach(([label, value, link]) => {
+        const item = document.createElement('div');
+        item.className = 'tk__item';
+        if (String(value).length > 38) item.classList.add('is-wide');
+        if (label === priceLabel) item.classList.add('is-price');
+        const l = document.createElement('div'); l.className = 'tk__label'; l.textContent = label;
+        const v = document.createElement('div'); v.className = 'tk__value';
+        if (link) {
+          const a = document.createElement('a');
+          a.href = link; a.target = '_blank'; a.rel = 'noopener'; a.textContent = value;
+          v.appendChild(a);
+        } else {
+          v.textContent = value;
+        }
+        item.append(l, v);
+        grid.appendChild(item);
       });
+      main.appendChild(grid);
 
-      card1.appendChild(details);
-      container.appendChild(card1);
-
-      // Spacer
-      const spacer = document.createElement('div'); spacer.style.height = '0px';
-      container.appendChild(spacer);
-
-      // Card 2: QR
-      const card2 = document.createElement('div'); card2.className = 'ticket-card-2 qr-card';
+      // the stub: QR code, caption, website
+      const stub = document.createElement('div');
+      stub.className = 'tk__stub';
       const qrBox = document.createElement('div'); qrBox.className = 'qr-box';
-      card2.appendChild(qrBox);
-      const caption = document.createElement('div'); caption.className = 'caption'; caption.textContent = `{{ _('Scan this code to enter!') }}`;
+      const caption = document.createElement('div'); caption.className = 'caption'; caption.textContent = `{{ _('Scan QR code if asked') }}`;
       const url = document.createElement('div'); url.className = 'url'; url.textContent = ticket.footerText || 'www.araxitravel.am';
-      card2.appendChild(caption); card2.appendChild(url);
-      container.appendChild(card2);
+      stub.append(qrBox, caption, url);
+      container.append(main, stub);
 
       // Per-ticket Download button (ignored in capture)
       const dlBtn = document.createElement('button');
       dlBtn.className = 'ticket-action';
       dlBtn.dataset.ignore = 'true';
       dlBtn.type = 'button';
+      dlBtn.setAttribute('aria-label', `{{ _('Download') }}`);
       dlBtn.addEventListener('click', () =>
         downloadElementAsJPEG(container, filenameForTicket(ticket.id || ticket.index))
       );
 
       const icon = document.createElement('i');
       icon.classList.add('fa-solid', 'fa-download'); // Font Awesome 6
-      icon.setAttribute('aria-hidden', 'true');      // decorative  
+      icon.setAttribute('aria-hidden', 'true');      // decorative
       dlBtn.appendChild(icon);
 
       wrapper.appendChild(container);
@@ -776,4 +732,15 @@ function formatInternationalNumber(phoneNumber) {
       renderTickets(tickets);
     });
   </script>
+{% endblock %}
+
+
+{# Header and footer of the landing page instead of the public ones (see public.html) #}
+{% block site_header %}
+{% with chrome_solid = true %}{% include '_site_header.html' %}{% endwith %}
+{% endblock %}
+
+{% block site_footer %}
+{% include '_site_footer.html' %}
+<script nonce="{{ csp_nonce() }}" type="text/javascript" src="{{ url_for('static', filename='JS/site-chrome.js') }}"></script>
 {% endblock %}

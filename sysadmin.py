@@ -1166,6 +1166,9 @@ def calculate_price(products):
 def insertIntoBuffer(data, pdID, smthWrong, languageID, paymentMethod, priceState, priceOverrides=None):
     # IMPORTANT
     # Do not forget to take into consideration the max quantity as well
+    # data['ptData']: [{ptID (PT_Ref_Key), quantity}]. A row with 'unitPrice' (the cart's "Book all", one row
+    # per booking, the same price may come twice) reserves its own quantity at that price; without it (the
+    # buy-now page) every row is for len(data['contact_list']) units at priceOverrides / the stored price.
         
     if paymentMethod and priceState == True:
         # Check credentials for credit/debit card
@@ -1231,17 +1234,21 @@ def insertIntoBuffer(data, pdID, smthWrong, languageID, paymentMethod, priceStat
     if data['promo'] != '' and result['data'][0]['promoID'] is None:
         return {'status': "2"}
     
-    # This checks if there is corresponding amount of product in store
+    # This checks if there is corresponding amount of product in store: each row within the stock's own
+    # limit, and the rows of the same price together within what is in stock
+    wanted = {}
     for checkRow in data['ptData']:
+        wanted[checkRow['ptID']] = wanted.get(checkRow['ptID'], 0) + checkRow['quantity']
+    for checkRow in data['ptData']:
+        QUANTITY = checkRow['quantity']
         for checkR in result['data']:
             if checkRow['ptID'] == checkR['ptID']:
-                QUANTITY = checkRow['quantity']
                 # the stock's own limit, or MAX_ALLOWED_QUANTITY when it was saved without one,
                 # and never more than is in stock
                 purchaseLimit = checkR['maxQuantity'] if checkR['maxQuantity'] is not None else MAX_ALLOWED_QUANTITY
                 maxAllowdQuantity = min(checkR['totalQuantity'], purchaseLimit)
 
-                if maxAllowdQuantity < QUANTITY:  
+                if maxAllowdQuantity < QUANTITY or checkR['totalQuantity'] < wanted[checkRow['ptID']]:  
                     print('buffer_2')
 
                     return {'status': "0", 'answer': smthWrong}  
@@ -1251,15 +1258,17 @@ def insertIntoBuffer(data, pdID, smthWrong, languageID, paymentMethod, priceStat
     #    Nothing is written yet, so any check below can still refuse the order without taking
     #    stock (before, the stock was subtracted first and a refusal lost those units for good)
     totalPrice = 0
+    left = {r['quantityID']: r['Quantity'] for r in result['data']}   # what each stock row still has to give
     for row in data['ptData']:
-        QUANTITY = len(data['contact_list'])
+        QUANTITY = row['quantity'] if 'unitPrice' in row else len(data['contact_list'])
         for r in result['data']:
             if QUANTITY == 0:
                 break
             
-            if row['ptID'] == r['ptID']:
-                take = min(r['Quantity'], QUANTITY)
-                unitPrice = (priceOverrides or {}).get(r['ptID'], r['Price'])
+            if row['ptID'] == r['ptID'] and left[r['quantityID']] > 0:
+                take = min(left[r['quantityID']], QUANTITY)
+                left[r['quantityID']] -= take
+                unitPrice = row['unitPrice'] if 'unitPrice' in row else (priceOverrides or {}).get(r['ptID'], r['Price'])
                 if r['discount'] is not None:
                     totalPrice = totalPrice + unitPrice * take - unitPrice * take * r['discount'] / 100
                 else:

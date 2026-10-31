@@ -653,23 +653,8 @@
             });
         }
 
-        
-        // Function to decode HTML entities
-        function decodeHTMLEntities(text) {
-            const textArea = document.createElement('textarea');
-            textArea.innerHTML = text;
-            return textArea.value;
-        }
-        
-
-        // Decode HTML entities
-        const decodedJSON = decodeHTMLEntities("{{ mainResult.data }}")
-        .replace(/'/g, '"') // Replace single quotes with double quotes
-        .replace(/\bNone\b/g, 'null'); // Replace `None` with `null`
-        
-
         // Array to keep the images and alt texts in the desired order
-        const imagesToAdd = JSON.parse(decodedJSON);
+        const imagesToAdd = {{ mainResult.data | tojson }};
 
         let src = 'sub_product_slider';
         

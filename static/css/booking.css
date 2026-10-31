@@ -96,7 +96,7 @@
 }
 
 .bk-choice.invalid .bk-pill span {
-    border-color: red;
+    border-color: var(--ochre-600, #a9733a);
 }
 
 /* who is coming: a - / + counter per age group */
@@ -291,7 +291,7 @@
 
 /* a vehicle is missing (buy-now) */
 .bk-fold.invalid .bk-fold__summary {
-    color: #c0392b;
+    color: var(--ochre-600, #a9733a);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -322,7 +322,7 @@
 
 .bk-message {
     margin: 0;
-    color: red;
+    color: var(--ochre-600, #a9733a);
     font-size: 14px;
 }
 
@@ -347,7 +347,7 @@
 }
 
 #booking-summary .bk-error {
-    color: red;
+    color: var(--ochre-600, #a9733a);
 }
 
 #booking-summary .bk-total {
@@ -390,7 +390,7 @@
 }
 
 .bk-notes-input.is-invalid {
-    border-color: #c0392b;
+    border-color: var(--ochre-600, #a9733a);
 }
 
 .bk-terms a {
@@ -533,7 +533,7 @@
 }
 
 .bk-date-input.is-invalid {
-    border-color: #c0392b;
+    border-color: var(--ochre-600, #a9733a);
 }
 
 .bk-date-input::-webkit-calendar-picker-indicator {

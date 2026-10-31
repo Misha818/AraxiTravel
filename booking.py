@@ -16,9 +16,9 @@
 # One person = one ticket = one unit of stock, as before.
 # Every booking is for one day (booking_date_range): from MIN_DAYS_AHEAD days after today up to the last
 # day the price's stock is valid (quantity.expDate). There is no schedule or per-day capacity yet.
-from datetime import date, timedelta
-from flask_babel import gettext, ngettext
-from sysadmin import sqlSelect, sqlInsert
+from datetime import date, datetime, timedelta
+from flask_babel import gettext, ngettext, format_date, format_datetime
+from sysadmin import sqlSelect, sqlInsert, MAX_ALLOWED_QUANTITY
 
 PRICING_FIXED, PRICING_VEHICLE, PRICING_AGE = 0, 1, 2
 NO_GUIDE = 0
@@ -59,6 +59,19 @@ def booking_date_range(ptRefKey):
                        (ptRefKey, first), True)
     last = result['data'][0]['last'] if result['length'] else None
     return (first, last) if last else None
+
+
+def booking_stock_limit(ptRefKey):
+    """How many people one booking of the price ptRefKey can be for at most: its valid stock, never more
+    than its stock's own limit (quantity.maxQuantity, MAX_ALLOWED_QUANTITY when none). The service page's
+    people dropdown has the same limit (/get-pt-quantity). None when it has no stock"""
+    result = sqlSelect("""SELECT SUM(`Quantity`) AS `quantity`, MAX(`maxQuantity`) AS `maxQuantity` FROM `quantity`
+                          WHERE `ptRefKey` = %s AND `Status` = 1 AND `expDate` > CURDATE();""", (ptRefKey,), True)
+    row = result['data'][0] if result['length'] else None
+    if row is None or not row['quantity'] or row['quantity'] < 1:
+        return None
+    limit = row['maxQuantity'] if row['maxQuantity'] is not None else MAX_ALLOWED_QUANTITY
+    return int(min(row['quantity'], limit))
 
 
 def parse_booking_date(text, ptRefKey):
@@ -382,13 +395,104 @@ def client_options(options, langPrefix):
     }
 
 
-def get_booking(pdID):
-    """What was booked with the order pdID (staff order details), or None:
-    the booking_details row with 'ages': [{ageGroup, people, price}]"""
-    result = sqlSelect("SELECT * FROM `booking_details` WHERE `payment_details_id` = %s ORDER BY `ID` DESC LIMIT 1;", (pdID,), True)
-    if result['length'] == 0:
-        return None
-    booking = result['data'][0]
-    booking['ages'] = sqlSelect("SELECT `ageGroup`, `people`, `price` FROM `booking_ages` WHERE `bookingID` = %s ORDER BY `ageID`;",
-                                (booking['ID'],), True)['data']
-    return booking
+def get_bookings(pdID):
+    """What was booked with the order pdID (staff order details): one booking_details row per booking (an
+    order from the cart's "Book all" has several), each with 'ptTitle' / 'prTitle' (the price and its
+    product as named now) and 'ages': [{ageGroup, people, price}]"""
+    bookings = sqlSelect("""SELECT `booking_details`.*, `product_type`.`Title` AS `ptTitle`, `product`.`Title` AS `prTitle`
+                            FROM `booking_details`
+                                LEFT JOIN `product_type` ON `product_type`.`ID` = `booking_details`.`productTypeID`
+                                LEFT JOIN `product` ON `product`.`ID` = `product_type`.`Product_ID`
+                            WHERE `booking_details`.`payment_details_id` = %s
+                            ORDER BY `booking_details`.`bookingDate`, `booking_details`.`ID`;""", (pdID,), True)['data']
+    for booking in bookings:
+        booking['ages'] = sqlSelect("SELECT `ageGroup`, `people`, `price` FROM `booking_ages` WHERE `bookingID` = %s ORDER BY `ageID`;",
+                                    (booking['ID'],), True)['data']
+    return bookings
+
+
+# ---- The tickets of an order (the client's confirmation page): what the price card showed ----
+SPSS_BOOL, SPSS_DATE, SPSS_DATETIME, SPSS_LOCATION = 3, 4, 5, 6   # spss_category (app.py SPSS_*)
+
+
+def spss_ticket_value(categoryID, value):
+    """A specification value as the ticket shows it: (text, link or None)"""
+    value = (value or '').strip()
+    if categoryID == SPSS_BOOL:
+        return (gettext('Yes') if value == '1' else gettext('No') if value == '0' else value), None
+    if categoryID == SPSS_LOCATION and value.lower().startswith('https://'):
+        return gettext('Map'), value
+    try:
+        if categoryID == SPSS_DATE:
+            return format_date(date.fromisoformat(value), 'long'), None
+        if categoryID == SPSS_DATETIME:
+            return format_datetime(datetime.strptime(value, '%Y-%m-%d %H:%M'), 'medium'), None
+    except ValueError:
+        pass
+    return value, None
+
+
+def booking_ticket_rows(booking, languageID, currency):
+    """What a ticket says about one booking of an order (get_bookings row), in languageID: [[label, value, link]]
+    - the event, its day and duration, who comes, the vehicle, the guide, the client's notes, the price, and
+    the price's specifications (as on the service page's price card; their values in languageID)"""
+    pt = sqlSelect("""SELECT `product_type`.`ID`, `product_type`.`Title` AS `ptTitle`, `product_type`.`Duration`,
+                             `product`.`Title` AS `prTitle`
+                      FROM `product_type_relatives`
+                          JOIN `product_type` ON `product_type`.`ID` = `product_type_relatives`.`PT_ID`
+                          LEFT JOIN `product` ON `product`.`ID` = `product_type`.`Product_ID`
+                      WHERE `product_type_relatives`.`PT_Ref_Key` = %s AND `product_type_relatives`.`Language_ID` = %s
+                      LIMIT 1;""", (booking['ptRefKey'], languageID), True)['data']
+    pt = pt[0] if pt else {'ID': booking['productTypeID'], 'ptTitle': booking.get('ptTitle'), 'prTitle': booking.get('prTitle'),
+                           'Duration': None}
+    rows = [[gettext('Event'), ': '.join(t for t in (pt['prTitle'], pt['ptTitle']) if t), None]]
+    if booking['bookingDate']:
+        rows.append([gettext('Date'), format_date(booking['bookingDate'], 'full'), None])
+    duration = duration_label(pt['Duration'])
+    if duration:
+        rows.append([gettext('Duration'), duration, None])
+    who = ', '.join(f"{a['ageGroup']} × {a['people']}" for a in booking['ages'])
+    people = ngettext('%(num)s person', '%(num)s people', booking['people'])
+    rows.append([gettext('People'), f'{who} ({people})' if who else people, None])
+    if booking['vehicleType']:
+        rows.append([gettext('Vehicle'), booking['vehicleType'] + ' · ' + ngettext('%(num)s seat', '%(num)s seats', booking['vehicleSeats'] or 0), None])
+    rows.append([gettext('Guide'), booking['guideLanguage'] or gettext('No guide'), None])
+    if booking['notes']:
+        rows.append([gettext('Additional notes'), booking['notes'], None])
+    total = float(booking['total'] or 0)
+    amount = f"{total:,.0f}" if total.is_integer() else f"{total:,.2f}"
+    rows.append([gettext('Price'), f'{currency} {amount}' if total > 0 else gettext('Free'), None])
+
+    specs = sqlSelect("""SELECT `sub_product_specifications`.`Name`, `sub_product_specifications`.`spssCategoryID`,
+                                `product_type_details`.`Text`
+                         FROM `product_type_details`
+                             JOIN `sub_product_specifications` ON `sub_product_specifications`.`ID` = `product_type_details`.`spssID`
+                                 AND `sub_product_specifications`.`Status` = 1
+                         WHERE `product_type_details`.`productTypeID` = %s
+                         ORDER BY `sub_product_specifications`.`Order`;""", (pt['ID'],), True)['data']
+    for spec in specs:
+        if (spec['Text'] or '').strip():
+            text, link = spss_ticket_value(spec['spssCategoryID'], spec['Text'])
+            rows.append([spec['Name'], text, link])
+    return rows
+
+
+def order_tickets(pdID, languageID, currency):
+    """The tickets of the order pdID: one per booking for every ticket holder (event_clients: each person on
+    the buy-now page, the lead contact of a "Book all" order), [{'rows': [[label, value, link]]}] with the
+    holder's name first. [] for an order without booking details (made before bookings were kept)"""
+    bookings = get_bookings(pdID)
+    if not bookings:
+        return []
+    holders = sqlSelect("""SELECT `clients`.`FirstName`, `clients`.`LastName`
+                           FROM `event_clients`
+                               LEFT JOIN `clients` ON `clients`.`ID` = `event_clients`.`clientID`
+                           WHERE `event_clients`.`payment_details_id` = %s
+                           ORDER BY `event_clients`.`ID`;""", (pdID,), True)['data'] or [{'FirstName': '', 'LastName': ''}]
+    tickets = []
+    for booking in bookings:
+        rows = booking_ticket_rows(booking, languageID, currency)
+        for holder in holders:
+            name = ' '.join(n for n in (holder['FirstName'], holder['LastName']) if n)
+            tickets.append({'rows': [[gettext('Name'), name, None]] + rows})
+    return tickets

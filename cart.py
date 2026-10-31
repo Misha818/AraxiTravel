@@ -21,7 +21,7 @@ import secrets
 
 from flask_babel import gettext
 from datetime import date
-from booking import booking_options, booking_quote, parse_booking_date, to_int, NO_GUIDE, PRICING_VEHICLE
+from booking import booking_options, booking_quote, parse_booking_date, booking_stock_limit, client_options, to_int, NO_GUIDE, PRICING_VEHICLE
 from sysadmin import sqlSelect
 
 CART_COOKIE = 'araxi_cart'
@@ -182,7 +182,9 @@ def buy_now_query(item, vehicleID, quote, dateOk):
 def cart_view(cart, languageID):
     """The cart as the cart page shows it: one entry per item, priced now
     [{id, available, prTitle, prUrl, ptTitle, imgName, AltText, people, ages: [{Name, count}], vehicle, guide,
-      lines, total, buyNow: {surl, query}, otherLanguage, date, dateOk, sameDay}]
+      lines, total, buyNow: {surl, query}, otherLanguage, date, dateOk, sameDay, notesEnabled, notesRequired, edit}]
+    edit: what the page's "Edit" (static/JS/booking.js initCartPage) starts from: {options (client_options, with
+    'stock': booking_stock_limit), choice: {vehicle, guide, ages: {ageID: n}, date}}
     available is False when the price or a choice is no longer offered (only removing it is possible).
     date: the day booked for (a date, or None); dateOk: it can still be booked for that day (if not, the
     day is chosen again on the buy-now page); sameDay: another booking in the cart is for the same day.
@@ -194,6 +196,7 @@ def cart_view(cart, languageID):
     for item in cart:
         entry = {'id': item['id'], 'available': False, 'people': sum(item['a'].values()), 'ages': [],
                  'vehicle': None, 'guide': None, 'lines': [], 'total': 0, 'buyNow': None, 'otherLanguage': None,
+                 'notesEnabled': 0, 'notesRequired': 0, 'edit': None,
                  'date': date.fromisoformat(item['d']) if item['d'] else None, 'dateOk': False,
                  'sameDay': bool(item['d']) and days.count(item['d']) > 1}
         product = products.get(item['pt'])
@@ -216,6 +219,38 @@ def cart_view(cart, languageID):
                     'lines': quote['lines'],
                     'total': quote['total'],
                     'buyNow': {'surl': f"{options['ptRefKey']}-{entry['people']}", 'query': buy_now_query(item, vehicleID, quote, entry['dateOk'])},
+                    'notesEnabled': options['notesEnabled'],
+                    'notesRequired': options['notesRequired'],
                 })
+                editOptions = client_options(options, '')
+                editOptions['stock'] = booking_stock_limit(options['ptRefKey'])
+                entry['edit'] = {'options': editOptions,
+                                 'choice': {'vehicle': quote['vehicle']['ID'] if quote['vehicle'] else None,
+                                            'guide': quote['guide']['ID'] if quote['guide'] else NO_GUIDE,
+                                            'ages': {str(k): n for k, n in item['a'].items()},
+                                            'date': item['d'] if entry['dateOk'] else ''}}
         view.append(entry)
     return view
+
+
+def cart_bookings(cart, languageID):
+    """The cart's items that can be booked now, as the cart's "Book all" orders them (each checked like a
+    booking: offered in languageID, its choices still valid, its day still bookable):
+    [{'item', 'options', 'quote', 'date' (a date), 'title' ('Service: Price')}]"""
+    products = product_rows({item['pt'] for item in cart}, languageID)
+    bookings = []
+    for item in cart:
+        options = booking_options(item['pt'], languageID)
+        if options is None or not item['d']:
+            continue
+        day, error = parse_booking_date(item['d'], options['ptRefKey'])
+        if error:
+            continue
+        vehicleID = vehicle_in_language(item['v'], languageID) if options['basis'] == PRICING_VEHICLE else None
+        quote = booking_quote(options, sum(item['a'].values()), vehicleID, item['g'], expand_ages(item['a']))
+        if not quote['ok']:
+            continue
+        product = products.get(item['pt']) or {}
+        title = ': '.join(t for t in (product.get('prTitle'), product.get('ptTitle')) if t)
+        bookings.append({'item': item, 'options': options, 'quote': quote, 'date': day, 'title': title})
+    return bookings

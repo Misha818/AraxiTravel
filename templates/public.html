@@ -350,10 +350,12 @@
         const mobileNavOverlay = document.querySelector('.mobile-nav-overlay');
         const mobileMenuCloseButton = document.querySelector('.mobile-menu-close');
 
-        // Open the overlay when the hamburger is clicked
-        mobileMenuButton.addEventListener('click', () => {
-          mobileNavOverlay.classList.add('open');
-        });
+        // Open the overlay when the hamburger is clicked (pages with the landing page's header have none)
+        if (mobileMenuButton && mobileNavOverlay) {
+          mobileMenuButton.addEventListener('click', () => {
+            mobileNavOverlay.classList.add('open');
+          });
+        }
 
         // Close the overlay when the close button is clicked
         if (mobileMenuCloseButton) {
@@ -365,7 +367,7 @@
         }
         
         let sFlag = false;
-        document.getElementById('subscribe').addEventListener('click', function() {
+        document.getElementById('subscribe')?.addEventListener('click', function() {
           if (sFlag) {
             return;
           }
@@ -439,7 +441,7 @@
         });
 
         let cmFlag = false;
-        document.getElementById('message').addEventListener('click', function() {
+        document.getElementById('message')?.addEventListener('click', function() {
           event.preventDefault();
           if (cmFlag) {
             return;
@@ -561,14 +563,18 @@
           xhr.send(formData);
         });
 
-        document.getElementById('emailMessage').addEventListener('keyup', function() {
+        document.getElementById('emailMessage')?.addEventListener('keyup', function() {
           this.style.border = '1px solid #ccc';
           this.style.color = '#000';
         });
 
 
-        let mobileNavSelect = document.querySelector('.custom-language-select').cloneNode(true);
-        mobileNavSelect.className = "change-language-menu";
+        // the old header's language menu, copied into its phone menu (the landing page's header has neither)
+        const languageSelect = document.querySelector('.custom-language-select');
+        let mobileNavSelect = languageSelect ? languageSelect.cloneNode(true) : null;
+        if (mobileNavSelect) {
+          mobileNavSelect.className = "change-language-menu";
+        }
 
         // mobileNavSelect.addEventListener("change", function() {
         //   window.location.href = '/setlang?lang=' + this.value;
@@ -590,12 +596,12 @@
 
         // });
 
-        if (document.querySelector('.mobile-nav-content')) {
+        if (document.querySelector('.mobile-nav-content') && mobileNavSelect) {
           document.querySelector('.mobile-nav-content').append(mobileNavSelect);
         }
 
 
-        document.querySelector('.selected-option').addEventListener('click', function () {
+        document.querySelector('.selected-option')?.addEventListener('click', function () {
           this.parentNode.classList.toggle('open');
         });
         
@@ -612,7 +618,7 @@
           });
         });
 
-        document.querySelector('.change-language-menu').addEventListener('click', function () {
+        document.querySelector('.change-language-menu')?.addEventListener('click', function () {
           document.querySelector('.change-language-menu .options').style.position = 'unset';
           document.querySelector('.change-language-menu .options').style.padding = 'unset';
           document.querySelector('.change-language-menu .options').style.background = 'unset';
@@ -623,7 +629,7 @@
         });
 
           let x = 0;
-          document.querySelector('.change-language-menu .selected-option').addEventListener('click', function () {
+          document.querySelector('.change-language-menu .selected-option')?.addEventListener('click', function () {
             let mobileOptions = document.querySelector('.change-language-menu .options');
             if (x == 0) {
               mobileOptions.style.display = 'block';
@@ -673,7 +679,10 @@
             dropdown.appendChild(opt);
             });
 
-        langContainer.append(btn, dropdown);
+        // the old header's language button (the landing page's header has its own switch)
+        if (langContainer) {
+          langContainer.append(btn, dropdown);
+        }
 
 
         const languageButton = document.getElementById('language-button');

@@ -1,3 +1,7 @@
+-- This file is UTF-8: tell the client so, otherwise the Armenian / Russian text below is
+-- stored garbled when the import runs with another client charset (e.g. mysql on Windows)
+SET NAMES utf8mb4;
+
 -- Drop the existing database if it exists
 DROP DATABASE IF EXISTS `araxitravel_db`;
 

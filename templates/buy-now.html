@@ -7,6 +7,11 @@
 
 {% block head %}
 <meta name="robots" content="noindex, nofollow" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Marcellus&family=Noto+Sans+Armenian:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- Header and footer of the landing page (templates/_site_header.html, _site_footer.html) -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/site-chrome.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/booking.css') }}">
 <!-- jQuery -->
 <script nonce="{{ csp_nonce() }}" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
@@ -23,11 +28,11 @@
 <style>
 
 body {
-  background-color: #fdf6ec;
-}  
-
-.header_public {
-    box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.3);
+  min-height: 100vh;
+  background-color: #fbf9f4 !important;
+}
+.site-footer {
+  margin-top: auto;
 }
 
 .container {
@@ -74,16 +79,316 @@ body {
     color: #000 !important;
 }
 
+/* ================= The page in the app's look (static/css/araxi-tokens.css, as the cart pages): cream page,
+   Marcellus title, Inter text, white rounded cards, navy and ochre. Only looks: the ids and classes the
+   page's scripts use stay as they are ================= */
+.bn {
+  margin-top: calc(var(--header-h, 76px) + 36px) !important;
+  margin-bottom: 64px;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  color: var(--ink-900, #0b2338);
+}
+.bn h1,
+.bn h4,
+.bn h6,
+.bn label,
+.bn p {
+  text-align: left;
+}
+.bn .bn__eyebrow {
+  margin: 0 0 6px;
+  font: 600 12px/1.3 var(--font-body, 'Inter', sans-serif);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--ochre-600, #a8743d);
+}
+/* the price's name (added by the page's script) */
+.bn #fill-data-container > h1 {
+  margin: 0 0 22px;
+  font: 400 clamp(1.8rem, 3.6vw, 2.4rem)/1.18 var(--font-display, 'Marcellus', serif);
+  color: var(--navy-900, #072339);
+}
+/* the ticket's heading and card */
+.bn .ticket-wrap {
+  margin-top: 26px;
+}
+.bn .ticket-wrap > h4 {
+  margin: 0 0 10px !important;
+  font: 400 1.35rem/1.2 var(--font-display, 'Marcellus', serif);
+  color: var(--navy-900, #072339);
+}
+.bn .client-contact {
+  margin: 0 !important;
+  padding: 20px 22px 22px;
+  background: #fff;
+  border: 1px solid var(--cream-200, #ece4d6);
+  border-radius: 18px;
+  box-shadow: var(--shadow-card, 0 10px 30px rgba(7, 35, 57, .08));
+}
+.bn .bk-age-tag {
+  font-size: 13px;
+  letter-spacing: .04em;
+  color: var(--ochre-600, #a8743d);
+}
+/* fields */
+.bn .form-label {
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--navy-900, #072339);
+}
+.bn .form-control,
+.bn .form-select {
+  min-height: 46px;
+  padding: 10px 14px;
+  font: 400 15px/1.3 var(--font-body, 'Inter', sans-serif);
+  color: var(--navy-900, #072339);
+  background-color: #fff;
+  border: 1px solid var(--cream-200, #ece4d6);
+  border-radius: 12px !important;
+  box-shadow: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.bn .form-select {
+  padding-right: 40px;
+}
+.bn .form-control:hover,
+.bn .form-select:hover {
+  border-color: var(--river-400, #6aa6c4);
+}
+.bn .form-control:focus,
+.bn .form-select:focus {
+  border-color: var(--navy-900, #072339);
+  box-shadow: 0 0 0 3px rgba(7, 35, 57, .14);
+}
+.bn textarea.form-control {
+  min-height: 96px;
+}
+.bn .my-phone-control {
+  padding-top: 10px !important;
+  padding-bottom: 10px !important;
+}
+.bn hr {
+  height: 1px;
+  margin: 26px 0 !important;
+  color: var(--cream-200, #ece4d6);
+  background-color: var(--cream-200, #ece4d6);
+  border: 0;
+  opacity: 1;
+}
+.bn .form-check-input {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  border-color: var(--sand-300, #d9cdb8);
+}
+.bn .form-check-input:checked {
+  background-color: var(--navy-900, #072339);
+  border-color: var(--navy-900, #072339);
+}
+.bn .form-check-input:focus {
+  box-shadow: 0 0 0 3px rgba(7, 35, 57, .14);
+}
+/* the notes, as written on the price card or in the cart (read only) */
+.bn .bk-notes-view[hidden] {
+  display: none;
+}
+.bn .bk-notes-view {
+  padding: 14px 16px;
+  background: #fff;
+  border: 1px solid var(--cream-200, #ece4d6);
+  border-radius: 14px;
+}
+.bn .bk-notes-view .form-label {
+  display: block;
+  margin-bottom: 4px;
+}
+.bn .bk-notes-view p {
+  text-align: left !important;
+}
+.bn .bk-notes-view__text {
+  margin: 0;
+  font-size: 15px;
+  color: var(--ink-900, #0b2338);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.bn .bk-notes-view__missing {
+  margin: 8px 0 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ochre-600, #a9733a);
+}
+.bn .bk-notes-view__missing a {
+  color: var(--river-600, #1f6f99);
+  font-weight: 600;
+}
+.bn .bk-terms a {
+  color: var(--river-600, #1f6f99);
+}
+/* "Continue": the app's solid ochre button (as "Book and pay" on the cart's "Book all") */
+.bn .bn__submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  margin: 6px 0 15px;
+  font: 600 16px/1 var(--font-body, 'Inter', sans-serif);
+  color: #fff;
+  background-color: #c59054;
+  border: 1.5px solid #c59054;
+  border-radius: 999px;
+  box-shadow: 0 8px 20px rgba(197, 144, 84, .28);
+  transition: filter .2s, box-shadow .2s;
+}
+.bn .bn__submit:hover,
+.bn .bn__submit:focus {
+  color: #fff;
+  background-color: #c59054;
+  border-color: #c59054;
+  filter: brightness(.95);
+  box-shadow: 0 10px 24px rgba(197, 144, 84, .34);
+}
+.bn .bn__submit:focus-visible {
+  outline: 2px solid var(--navy-900, #072339);
+  outline-offset: 3px;
+}
+.bn .checkoutLoader {
+  min-height: 52px;
+  color: #c59054;
+  background: #fff;
+  border: 1.5px solid #c59054;
+  border-radius: 999px;
+}
+
+/* the summary column: the booking's price, the order lines, the promo code */
+.bn #promo-container {
+  margin-top: 0;
+}
+@media (min-width: 768px) {
+  .bn #promo-container {
+    position: sticky;
+    top: calc(var(--header-h, 76px) + 20px);
+    align-self: flex-start;
+  }
+}
+.bn .list-group {
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid var(--cream-200, #ece4d6);
+  border-radius: 16px;
+  box-shadow: var(--shadow-card, 0 10px 30px rgba(7, 35, 57, .08));
+}
+.bn .list-group:empty {
+  display: none;
+}
+.bn .list-group-item {
+  padding: 12px 16px;
+  font-size: 14px;
+  color: var(--ink-900, #0b2338);
+  border-color: var(--cream-200, #ece4d6);
+}
+.bn #booking-summary .bk-total {
+  font-size: 15px;
+  background-color: var(--cream-50, #fbf9f4);
+}
+.bn #checkout-basket .text-muted {
+  flex: none;
+  margin-left: 12px;
+  white-space: nowrap;
+}
+.bn #checkout-basket h6 {
+  font: 600 14px/1.35 var(--font-body, 'Inter', sans-serif);
+  color: var(--navy-900, #072339);
+}
+/* the promo code's Bootstrap card is only a wrapper here: no padding, background or rounded corners */
+.bn #promo-container > .card {
+  padding: 0 !important;
+  background: transparent;
+  border-radius: 0;
+}
+.bn #promo-container > .card > .list-group {
+  border: 0;
+  box-shadow: none;
+  background: transparent;
+}
+.bn #promo-container .input-group {
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+.bn #promo-container .input-group > .form-control {
+  border-radius: 12px !important;
+}
+.bn .submit-promo {
+  flex: none;
+  min-height: 46px;
+  padding: 0 18px;
+  font-weight: 600;
+  color: #c59054;
+  background: transparent;
+  border: 1.5px solid #c59054e6;
+  border-radius: 999px !important;
+}
+.bn .submit-promo:hover,
+.bn .submit-promo:focus {
+  color: #a8743d;
+  background-color: rgba(197, 144, 84, .1);
+  border-color: #c59054;
+  box-shadow: none;
+}
+/* mistakes: the app's ochre instead of red (the message box, the fields, the hints under them) */
+.bn #mistakes {
+  margin: 0 0 18px;
+  padding: 12px 16px;
+  font-weight: 600;
+  color: var(--ochre-600, #a9733a);
+  background: rgba(197, 144, 84, .1);
+  border: 1px solid var(--ochre-500, #c59054);
+  border-radius: 12px;
+}
+.bn .invalid-feedback,
+.bn .bn__error-text {
+  color: var(--ochre-600, #a9733a) !important;
+  font-weight: 500;
+}
+.bn .form-control.is-invalid,
+.bn .form-select.is-invalid,
+.bn .form-check-input.is-invalid {
+  border-color: var(--ochre-600, #a9733a);
+  background-image: none;
+}
+.bn .form-control.is-invalid:focus,
+.bn .form-select.is-invalid:focus,
+.bn .form-check-input.is-invalid:focus {
+  box-shadow: 0 0 0 3px rgba(197, 144, 84, .25);
+}
+.bn .form-check-input.is-invalid ~ .form-check-label {
+  color: var(--ochre-600, #a9733a);
+}
+
+/* phones: the columns' gutter fits the page (no sideways scroll) */
+@media (max-width: 767.98px) {
+  .bn > main > .row {
+    --bs-gutter-x: 1.5rem;
+    --bs-gutter-y: 1.5rem;
+  }
+  .bn .client-contact {
+    padding: 16px;
+  }
+}
+
 </style>
 {% endblock %}
 
 
 {% block content %}
 
+{# read by public.html's header.js #}
+<input type="hidden" id="csrfToket" value="{{ csrf_token() }}">
 <input type="hidden" id="inBasketText" value="{{ _('In Basket') }}">
 
 
-<div class="container checkout-form">
+<div class="container checkout-form bn">
   <main>
       <div class="row g-5">
           <div class="col-md-5 col-lg-4 order-md-last" id="promo-container">
@@ -134,7 +439,7 @@ body {
                 
                 <li class="list-group-item d-flex justify-content-between bg-light" id="invalid-promo" style="display: none!important; margin-bottom: 7px;">
                   <div class="text-success">
-                    <h6 class="my-0" style="text-align: left; color: red;">{{ _('Invalid Promo Code') }}</h6>
+                    <h6 class="my-0 bn__error-text" style="text-align: left;">{{ _('Invalid Promo Code') }}</h6>
                   </div>
                 </li>
       
@@ -167,12 +472,15 @@ body {
 
                   </div>
                   <hr class="my-4">
+                  {#- the notes written on the price card or in the cart, shown only (static/JS/booking.js initBuyNow);
+                      required ones that are missing are added there -#}
                   {% if bookingData and bookingData.notesEnabled %}
-                  <div class="mb-3 bk-notes">
-                    <label for="bookingNotes" class="form-label">{{ _('Additional notes') }}{{ ' *' if bookingData.notesRequired }}</label>
-                    <textarea class="form-control" id="bookingNotes" maxlength="2000"{{ ' required' if bookingData.notesRequired }}
-                              placeholder="{{ _('Anything we should know, e.g. where to pick you up or special needs') }}"></textarea>
-                    <div class="invalid-feedback">{{ _('Please write the additional notes.') }}</div>
+                  <div class="mb-3 bk-notes-view" id="bookingNotesView">
+                    <span class="form-label">{{ _('Additional notes') }}{{ ' *' if bookingData.notesRequired }}</span>
+                    <p class="bk-notes-view__text" data-notes-text>—</p>
+                    <p class="bk-notes-view__missing" data-notes-missing hidden>{{ _('Additional notes are required for this booking.') }}
+                      {% if cartItem %}<a href="{{ url_for('cart') }}#edit-{{ cartItem }}">{{ _('Add them in your cart') }}</a>
+                      {%- else %}<a href="#" data-notes-back>{{ _('Add them on the service page') }}</a>{% endif %}</p>
                   </div>
                   {% endif %}
                   {% if bookingData %}
@@ -183,19 +491,8 @@ body {
                     <div class="invalid-feedback">{{ _('Please agree to the terms and conditions.') }}</div>
                   </div>
                   {% endif %}
-                  <div  class="w-100 btn btn-primary btn-lg" 
-                        style="background-color: white;
-                        color: #fc2828ba;
-                        border-color: #fc2828ba;
-                        border-radius: 100px;
-                        margin-bottom: 15px;"
-                  >{{ _('Continue')}}
-                </div>
-                <div  class="w-100 btn btn-lg hidden checkoutLoader" 
-                      style=" background-color: white;
-                              color: #fc2828ba;
-                              border-color: #fc2828ba;" 
-                ></div>
+                  <div class="w-100 btn btn-primary btn-lg bn__submit" role="button" tabindex="0">{{ _('Continue')}}</div>
+                <div class="w-100 btn btn-lg hidden checkoutLoader"></div>
 
 
               </form>
@@ -350,7 +647,7 @@ function submit_promo() {
       // empty promo → show UI and resolve (don’t leave Promise pending)
       promo.placeholder = "{{ _('Enter Promo Code') }}";
       promo.classList.add('red-placeholder');
-      promo.style.borderColor = 'red';
+      promo.style.borderColor = '#a9733a';
       promoCodeParent.style.setProperty("display", "none", "important");
       document.querySelector('#discount-info').style.setProperty("display", "none", "important");
       document.querySelector('#checkout-total-price').style.setProperty('text-decoration', 'unset');
@@ -826,7 +1123,8 @@ async function get_pt_quantity(ptID, quantity) {
         let Cart = prDataGlobal.ptID + '-' + prDataGlobal.quantity
         
         let notification = document.querySelector('.notification');
-        const aTag = notification.parentNode.parentNode;
+        // the old public header's basket link (the landing page's header has none)
+        const aTag = notification ? notification.parentNode.parentNode : null;
         if (Cart === false) {
             document.querySelector('.basket').src = document.getElementById('empty-basket').value;
             notification.innerHtml = '';
@@ -919,7 +1217,9 @@ async function get_pt_quantity(ptID, quantity) {
                   document.querySelector('.badge').textContent = cartCount.toString();
                 }
     
-                aTag.href = window.location.origin + '/cart/' + Cart;
+                if (aTag) {
+                  aTag.href = window.location.origin + '/cart/' + Cart;
+                }
                 if (prData[0].Price == 0) {
                   document.getElementById('fill-data-container').style.width = "100%";
                 }
@@ -1512,7 +1812,7 @@ async function get_pt_quantity(ptID, quantity) {
               }
 
               // Get the header height
-              const header = document.querySelector('.header_public');
+              const header = document.querySelector('.site-header, .header_public');
               const headerHeight = header ? header.offsetHeight : 0;
 
               // Calculate target element's top position relative to the document
@@ -1542,7 +1842,7 @@ async function get_pt_quantity(ptID, quantity) {
       event.preventDefault;
       
       promo.classList.remove('red-placeholder');
-      promo.style.borderColor = 'black';
+      promo.style.borderColor = '';
 
   });
 
@@ -1691,6 +1991,10 @@ $(document).ready(function() {
     return flag;
   }    
 
+  // a field with a mistake: the app's ochre (static/css/araxi-tokens.css --ochre-600); a corrected one
+  // goes back to the page's own border (buy-now.html .bn .form-control)
+  const ERROR_COLOR = '#a9733a';
+
   function handleInput(num) {
     let flag = true;
     let firstname =  document.querySelector('#firstname_' + num);
@@ -1703,73 +2007,72 @@ $(document).ready(function() {
     if (firstname.value === '') {
       mistakes.style.display = 'block';
       firstname.parentNode.querySelector('.invalid-feedback').style.display = 'block'
-      firstname.style.borderColor = 'red'
+      firstname.style.borderColor = ERROR_COLOR
       flag = false;
     } else {
       mistakes.style.display = 'none';
       firstname.parentNode.querySelector('.invalid-feedback').style.display = 'none'
-      firstname.style.borderColor = '#212529';
+      firstname.style.borderColor = '';
     }
     
     if (lastname.value === '') {
       mistakes.style.display = 'block';
       lastname.parentNode.querySelector('.invalid-feedback').style.display = 'block'
-      lastname.style.borderColor = 'red';
+      lastname.style.borderColor = ERROR_COLOR;
       flag = false;
     } else {
       mistakes.style.display = 'none';
       lastname.parentNode.querySelector('.invalid-feedback').style.display = 'none'
-      lastname.style.borderColor = '#212529';
+      lastname.style.borderColor = '';
     }
     
     if (isValidPhoneString(phone.value) === false || phone.value === '') {
       phone.parentNode.querySelector('.invalid-feedback-p').style.display = 'block'
-      phone.style.borderColor = 'red';
+      phone.style.borderColor = ERROR_COLOR;
       flag = false;
       // return flag;
     } else {
       // flag = true;
       mistakes.style.display = 'none';
       phone.parentNode.querySelector('.invalid-feedback-p').style.display = 'none'
-      phone.style.borderColor = '#212529';
+      phone.style.borderColor = '';
     }
 
     if (confirmPhone.value === '') {
       mistakes.style.display = 'block';
       confirmPhone.parentNode.querySelector('.invalid-feedback-phone').style.display = 'block';
-      // confirmPhone.style.borderColor = 'red';
-      confirmPhone.style.setProperty('border-color', 'red', 'important');
+      // confirmPhone.style.borderColor = ERROR_COLOR;
+      confirmPhone.style.setProperty('border-color', ERROR_COLOR, 'important');
 
       flag = false;
     } else {
       mistakes.style.display = 'none';
       confirmPhone.parentNode.querySelector('.invalid-feedback-phone').style.display = 'none'
-      confirmPhone.style.borderColor = '#212529';
+      confirmPhone.style.borderColor = '';
     }
 
     if (phone.value != confirmPhone.value) {
       mistakes.style.display = 'block';
       matchControl.style.display = 'block';
-      phone.style.borderColor = 'red';
-      confirmPhone.style.borderColor = 'red';
+      phone.style.borderColor = ERROR_COLOR;
+      confirmPhone.style.borderColor = ERROR_COLOR;
       flag = false;
     } else {
+      // the numbers match: their borders stay as the checks above set them (two empty fields match too)
       mistakes.style.display = 'none';
       matchControl.style.display = 'none';
-      phone.style.borderColor = '#212529';
-      confirmPhone.style.borderColor = '#212529';
     }
 
     if (email.value === '' || !isValidEmail(email.value)) {
       mistakes.style.display = 'block';
       email.parentNode.querySelector('.invalid-feedback').style.display = 'block';
-      email.style.borderColor = 'red';
+      email.style.borderColor = ERROR_COLOR;
       flag = false;
     } else {
-      email.style.borderColor = '#212529';
+      email.style.borderColor = '';
       mistakes.style.display = 'none';
       email.parentNode.querySelector('.invalid-feedback').style.display = 'none'
-      email.style.borderColor = '#212529';
+      email.style.borderColor = '';
     }
     return flag;
 
@@ -1872,7 +2175,7 @@ document.querySelector('.btn-primary').addEventListener('click', function(event)
         paymentMethod = document.getElementById('payment_methods');
         if (paymentMethod.value) {
           data['payment_method'] = paymentMethod.value;
-          paymentMethod.style.borderColor = '#212529';
+          paymentMethod.style.borderColor = '';
             // Collect all input and select elements
             let form = document.querySelector('#payment_container');
             let elements = form.querySelectorAll('input, select');
@@ -1888,17 +2191,17 @@ document.querySelector('.btn-primary').addEventListener('click', function(event)
                   }
                 } else {
                   if (!el.value) {
-                    el.style.borderColor = 'red';
+                    el.style.borderColor = '#a9733a';
                     flag = false;
                   } else {
-                    el.style.borderColor = '#212529';
+                    el.style.borderColor = '';
                     data[el.id] = el.value;
                   }
                 }
               }
             });
         } else {
-          paymentMethod.style.borderColor = 'red';
+          paymentMethod.style.borderColor = '#a9733a';
           flag = false;
         }
       }
@@ -1908,7 +2211,7 @@ document.querySelector('.btn-primary').addEventListener('click', function(event)
 
     function check_flag() {
       if (flag === false) {
-        mistakes.textContent = "{{ _('Please improve all field marked in red') }}";
+        mistakes.textContent = {{ _('Please check the highlighted fields.') | tojson }};
         mistakes.style.display = 'block';
         mistakes.scrollIntoView({ behavior: 'smooth' });
         
@@ -1976,7 +2279,7 @@ document.querySelector('.btn-primary').addEventListener('click', function(event)
             console.log(keyList)
             keyList.forEach(key => {
               console.log(key)
-              document.getElementById(key).style.borderColor = 'red';
+              document.getElementById(key).style.borderColor = '#a9733a';
             });
             
             clickedButton.classList.toggle('hidden');    
@@ -2065,4 +2368,15 @@ document.querySelector('.btn-primary').addEventListener('click', function(event)
 
 </script>
 
+{% endblock %}
+
+
+{# Header and footer of the landing page instead of the public ones (see public.html) #}
+{% block site_header %}
+{% with chrome_solid = true %}{% include '_site_header.html' %}{% endwith %}
+{% endblock %}
+
+{% block site_footer %}
+{% include '_site_footer.html' %}
+<script nonce="{{ csp_nonce() }}" type="text/javascript" src="{{ url_for('static', filename='JS/site-chrome.js') }}"></script>
 {% endblock %}

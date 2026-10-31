@@ -748,6 +748,261 @@
         });
     }
 
+    // ================= Cart page: notes and "Edit" =================
+    // all: {cart item id: {options (with 'stock': how many can come at most), choice: {vehicle, guide, ages,
+    // date}}} (cart.py cart_view). Every item shows its notes (noteStore); "Edit" opens the service page's
+    // controls for it, and "Save" sends the new choices (POST /cart/update) and keeps the notes
+    function initCartPage(all) {
+        document.querySelectorAll('[data-cart-item]').forEach(li => {
+            const id = li.dataset.cartItem;
+            const notes = noteStore.get('cart:' + id).trim();
+            const text = li.querySelector('[data-notes-text]');
+            if (text) {
+                text.textContent = notes || '—';
+            }
+            const missing = li.querySelector('[data-notes-missing]');
+            if (missing) {
+                missing.hidden = notes !== '';
+            }
+        });
+
+        document.querySelectorAll('[data-cart-edit]').forEach(button => {
+            const id = button.dataset.cartEdit;
+            const panel = document.querySelector('[data-cart-editor="' + id + '"]');
+            if (!all[id] || !panel) {
+                button.hidden = true;
+                return;
+            }
+            let built = false;
+            button.addEventListener('click', () => {
+                const open = panel.hidden;
+                if (open && !built) {
+                    cartEditor(panel, id, all[id], () => {
+                        panel.hidden = true;
+                        button.setAttribute('aria-expanded', 'false');
+                        button.focus();
+                    });
+                    built = true;
+                }
+                panel.hidden = !open;
+                button.setAttribute('aria-expanded', String(open));
+                if (open) {
+                    const first = panel.querySelector('input, button');
+                    if (first) {
+                        first.focus();
+                    }
+                }
+            });
+        });
+
+        // a link from "Book all" to an item's editor (#edit-<id>): it opens
+        const target = location.hash.startsWith('#edit-') ? document.querySelector('[data-cart-edit="' + location.hash.slice(6) + '"]') : null;
+        if (target) {
+            target.click();
+        }
+    }
+
+    // The editor of one cart item: date, who is coming, vehicle, guide, notes, the price, Save / Cancel
+    function cartEditor(panel, id, data, close) {
+        const options = data.options;
+        const name = 'ce' + id;
+        let selectedDate = validDay(options, data.choice.date || '');
+        let selectedVehicle = data.choice.vehicle;
+        let selectedGuide = data.choice.guide;
+        const counts = {};
+        Object.keys(data.choice.ages || {}).forEach(ageID => {
+            counts[ageID] = Number(data.choice.ages[ageID]);
+        });
+        const stockMax = () => (options.stock === null || options.stock === undefined ? null : options.stock);
+
+        const box = document.createElement('div');
+        box.className = 'booking bk-cart-editor';
+        const day = options.dateMin ? dateField(name, options, selectedDate) : null;
+        if (day) {
+            box.appendChild(day.element);
+        }
+        const counters = ageCounters(options, name, (ageID, step) => {
+            const max = peopleLimit(options, stockMax(), selectedVehicle);
+            if (step > 0 && max !== null && sumCounts(counts) >= max) {
+                showMessage(limitMessage(options, stockMax(), selectedVehicle));
+                return;
+            }
+            counts[ageID] = Math.max(0, (counts[ageID] || 0) + step);
+            showMessage('');
+            update();
+        });
+        if (options.ages.length) {
+            box.appendChild(counters.element);
+        }
+        if (options.basis === PRICING_VEHICLE && options.vehicles.length) {
+            box.appendChild(pills(name + 'vehicle', T.vehicle, options.vehicles.map(v => ({
+                value: v.ID, label: v.Type, sub: v.SeatsLabel + ' · ' + (v.Price > 0 ? money(v.Price) : T.free)
+            })), selectedVehicle, 'bk-vehicle'));
+        }
+        if (options.guides.length) {
+            box.appendChild(pills(name + 'guide', T.guide, guideItems(options), selectedGuide, 'bk-guide'));
+        }
+        const notes = options.notesEnabled ? notesField(name, options) : null;
+        if (notes) {
+            notes.input.value = noteStore.get('cart:' + id);
+            box.appendChild(notes.element);
+            notes.input.addEventListener('input', () => notes.input.classList.remove('is-invalid'));
+        }
+
+        const price = document.createElement('p');
+        price.className = 'bk-cart-editor__price';
+        box.appendChild(price);
+        const message = document.createElement('p');
+        message.className = 'bk-message';
+        message.setAttribute('role', 'alert');
+        box.appendChild(message);
+
+        const actions = document.createElement('div');
+        actions.className = 'bk-cart-editor__actions';
+        const cancel = document.createElement('button');
+        cancel.type = 'button';
+        cancel.className = 'bk-btn';
+        cancel.textContent = T.cancel;
+        const save = document.createElement('button');
+        save.type = 'button';
+        save.className = 'bk-btn bk-btn--solid';
+        save.textContent = T.save;
+        actions.appendChild(cancel);
+        actions.appendChild(save);
+        box.appendChild(actions);
+        panel.appendChild(box);
+
+        function showMessage(text) {
+            message.classList.remove('is-success');
+            message.textContent = text;
+        }
+
+        function update() {
+            const max = peopleLimit(options, stockMax(), selectedVehicle);
+            if (max !== null) {
+                const order = options.ages.map(a => String(a.ID));
+                while (sumCounts(counts) > Math.max(max, 1)) {
+                    const ageID = order.find(i => (counts[i] || 0) > 0);
+                    counts[ageID] -= 1;
+                }
+            }
+            counters.render(counts, max, 0);
+            const people = sumCounts(counts);
+            const amount = cardPrice(options, counts, selectedVehicle, selectedGuide);
+            price.textContent = amount === null || people === 0 ? '' : T.total + ': ' + (amount > 0 ? money(amount) : T.participationFree);
+        }
+
+        box.addEventListener('change', event => {
+            if (event.target.name === name + 'date') {
+                selectedDate = validDay(options, event.target.value);
+                event.target.classList.toggle('is-invalid', !selectedDate && !!event.target.value);
+                showMessage(selectedDate || !event.target.value ? '' : T.dateUnavailable);
+            }
+            if (event.target.name === name + 'vehicle') {
+                selectedVehicle = Number(event.target.value);
+                showMessage('');
+            }
+            if (event.target.name === name + 'guide') {
+                selectedGuide = Number(event.target.value);
+            }
+            update();
+        });
+        update();
+
+        // the choices as /cart/update takes them; null (and the reason shown) when something is missing
+        function choices() {
+            if (!selectedDate) {
+                showMessage(day ? T.chooseDate : T.dateUnavailable);
+                if (day) {
+                    day.input.classList.add('is-invalid');
+                    day.input.focus();
+                }
+                return null;
+            }
+            if (sumCounts(counts) < 1) {
+                showMessage(T.chooseWho);
+                counters.open();
+                return null;
+            }
+            if (options.basis === PRICING_VEHICLE && !vehicleByID(options, selectedVehicle)) {
+                showMessage(T.chooseVehicle);
+                setFold(box.querySelector('.bk-vehicle'), true);
+                return null;
+            }
+            if (options.adultRequired && !hasAdult(options, counts)) {
+                showMessage(T.adultRequired);
+                counters.open();
+                return null;
+            }
+            if (notes && notes.input.required && !notes.input.value.trim()) {
+                showMessage(T.writeNotes);
+                notes.input.classList.add('is-invalid');
+                notes.input.focus();
+                return null;
+            }
+            const formData = new FormData();
+            formData.append('id', id);
+            formData.append('ptID', options.ptRefKey);
+            if (options.basis === PRICING_VEHICLE) {
+                formData.append('vehicle', selectedVehicle);
+            }
+            formData.append('guide', selectedGuide);
+            formData.append('ages', Object.keys(counts).filter(a => counts[a] > 0).map(a => a + ':' + counts[a]).join(','));
+            formData.append('date', selectedDate);
+            return formData;
+        }
+
+        cancel.addEventListener('click', close);
+        save.addEventListener('click', () => {
+            const formData = choices();
+            if (!formData || save.disabled) {
+                return;
+            }
+            save.disabled = true;
+            // status 3: other bookings are for that day; asked, then sent again with sameDay=1
+            function send(sameDay) {
+                if (sameDay) {
+                    formData.set('sameDay', '1');
+                }
+                return fetch('/cart/update', { method: 'POST', headers: { 'X-CSRFToken': T.csrf }, body: formData })
+                    .then(response => response.json())
+                    .then(answer => {
+                        T.csrf = answer.newCSRFtoken || T.csrf;
+                        if (answer.status !== '3') {
+                            return answer;
+                        }
+                        return confirmSameDay(selectedDate, answer.items).then(ok => ok ? send(true) : null);
+                    });
+            }
+            send(false)
+                .then(answer => {
+                    if (!answer) {
+                        if (day) {
+                            day.input.focus();
+                        }
+                        return;
+                    }
+                    if (answer.status !== '1') {
+                        showMessage(answer.answer);
+                        return;
+                    }
+                    if (notes) {
+                        noteStore.set('cart:' + id, notes.input.value.trim());
+                    }
+                    // the page shows the booking as the server priced it
+                    location.hash = 'item-' + id;
+                    location.reload();
+                })
+                .catch(error => {
+                    showMessage(T.tryAgain);
+                    console.error(error);
+                })
+                .finally(() => {
+                    save.disabled = false;
+                });
+        });
+    }
+
     // ================= Buy-now page =================
     // The page makes one ticket (.client-contact) per person and adds / removes them with its + / −
     // (.tkt-add / .tkt-remove). Here the counters do that: every ticket is tagged with an age group
@@ -1049,16 +1304,25 @@
             waitForTickets();
         }
 
-        // ---- notes (as written on the price card, noteStore) and terms
-        const notes = document.getElementById('bookingNotes');
+        // ---- notes and terms. The notes are written on the price card or in the cart (noteStore), not here:
+        // the page only shows them (#bookingNotesView), and when the price requires them and there are none,
+        // says where to add them
+        const notesView = document.getElementById('bookingNotesView');
         const terms = document.getElementById('bookingTerms');
         const notesKey = options.cartItem ? 'cart:' + options.cartItem : 'pt:' + options.ptRefKey;
-        if (notes) {
-            notes.value = notes.value || noteStore.get(notesKey);
-            notes.addEventListener('input', () => {
-                notes.classList.remove('is-invalid');
-                noteStore.set(notesKey, notes.value.trim());
-            });
+        const notesText = notesView ? noteStore.get(notesKey).trim() : '';
+        const notesMissing = notesView ? notesView.querySelector('[data-notes-missing]') : null;
+        if (notesView) {
+            notesView.querySelector('[data-notes-text]').textContent = notesText || '—';
+            // nothing written and nothing asked for: nothing to show
+            notesView.hidden = !notesText && !options.notesRequired;
+            const back = notesView.querySelector('[data-notes-back]');
+            if (back) {
+                back.addEventListener('click', event => {
+                    event.preventDefault();
+                    history.back();
+                });
+            }
         }
         if (terms) {
             terms.addEventListener('change', () => terms.classList.remove('is-invalid'));
@@ -1090,8 +1354,8 @@
                     showMessage(day ? T.chooseDate : T.dateUnavailable);
                     ok = false;
                 }
-                if (notes && notes.required && !notes.value.trim()) {
-                    notes.classList.add('is-invalid');
+                if (notesMissing && options.notesRequired && !notesText) {
+                    notesMissing.hidden = false;
                     ok = false;
                 }
                 if (terms && !terms.checked) {
@@ -1107,7 +1371,7 @@
                     guide: guide || 0,
                     date: bookingDay,
                     ages: ages(),
-                    notes: notes ? notes.value.trim() : '',
+                    notes: notesText,
                     terms: terms ? terms.checked : false
                 };
             },
@@ -1124,6 +1388,11 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
+        const cart = json('cartEditData');
+        if (cart) {
+            initCartPage(cart);
+            return;
+        }
         const data = json('bookingData');
         if (!data) {
             return;

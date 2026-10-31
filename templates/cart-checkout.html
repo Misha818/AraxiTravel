@@ -1,0 +1,363 @@
+{% extends 'public.html' %}
+{#- "Book all": every booking of the cart that can be booked now (cart.py cart_bookings), ordered together for
+    one lead contact with one payment (POST /cart/checkout, app.py cart_checkout). The notes written on the
+    service page or in the cart come from this browser (static/JS/booking.js noteStore) -#}
+{% block title %}
+  {{ _('Book all') }}
+{% endblock %}
+
+
+{% block head %}
+<meta name="robots" content="noindex, nofollow" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Marcellus&family=Noto+Sans+Armenian:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/site-chrome.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/booking.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cart.css') }}">
+<style>
+  body {
+    background-color: #fbf9f4 !important;
+    min-height: 100vh;
+  }
+  .site-footer {
+    margin-top: auto;
+  }
+</style>
+{% endblock %}
+
+{% macro money(amount) -%}
+  {%- if amount > 0 -%}{{ MAIN_CURRENCY }} {{ '{:,.2f}'.format(amount | float).rstrip('0').rstrip('.') }}{%- else -%}{{ _('Free') }}{%- endif -%}
+{%- endmacro %}
+
+{% block content %}
+<input type="hidden" id="csrfToket" value="{{ csrf_token() }}">
+<input type="hidden" id="inBasketText" value="{{ _('In Basket') }}">
+<main class="bk-cart bk-checkout" data-checkout data-csrf="{{ csrf_token() }}"
+      data-items="{{ bookings | map(attribute='item') | map(attribute='id') | list | tojson | forceescape }}">
+  <a class="bk-checkout__back" href="{{ url_for('cart') }}">&larr; {{ _('Back to cart') }}</a>
+  <h1 class="bk-cart__title">{{ _('Book all') }}</h1>
+  <p class="bk-cart__lead">{{ _('All these bookings in one order, paid once.') }}</p>
+  {% if left %}
+  <p class="bk-cart-item__note">{{ ngettext('%(num)s booking in your cart can not be booked now and is not included.', '%(num)s bookings in your cart can not be booked now and are not included.', left) }}
+    <a href="{{ url_for('cart') }}">{{ _('View cart') }}</a></p>
+  {% endif %}
+
+  <ul class="bk-cart__list bk-checkout__list">
+    {% for b in bookings %}
+    {% set item, options, quote = b.item, b.options, b.quote %}
+    <li class="bk-cart-item bk-checkout__item" data-booking-item="{{ item.id }}"
+        data-notes-enabled="{{ options.notesEnabled }}" data-notes-required="{{ options.notesRequired }}">
+      <div>
+        <h2 class="bk-cart-item__title">{{ b.title }}</h2>
+        <dl class="bk-cart-item__choices">
+          <div>
+            <dt>{{ _('Date') }}:</dt>
+            <dd>{{ format_date(b.date, 'full') }}</dd>
+          </div>
+          <div>
+            <dt>{{ _('Who is coming?') }}</dt>
+            <dd>{% for a in options.ages if quote.ageCounts.get(a.ID) %}{{ a.Name }} × {{ quote.ageCounts[a.ID] }}{% if not loop.last %}, {% endif %}{% endfor %}</dd>
+          </div>
+          {% if quote.vehicle %}
+          <div>
+            <dt>{{ _('Vehicle') }}:</dt>
+            <dd>{{ quote.vehicle.Type }}</dd>
+          </div>
+          {% endif %}
+          <div>
+            <dt>{{ _('Guide') }}:</dt>
+            <dd>{{ quote.guide.Language if quote.guide else _('No guide') }}</dd>
+          </div>
+          {% if options.notesEnabled %}
+          <div class="bk-cart-item__notes">
+            <dt>{{ _('Additional notes') }}{{ ' *' if options.notesRequired }}:</dt>
+            <dd data-notes-text>—</dd>
+          </div>
+          {% endif %}
+        </dl>
+        {% if options.notesEnabled and options.notesRequired %}
+        <p class="bk-cart-item__unavailable" data-notes-missing hidden>{{ _('Additional notes are required for this booking.') }}
+          <a href="{{ url_for('cart') }}#edit-{{ item.id }}">{{ _('Add them in your cart') }}</a></p>
+        {% endif %}
+      </div>
+      <div class="bk-cart-item__side">
+        <ul class="bk-cart-item__lines">
+          {% for line in quote.lines %}
+          <li><span>{{ line.label }}</span><span>{{ money(line.amount) }}</span></li>
+          {% endfor %}
+        </ul>
+        <p class="bk-cart-item__total">{{ money(quote.total) if quote.total > 0 else _('Participation is free') }}</p>
+        {#- what the promo code takes off this booking (filled by the script below) -#}
+        <p class="bk-checkout__promo-line" data-promo-line hidden></p>
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+
+  <div class="bk-checkout__summary">
+    {%- if total > 0 %}
+    {#- a promo code, as on the buy-now page: checked with /cart/promo, sent with the order -#}
+    <form class="bk-checkout__promo" data-promo-form novalidate>
+      <label for="promo" class="bk-checkout__promo-label">{{ _('Promo code') }}</label>
+      <div class="bk-checkout__promo-row">
+        <input type="text" id="promo" name="promo" autocomplete="off" placeholder="{{ _('Promo code') }}">
+        <button type="submit" class="bk-btn">{{ _('Submit') }}</button>
+      </div>
+      <p class="bk-checkout__promo-note" data-promo-note role="status" aria-live="polite"></p>
+    </form>
+    {%- endif %}
+    <p class="bk-checkout__total"><span>{{ _('Total') }}</span>
+      <span class="bk-checkout__amounts">
+        <s class="bk-checkout__old" data-total-old hidden>{{ money(total) }}</s>
+        <strong data-total data-amount="{{ total }}">{{ money(total) if total > 0 else _('Participation is free') }}</strong>
+      </span>
+    </p>
+  </div>
+
+  <form class="bk-checkout__form" data-checkout-form novalidate>
+    <h2 class="bk-checkout__heading">{{ _('Contact details') }}</h2>
+    <p class="bk-checkout__hint">{{ _('The person we contact about these bookings.') }}</p>
+    <div class="bk-checkout__fields">
+      <label>{{ _('First name') }} *<input type="text" name="firstname" autocomplete="given-name" required></label>
+      <label>{{ _('Last name') }} *<input type="text" name="lastname" autocomplete="family-name" required></label>
+      <label>{{ _('Phone Number') }} *<input type="tel" name="phone" autocomplete="tel" required></label>
+      <label>{{ _('Confirm Phone Number') }} *<input type="tel" name="confirm_phone" autocomplete="tel" required></label>
+      <label class="bk-checkout__wide">{{ _('Email') }} *<input type="email" name="email" autocomplete="email" required></label>
+    </div>
+
+    {% if total > 0 %}
+    <label class="bk-checkout__wide bk-checkout__payment">{{ _('Payment method') }} *
+      <select name="payment_method" required>
+        <option value="">{{ _('Choose payment method') }}</option>
+        {% for row in paymentMethods %}
+        <option value="{{ row['ID'] }}">{{ row['method'] }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    {% if not paymentMethods %}
+    <p class="bk-cart-item__unavailable">{{ _('These bookings can not be paid together. Please book them one by one.') }}</p>
+    {% endif %}
+    {% endif %}
+
+    {% set termsLink %}<a href="/terms" target="_blank" rel="noopener">{{ _('terms and conditions') }}</a>{% endset %}
+    <label class="bk-checkout__terms"><input type="checkbox" name="terms" required>
+      <span>{{ (_('I agree to the %(terms)s.', terms='{terms}') | e | string) | replace('{terms}', termsLink | string) | safe }}</span></label>
+
+    <p class="bk-message" role="alert" data-checkout-message></p>
+    <button type="submit" class="bk-btn bk-btn--solid bk-checkout__submit" {% if total > 0 and not paymentMethods %}disabled{% endif %}>
+      {{ _('Book and pay') if total > 0 else _('Book all') }}
+    </button>
+  </form>
+</main>
+
+<script nonce="{{ csp_nonce() }}">
+  // The notes of each booking (written on the service page or in the cart, kept in this browser), the
+  // order (POST /cart/checkout) and, once it is placed, its confirmation page
+  (function () {
+    const page = document.querySelector('[data-checkout]');
+    const form = page.querySelector('[data-checkout-form]');
+    const message = page.querySelector('[data-checkout-message]');
+    const submit = form.querySelector('.bk-checkout__submit');
+    let csrf = page.dataset.csrf;
+    const items = JSON.parse(page.dataset.items);
+    const currency = {{ MAIN_CURRENCY | tojson }};
+    const money = amount => currency + ' ' + Number(amount).toLocaleString('en-US', { maximumFractionDigits: 2 });
+
+    // ---- the promo code (POST /cart/promo): the discount of each booking and the new total; the code that
+    // was checked is the one sent with the order
+    const promoForm = page.querySelector('[data-promo-form]');
+    const promoInput = promoForm ? promoForm.querySelector('#promo') : null;
+    const promoNote = promoForm ? promoForm.querySelector('[data-promo-note]') : null;
+    const totalEl = page.querySelector('[data-total]');
+    const totalOld = page.querySelector('[data-total-old]');
+    let promoApplied = '';
+
+    function showPromo(answer, code) {
+      promoApplied = answer && answer.status === '1' ? code : '';
+      page.querySelectorAll('[data-promo-line]').forEach(line => {
+        line.hidden = true;
+        line.textContent = '';
+      });
+      if (!promoApplied) {
+        totalOld.hidden = true;
+        totalEl.textContent = money(totalEl.dataset.amount);
+        return;
+      }
+      answer.items.forEach(item => {
+        const line = page.querySelector('[data-booking-item="' + item.id + '"] [data-promo-line]');
+        if (line && item.amount > 0) {
+          line.textContent = {{ _('Promo code') | tojson }} + ' −' + item.discount + '%: −' + money(item.amount);
+          line.hidden = false;
+        }
+      });
+      totalOld.hidden = !(answer.discountPrice > 0);
+      totalEl.textContent = money(answer.totalPrice - answer.discountPrice);
+    }
+
+    if (promoForm) {
+      promoInput.addEventListener('input', () => {
+        promoInput.classList.remove('is-invalid');
+        // a changed code is checked again before it counts
+        if (promoApplied && promoInput.value.trim() !== promoApplied) {
+          showPromo(null, '');
+          promoNote.textContent = '';
+        }
+      });
+      promoForm.addEventListener('submit', event => {
+        event.preventDefault();
+        const code = promoInput.value.trim();
+        const button = promoForm.querySelector('button');
+        if (!code) {
+          showPromo(null, '');
+          promoInput.classList.add('is-invalid');
+          promoNote.className = 'bk-checkout__promo-note is-error';
+          promoNote.textContent = {{ _('Enter Promo Code') | tojson }};
+          promoInput.focus();
+          return;
+        }
+        button.disabled = true;
+        const body = new FormData();
+        body.append('promo', code);
+        fetch('/cart/promo', { method: 'POST', headers: { 'X-CSRFToken': csrf }, body: body })
+          .then(response => response.json())
+          .then(answer => {
+            csrf = answer.newCSRFtoken || csrf;
+            showPromo(answer, code);
+            promoInput.classList.toggle('is-invalid', answer.status !== '1');
+            promoNote.className = 'bk-checkout__promo-note' + (answer.status === '1' ? ' is-ok' : ' is-error');
+            promoNote.textContent = answer.status === '1'
+              ? {{ _('Promo code') | tojson }} + ' ' + code + ': −' + money(answer.discountPrice)
+              : answer.answer;
+          })
+          .catch(error => {
+            showPromo(null, '');
+            promoNote.className = 'bk-checkout__promo-note is-error';
+            promoNote.textContent = {{ _('Something went wrong. Please try again!') | tojson }};
+            console.error(error);
+          })
+          .finally(() => {
+            button.disabled = false;
+          });
+      });
+    }
+
+    function storedNotes(id) {
+      try {
+        return localStorage.getItem('araxiNotes:cart:' + id) || '';
+      } catch (error) {
+        return '';
+      }
+    }
+    const notes = {};
+    page.querySelectorAll('[data-booking-item]').forEach(li => {
+      const id = li.dataset.bookingItem;
+      notes[id] = li.dataset.notesEnabled === '1' ? storedNotes(id).trim() : '';
+      const text = li.querySelector('[data-notes-text]');
+      if (text) {
+        text.textContent = notes[id] || '—';
+      }
+      const missing = li.querySelector('[data-notes-missing]');
+      if (missing) {
+        missing.hidden = notes[id] !== '';
+      }
+    });
+
+    function showMessage(text, success) {
+      message.classList.toggle('is-success', !!success);
+      message.textContent = text;
+    }
+
+    form.addEventListener('input', event => event.target.classList.remove('is-invalid'));
+    form.addEventListener('submit', event => {
+      event.preventDefault();
+      if (submit.disabled) {
+        return;
+      }
+      const missing = [...form.querySelectorAll('[required]')].filter(input =>
+        input.type === 'checkbox' ? !input.checked : !input.value.trim());
+      form.querySelectorAll('.is-invalid').forEach(input => input.classList.remove('is-invalid'));
+      missing.forEach(input => input.classList.add('is-invalid'));
+      if (missing.length) {
+        showMessage({{ _('Please improve all red fields!') | tojson }});
+        missing[0].focus();
+        return;
+      }
+      const value = name => (form.elements[name] ? form.elements[name].value.trim() : '');
+      const data = {
+        contact: { firstname: value('firstname'), lastname: value('lastname'), phone: value('phone'),
+                   confirm_phone: value('confirm_phone'), email: value('email') },
+        payment_method: value('payment_method'),
+        terms: form.elements.terms.checked,
+        items: items,
+        notes: notes,
+        promo: promoInput ? promoInput.value.trim() : ''
+      };
+      const body = new FormData();
+      body.append('data', JSON.stringify(data));
+      submit.disabled = true;
+      showMessage('');
+      fetch('/cart/checkout', { method: 'POST', headers: { 'X-CSRFToken': csrf }, body: body })
+        .then(response => response.json())
+        .then(answer => {
+          csrf = answer.newCSRFtoken || csrf;
+          if (answer.status === '1') {
+            items.forEach(id => {
+              try {
+                localStorage.removeItem('araxiNotes:cart:' + id);
+              } catch (error) {
+                // no storage
+              }
+            });
+            if (answer.pdID) {
+              window.location.href = '/confirmation-page/' + answer.pdID;
+              return;
+            }
+            // paid and recorded, but no order page: say so and offer no second payment
+            showMessage(answer.answer, true);
+            submit.hidden = true;
+            return;
+          }
+          submit.disabled = false;
+          if (answer.promo && promoInput) {
+            // the code is not (or no longer) valid: say so at the code
+            showPromo(null, '');
+            promoInput.classList.add('is-invalid');
+            promoNote.className = 'bk-checkout__promo-note is-error';
+            promoNote.textContent = answer.answer;
+          }
+          if (answer.status === '-1') {
+            (answer.keyList || []).forEach(name => {
+              if (form.elements[name]) {
+                form.elements[name].classList.add('is-invalid');
+              }
+            });
+          }
+          showMessage(answer.answer);
+          if (answer.status === '4') {
+            const link = document.createElement('a');
+            link.href = '/cart';
+            link.textContent = {{ _('View cart') | tojson }};
+            message.appendChild(document.createTextNode(' '));
+            message.appendChild(link);
+          }
+        })
+        .catch(error => {
+          submit.disabled = false;
+          showMessage({{ _('Something went wrong. Please try again!') | tojson }});
+          console.error(error);
+        });
+    });
+  })();
+</script>
+{% endblock %}
+
+
+{% block site_header %}
+{% with chrome_solid = true %}{% include '_site_header.html' %}{% endwith %}
+{% endblock %}
+
+{% block site_footer %}
+{% include '_site_footer.html' %}
+<script nonce="{{ csp_nonce() }}" type="text/javascript" src="{{ url_for('static', filename='JS/site-chrome.js') }}"></script>
+{% endblock %}
