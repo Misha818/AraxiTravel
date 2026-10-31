@@ -3072,11 +3072,18 @@ def edit_price(ptID):
 PRICE_IMAGE_MAX_MB = 3
 
 
-# The error for a photo above PRICE_IMAGE_MAX_MB, or None
-def price_image_size_error(file):
+# Size in bytes of an uploaded file. A fresh upload's position is 0, so file.tell()
+# alone always says 0: seek to the end first, then rewind for the save.
+def uploaded_file_size(file):
     file.seek(0, os.SEEK_END)
     size = file.tell()
     file.seek(0)
+    return size
+
+
+# The error for a photo above PRICE_IMAGE_MAX_MB, or None
+def price_image_size_error(file):
+    size = uploaded_file_size(file)
     if size <= PRICE_IMAGE_MAX_MB * 1024 * 1024:
         return None
     return gettext('"%(name)s" is %(size)s MB: an image can be at most %(max)s MB.',
@@ -4897,13 +4904,10 @@ def stuff_signup(uniqueURL):
                 answer = gettext('File should be in PNG or JPG/JPEG format')
                 return jsonify({'status': '0', 'answer': answer, 'newCSRFtoken': newCSRFtoken}) 
             
-            # # Check file size (1 MB = 1048576 bytes)
-            file_size = file.tell()
-            if file_size > 1048576:
+            # Check file size (1 MB = 1048576 bytes)
+            if uploaded_file_size(file) > 1048576:
                 answer = gettext('File size should not exceed 1MB.')
                 return jsonify({'status': '0', 'answer': answer, 'newCSRFtoken': newCSRFtoken}) 
-            
-            file.seek(0)  # Reset the file pointer to the beginning after reading
             unique_filename = fileUpload(file, 'images/stuff')
     
         LanguageID = request.form.get('LanguageID')
@@ -5070,12 +5074,10 @@ def edit_profile(stuffID):
                 answer = gettext('File should be in PNG or JPG/JPEG format')
                 return jsonify({'status': '0', 'answer': answer, 'newCSRFtoken': newCSRFtoken}) 
             
-            # # Check file size (1 MB = 1048576 bytes)
-            file_size = file.tell()
-            if file_size > 1048576:
+            # Check file size (1 MB = 1048576 bytes)
+            if uploaded_file_size(file) > 1048576:
                 answer = gettext('File size should not exceed 1MB.')
                 return jsonify({'status': '0', 'answer': answer, 'newCSRFtoken': newCSRFtoken}) 
-            file.seek(0)  # Reset the file pointer to the beginning after reading
             
             if resultSame['data'][0]["Avatar"]:
                 removeRedundantFiles(resultSame['data'][0]["Avatar"], 'images/stuff')

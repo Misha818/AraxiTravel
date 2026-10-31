@@ -438,12 +438,7 @@ document.querySelector('.filter').addEventListener('click', function() {
   
   let filterURL = constract_filter_url('1');
   if (filterURL.status == 1) {
-    let affID = "{{ affID }}";
-    let filterAff = '';
-    if (affID) {
-      filterAff = '&affiliate=' + affID;
-    }
-    window.location.href = filterURL.message + filterAff;
+    window.location.href = filterURL.message;
 
   } else {
     alert(filterURL.message)
@@ -516,7 +511,13 @@ function constract_filter_url(page) {
   if (flag === 1) {
     return {'status': 0, 'message': "{{ _('Invalid phone number') }}"};
   }
-  
+
+  // Staff view (/stuff-affiliate-orders) needs the affiliate on every URL, page links included
+  let affID = {{ (affID or '') | tojson }};
+  if (affID) {
+    filterURL += '&affiliate=' + affID;
+  }
+
   return {'status': 1, 'message': filterURL}
   
 }
