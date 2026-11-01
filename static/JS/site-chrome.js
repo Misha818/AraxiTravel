@@ -6,6 +6,14 @@
 (function () {
     'use strict';
 
+    // The one-time language note (templates/_lang_notice.html)
+    const langNoticeClose = document.querySelector('[data-lang-notice-close]');
+    if (langNoticeClose) {
+        langNoticeClose.addEventListener('click', function () {
+            langNoticeClose.closest('[data-lang-notice]').remove();
+        });
+    }
+
     const header = document.querySelector('[data-header]');
     const toggle = document.querySelector('[data-menu-toggle]');
     const label = document.querySelector('[data-menu-label]');

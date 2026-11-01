@@ -1127,6 +1127,31 @@ def get_ptid_by_title(title):
         return ''
 
 
+def get_published_product_url(refKey, languageID, ptRefKey=''):
+    # A product's link in another language, None unless it is published in that language.
+    # A link to one price ("<product>&<price-title>") keeps that price when it has that language too.
+    sqlQuery = """
+                    SELECT `product`.`Url`
+                    FROM `product_relatives`
+                        LEFT JOIN `product` ON `product`.`ID` = `product_relatives`.`P_ID`
+                    WHERE `P_Ref_Key` = %s AND `product_relatives`.`Language_ID` = %s AND `product`.`Product_Status` = 2;"""
+    result = sqlSelect(sqlQuery, (refKey, languageID), True)
+    if result['length'] == 0:
+        return None
+
+    url = result['data'][0]['Url']
+    if ptRefKey:
+        sqlQueryPt = """
+                    SELECT `product_type`.`Title`
+                    FROM `product_type_relatives`
+                        LEFT JOIN `product_type` ON `product_type`.`ID` = `product_type_relatives`.`PT_ID`
+                    WHERE `PT_Ref_Key` = %s AND `product_type_relatives`.`Language_ID` = %s;"""
+        resultPt = sqlSelect(sqlQueryPt, (ptRefKey, languageID), True)
+        if resultPt['length'] > 0 and resultPt['data'][0]['Title']:
+            url += '&' + resultPt['data'][0]['Title'].replace(' ', '-')
+    return url
+
+
 def get_ptRefKey_by_title(title): # By product_type.Title
     title = title.replace('-', ' ')
     sqlQuery = """

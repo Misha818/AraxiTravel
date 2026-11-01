@@ -7,6 +7,8 @@
 {% block head %}
 
     {{ metaTags | safe }}
+    {% if hreflangLinks | length > 1 %}{% for link in hreflangLinks %}<link rel="alternate" hreflang="{{ link.lang }}" href="{{ link.url }}">
+    {% endfor %}{% endif %}
     
     <link rel="stylesheet" href="{{ url_for('static', filename='quill.snow.css') }}">
 

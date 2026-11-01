@@ -1,4 +1,5 @@
 from PIL import Image, ImageDraw, ImageFont
+from dotenv import load_dotenv
 import os
 import sys
 import math
@@ -243,8 +244,9 @@ card2_coords = (pad, card2_top, W - pad, card2_bottom)
 draw_rounded_rect(draw, card2_coords, radius=20, outline=(180, 180, 180), width=3, fill=(255, 255, 255))
 
 # QR Code settings
-qr_url = "https://www.araxitravel.am/ticket/35-T75JIZV"  # Full URL for QR
-footer_text = "www.araxitravel.am"  # Display text below QR
+load_dotenv()
+footer_text = os.getenv('HOME_URL', '').strip()  # Display text below QR: the site's domain (HOME_URL in .env)
+qr_url = f"https://{footer_text}/ticket/35-T75JIZV"  # Full URL for QR
 
 # Generate QR Code
 qr_generated = False

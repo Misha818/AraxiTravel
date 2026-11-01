@@ -294,15 +294,13 @@
     let display = 'display: none!important;';
 
     function cunstructTicketData() {
-        const host = window.location.hostname;
-        const needsWww = !/^www\./i.test(host) && host !== 'localhost' && !/^\d{1,3}(\.\d{1,3}){3}$/.test(host);
-        const hostWithWww = needsWww ? `www.${host}` : host;
-        // -> "www.example.com" (or unchanged)
+        // the site's domain (HOME_URL in .env)
+        const siteDomain = {{ home_domain | tojson }};
 
         // one ticket per booking and ticket holder, with everything the price card showed (booking.py order_tickets)
         const serverTickets = {{ tickets | tojson }};
         if (serverTickets.length) {
-            return serverTickets.map(t => Object.assign(t, { qrUrl: hostWithWww + '/ticket/' + `{{ pdUrl }}`, footerText: hostWithWww }));
+            return serverTickets.map(t => Object.assign(t, { qrUrl: 'https://' + siteDomain + '/ticket/' + `{{ pdUrl }}`, footerText: siteDomain }));
         }
 
         // an order made before bookings were kept: the price's specifications only
@@ -322,8 +320,8 @@
             });
             
 
-            item['qrUrl'] = hostWithWww + '/ticket/' + `{{ pdUrl }}`; 
-            item['footerText'] = hostWithWww;
+            item['qrUrl'] = 'https://' + siteDomain + '/ticket/' + `{{ pdUrl }}`; 
+            item['footerText'] = siteDomain;
             tickets.push(item)
             i++
         }
@@ -613,7 +611,7 @@ function formatInternationalNumber(phoneNumber) {
       stub.className = 'tk__stub';
       const qrBox = document.createElement('div'); qrBox.className = 'qr-box';
       const caption = document.createElement('div'); caption.className = 'caption'; caption.textContent = `{{ _('Scan QR code if asked') }}`;
-      const url = document.createElement('div'); url.className = 'url'; url.textContent = ticket.footerText || 'www.araxitravel.am';
+      const url = document.createElement('div'); url.className = 'url'; url.textContent = ticket.footerText || {{ home_domain | tojson }};
       stub.append(qrBox, caption, url);
       container.append(main, stub);
 
@@ -681,8 +679,8 @@ function formatInternationalNumber(phoneNumber) {
     //       status: 'Completed',
     //       status1: 'Completed',
     //       status2: 'Completed',
-    //       qrUrl: 'https://www.araxitravel.am/ticket/35-T75JIZV',
-    //       footerText: 'www.araxitravel.am'
+    //       qrUrl: 'https://araxi.travel/ticket/35-T75JIZV',
+    //       footerText: 'araxi.travel'
     //     },
     //     {
     //       id: '35-T75JIZV',
@@ -692,8 +690,8 @@ function formatInternationalNumber(phoneNumber) {
     //       status: 'Completed',
     //       status1: 'Completed',
     //       status2: 'Completed',
-    //       qrUrl: 'https://www.araxitravel.am/ticket/35-T75JIZV',
-    //       footerText: 'www.araxitravel.am'
+    //       qrUrl: 'https://araxi.travel/ticket/35-T75JIZV',
+    //       footerText: 'araxi.travel'
     //     },
     //     {
     //       id: '35-T75JIZV',
@@ -703,8 +701,8 @@ function formatInternationalNumber(phoneNumber) {
     //       status: 'Completed',
     //       status1: 'Completed',
     //       status2: 'Completed',
-    //       qrUrl: 'https://www.araxitravel.am/ticket/35-T75JIZV',
-    //       footerText: 'www.araxitravel.am'
+    //       qrUrl: 'https://araxi.travel/ticket/35-T75JIZV',
+    //       footerText: 'araxi.travel'
     //     },
     //     {
     //       id: '35-T75JIZV',
@@ -714,8 +712,8 @@ function formatInternationalNumber(phoneNumber) {
     //       status: 'Completed',
     //       status1: 'Completed',
     //       status2: 'Completed',
-    //       qrUrl: 'https://www.araxitravel.am/ticket/35-T75JIZV',
-    //       footerText: 'www.araxitravel.am'
+    //       qrUrl: 'https://araxi.travel/ticket/35-T75JIZV',
+    //       footerText: 'araxi.travel'
     //     },
     //     {
     //       id: '36-K82MXYZ',
@@ -725,8 +723,8 @@ function formatInternationalNumber(phoneNumber) {
     //       status: 'Completed',
     //       status1: 'Completed',
     //       status2: 'Completed',
-    //       qrUrl: 'https://www.araxitravel.am/ticket/36-K82MXYZ',
-    //       footerText: 'www.araxitravel.am'
+    //       qrUrl: 'https://araxi.travel/ticket/36-K82MXYZ',
+    //       footerText: 'araxi.travel'
     //     }
     //   ];
       renderTickets(tickets);

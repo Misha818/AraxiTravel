@@ -1,0 +1,12 @@
+{#- Shown once, on a first visit in a language picked from the browser's settings, so someone who would rather
+    read another language finds it (resolve_language in app.py; behaviour: static/JS/site-chrome.js).
+    chrome_refkey: see _lang_switch.html. -#}
+{%- if take_lang_notice() -%}
+<aside class="lang-notice" data-lang-notice>
+    <span>{{ _("Shown in your browser's language.") }}</span>
+    {%- for lang in supportedLangsData if lang['Prefix'] != current_locale %}
+    <a href="/setlang?lang={{ lang['Prefix'] | urlencode }}{% if chrome_refkey %}&RefKey={{ chrome_refkey | urlencode }}{% endif %}" lang="{{ lang['Prefix'] }}">{{ lang['Language'] }}</a>
+    {%- endfor %}
+    <button type="button" class="lang-notice__close" aria-label="{{ _('Close') }}" data-lang-notice-close>&times;</button>
+</aside>
+{%- endif -%}

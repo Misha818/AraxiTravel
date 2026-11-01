@@ -14,18 +14,20 @@
     <meta property="og:title"       content="{{ _('landingMetaTitle') }}" />
     <meta property="og:description" content="{{ _('landingMetaDescription') }}" />
     <meta property="og:image"       content="{{ url_for('static', filename='images/logo-full.png', _external=True) }}" />
-    <meta property="og:url"         content="{{ url_for('home', _external=True) }}" />
+    <meta property="og:url"         content="{{ homeCanonicalUrl }}" />
     <meta property="og:type"        content="website" />
     <meta property="og:site_name"   content="{{ _('site name') }}" />
 
-    <link rel="canonical" href="{{ url_for('home', _external=True) }}" />
+    <link rel="canonical" href="{{ homeCanonicalUrl }}" />
+    {% for home in homeUrls %}<link rel="alternate" hreflang="{{ home.lang }}" href="{{ home.url }}" />
+    {% endfor %}<link rel="alternate" hreflang="x-default" href="{{ homeRootUrl }}" />
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
     <script nonce="{{ csp_nonce() }}" type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "TravelAgency",
       "name": {{ _('site name') | tojson }},
-      "url": "{{ url_for('home', _external=True) }}",
+      "url": "{{ homeCanonicalUrl }}",
       "description": {{ _('landingMetaDescription') | tojson }},
       "logo": "{{ url_for('static', filename='images/logo-full.png', _external=True) }}"{% if info_email %},
       "email": {{ info_email | tojson }}{% endif %}

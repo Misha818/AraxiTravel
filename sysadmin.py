@@ -1,4 +1,4 @@
-from flask import session, redirect, jsonify, request, g, abort, url_for, make_response
+from flask import session, redirect, jsonify, request, g, abort, url_for, make_response, current_app
 from flask_wtf.csrf import generate_csrf
 from markupsafe import escape
 from araxitravel_db import get_db
@@ -49,6 +49,11 @@ MAIN_CURRENCY = os.getenv('MAIN_CURRENCY')
 INFO_EMAIL = (os.getenv('INFO_EMAIL') or '').strip()
 if not INFO_EMAIL:
     logging.warning('INFO_EMAIL is not set in .env: emails have no sender address and the site shows no contact email')
+
+# The site's domain (HOME_URL in .env, e.g. araxi.travel), printed on tickets
+HOME_URL = re.sub(r'^https?://', '', (os.getenv('HOME_URL') or '').strip()).rstrip('/')
+if not HOME_URL:
+    logging.warning('HOME_URL is not set in .env: tickets show the address the page was opened on')
 
 # The most of one price that a single purchase may take (MAX_ALLOWED_QUANTITY in .env).
 # Add to Store offers it as the stock's limit, and stock saved without a limit is capped at it
@@ -389,6 +394,15 @@ def ar_name_check(productName, languageID, productID):
 # Check if product link exists
 def pr_url_check(productLink, languageID, productID):
     myResponse = {'status': '0'}
+
+    # A product's address is "/<link>": it can not be one the site uses itself (/ru, /cart, /about...),
+    # those pages would win and the product could never be opened
+    siteAddresses = {rule.rule.split('/')[1] for rule in current_app.url_map.iter_rules()}
+    if productLink in siteAddresses:
+        myResponse['status'] = '1'
+        myResponse['answer'] = gettext('"%(link)s" is an address the site uses itself. Please choose another link.', link=productLink)
+        return myResponse
+
     update = ''
     sqlQueryCheck5Val = (productLink, languageID)
     
@@ -2027,6 +2041,9 @@ def get_pt_payment_methods(ptRefKey):
 
 
 def jsonSanitaizer(data, invalidChars):
+    if not data:   # e.g. no stock in this language yet
+        return data
+
     if type(data[0]) is tuple:
         myList = list(deepcopy(data))
         index = 0

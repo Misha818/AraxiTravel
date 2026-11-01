@@ -1,10 +1,11 @@
+from urllib.parse import urlencode, urlsplit
 from flask import Flask, render_template, request, jsonify, session, redirect, g, url_for, make_response
 from araxitravel_db import get_db, close_db
 from mysql.connector.pooling import PoolError
 from flask_babel import Babel, _, lazy_gettext as _l, gettext, format_date
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-from products import productHeaderData, email_text, submit_notes_text, get_pr_order, slidesToEdit, checkCategoryName, checkProductCategoryName, get_RefKey_LangID_by_link, get_article_category_images, get_product_category_images, edit_p_h, submit_reach_text, submit_product_text, add_p_c_sql, edit_p_c_view, edit_a_c_view, edit_p_c_sql, get_product_categories, get_ar_thumbnail_images, get_pr_thumbnail_images, add_product, productDetails, constructPrData, add_product_lang
+from products import productHeaderData, email_text, submit_notes_text, get_pr_order, slidesToEdit, checkCategoryName, checkProductCategoryName, get_RefKey_LangID_by_link, get_published_product_url, get_article_category_images, get_product_category_images, edit_p_h, submit_reach_text, submit_product_text, add_p_c_sql, edit_p_c_view, edit_a_c_view, edit_p_c_sql, get_product_categories, get_ar_thumbnail_images, get_pr_thumbnail_images, add_product, productDetails, constructPrData, add_product_lang
 from sysadmin import sanitize_html, sanitize_text_format, jsonSanitaizer, get_pt_payment_methods, get_payment_methods, is_valid_url, validate_request, send_confirmation_email, get_create_email_id, inline_css, init_sysadmin_context, check_rol_id, check_delivery_status, send_email_mailgun, getSupportedLangIDs, getLangdata, check_alias, get_order_status_list, get_affiliates, get_affiliate_reward_progress, get_promo_code_id_affiliateID, deletePUpdateP, reservePUpdateP, insertPUpdateP, insertIntoBuffer, calculate_price_promo, clientID_contactID, checkSPSSDataLen, replace_spaces_in_text_nodes, totalNumRows, countRows, filter_multy_dict, getLangdatabyID, supported_langs, get_full_website_name, generate_random_unique_string, get_meta_tags, removeRedundantFiles, checkForRedundantFiles, getFileName, fileUpload, get_ar_id_by_lang, get_pr_id_by_lang, getDefLang, getSupportedLangsPrefixes, getLangID, sqlSelect, sqlInsert, sqlUpdate, sqlDelete, get_pc_id_by_lang, get_pc_ref_key, login_required, is_script_request, session_seconds_left
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
@@ -106,6 +107,11 @@ def inject_current_year():
 def inject_info_email():
     return {'info_email': INFO_EMAIL}
 
+# The site's domain (HOME_URL in .env, read in sysadmin.py); the address in use when it isn't set
+@app.context_processor
+def inject_home_domain():
+    return {'home_domain': HOME_URL or request.host}
+
 # Seconds until a signed-in staff member is signed out for inactivity (None when signed out),
 # for the "Are you still there?" warning in static/JS/session-guard.js
 @app.context_processor
@@ -191,7 +197,7 @@ PAGINATION_BUTTONS_COUNT = os.getenv('PAGINATION_BUTTONS_COUNT')
 MAIN_CURRENCY = os.getenv('MAIN_CURRENCY')
 
 # MAX_ALLOWED_QUANTITY (from .env) is defined in sysadmin.py, which the checkout code there also uses
-from sysadmin import MAX_ALLOWED_QUANTITY, INFO_EMAIL
+from sysadmin import MAX_ALLOWED_QUANTITY, INFO_EMAIL, HOME_URL
 from booking import get_bookings, order_tickets, booking_options, booking_quote, booking_choices_error, save_booking, client_options, parse_booking_date, to_int, NO_GUIDE
 from cart import read_cart, write_cart, cart_count, cart_view, cart_items_on, cart_bookings, new_cart_item, same_booking, parse_age_counts, iso_date, MAX_CART_ITEMS
 
@@ -408,8 +414,6 @@ def login():
         # else:
         #     return jsonify({'status': "0", 'answer': gettext("CAPTCHA verification failed.")})
     else:
-        if session.get('lang') == None:
-            setlang()
         if 'user_id' in session:
             return redirect(url_for('stuff'))
         TURNSTILE_SITE_KEY = os.getenv('TURNSTILE_SITE_KEY')
@@ -461,19 +465,107 @@ def submit_r_t():
     return jsonify({'status': answer['status'], 'newCSRFtoken': newCSRFtoken})
     
 
+# How a visitor's language is decided (the first rule that applies):
+#   1. the language they picked in the switcher (LANG_CHOICE_COOKIE, written only by /setlang)
+#   2. the language of the product link they opened (index() below, for this visit only)
+#   3. their browser's language (Accept-Language), when it is one of ours
+#   4. English: for a browser that asks only for other languages, and for no language at all (crawlers)
+# Signed-in staff get their profile's language at login instead. session['lang'] then carries the
+# language through the visit: getLangID() and the content queries read it, so it has to be set before
+# the view runs. Armenian stays the site's main language (getDefLang) for content and staff.
+LANG_CHOICE_COOKIE = 'araxi_lang'
+LANG_CHOICE_MAX_AGE = 365 * 24 * 60 * 60
+FALLBACK_LANG = 'en'
+HOME_ROOT_LANG = 'en'
+LANDING_SECTIONS = ('activities', 'about', 'contacts', 'events')
+
+
+def chosen_language():
+    # The language picked in the switcher, on an earlier visit too (None if they never picked one)
+    lang = request.cookies.get(LANG_CHOICE_COOKIE)
+    return lang if lang in getSupportedLangsPrefixes() else None
+
+
+def visitor_choice():
+    # Staff keep the language of their session (their profile's, or the one they are editing in)
+    return None if 'user_id' in session else chosen_language()
+
+
+def home_url(lang, external=False, section=None):
+    # English lives at "/" (url_for('home') also serves as the base of links all over the app, so it
+    # stays "/"); every other language has its own page: /hy, /ru. The same for the home page's
+    # sections: /about, /ru/about
+    if lang == HOME_ROOT_LANG:
+        return url_for(section or 'home', _external=external)
+    if section:
+        return url_for('section_language', lang=lang, section=section, _external=external)
+    return url_for('home_language', lang=lang, _external=external)
+
+
+def landing_section_of(path):
+    # Is this address a home page or one of its sections? -> (yes/no, section)
+    parts = [part for part in path.split('/') if part]
+    if parts and parts[0] in getSupportedLangsPrefixes():
+        parts = parts[1:]
+    if not parts:
+        return True, None
+    if len(parts) == 1 and parts[0] in LANDING_SECTIONS:
+        return True, parts[0]
+    return False, None
+
+
+def browser_language():
+    return request.accept_languages.best_match(getSupportedLangsPrefixes())
+
+
+def detect_language():
+    return chosen_language() or browser_language() or FALLBACK_LANG
+
+
+@app.before_request
+def resolve_language():
+    if request.endpoint == 'static' or session.get('lang') in getSupportedLangsPrefixes():
+        return
+    session['lang'] = detect_language()
+    # A one-time note on a foreign-language first visit (templates/_lang_notice.html). Not for crawlers,
+    # which send no language, and not for Armenian, the language most would expect here.
+    if not chosen_language() and request.accept_languages and session['lang'] != getDefLang()['Prefix']:
+        session['lang_notice'] = True
+
+
+@app.context_processor
+def inject_lang_notice():
+    def take_lang_notice():
+        return session.pop('lang_notice', False)
+    return {'take_lang_notice': take_lang_notice}
+
+
+@app.after_request
+def vary_on_browser_language(response):
+    # Pages depend on the browser's language now: a cache must not hand one visitor's language to another
+    if request.endpoint != 'static':
+        response.vary.add('Accept-Language')
+    return response
+
+
+@app.after_request
+def keep_booking_pages_out_of_search(response):
+    # A visitor's own basket and orders: they have no address per language and no place in search results
+    if request.endpoint in ('cart', 'cart_checkout', 'buy_now', 'checkout', 'confirmation_page', 'order_tracker'):
+        response.headers['X-Robots-Tag'] = 'noindex'
+    return response
+
+
 def get_locale():
-    # Check if the language query parameter is set and valid
     supportedLangs = getSupportedLangsPrefixes()
-    if 'lang' in request.args:
-        lang = request.args.get('lang')        
-        if lang in supportedLangs:
-            session['lang'] = lang
-            return session['lang']
-    # If not set via query, check if we have it stored in the session
-    elif 'lang' in session:
-        return session.get('lang')
-    # Otherwise, use the browser's preferred language
-    return request.accept_languages.best_match(supportedLangs)
+    lang = request.args.get('lang')
+    if lang in supportedLangs:
+        session['lang'] = lang
+        return lang
+    if session.get('lang') in supportedLangs:
+        return session['lang']
+    # Only after session.clear() within this request (login) or a request refused before resolve_language
+    return detect_language()
 
 
 def get_timezone():
@@ -484,30 +576,36 @@ def get_timezone():
 babel = Babel(app, locale_selector=get_locale, timezone_selector=get_timezone)
 
 
+def back_to_referrer():
+    if request.referrer:
+        return redirect(request.referrer.split('&langID=')[0])
+    return redirect(url_for('home', _external=True))
+
+
+# The language switcher: the visitor's own choice, which is remembered and beats any detection
 @app.route('/setlang')
 @validate_request
 def setlang():
-    defLang = getDefLang()
-    lang = request.args.get('lang', defLang['Prefix'])
-    
-    refKey = request.args.get('RefKey', '')
+    lang = request.args.get('lang')
+    if lang not in getSupportedLangsPrefixes():
+        return back_to_referrer()
+
     session['lang'] = lang
-    if refKey != '':
-        langData = getLangdata(lang)
-        translated_path_segment = check_alias(refKey, langData['ID'])
-        if translated_path_segment == False:
-            return redirect(request.referrer)
-        else:
-            newUrl = url_for('home', _external=True) + translated_path_segment
-            return redirect(newUrl)
-    if request.referrer:
-        if 'langID' in request.referrer:
-            newUrl = request.referrer.split('&langID=')[0]
-        else:
-            newUrl = request.referrer
-        return redirect(newUrl)
-    
-    return redirect(url_for('home', _external=True))  # Redirect to the home page with the new language
+    session.pop('lang_notice', None)
+
+    refKey = request.args.get('RefKey', '')
+    translated_path_segment = check_alias(refKey, getLangdata(lang)['ID']) if refKey else False
+    isLanding, section = landing_section_of(urlsplit(request.referrer).path) if request.referrer else (False, None)
+    if translated_path_segment:
+        response = redirect(url_for('home', _external=True) + translated_path_segment)
+    elif isLanding:
+        response = redirect(home_url(lang, section=section))
+    else:
+        response = back_to_referrer()
+    response.set_cookie(LANG_CHOICE_COOKIE, lang, max_age=LANG_CHOICE_MAX_AGE, httponly=True, samesite='Lax',
+                        secure=app.config['SESSION_COOKIE_SECURE'])
+    return response
+
 
 @app.route('/setroll/<rollID>')
 @login_required
@@ -588,16 +686,55 @@ def inject_site_contacts():
     # Social links of the shared site footer (templates/_site_footer.html)
     return {'site_contacts': contact_urls()}
 
-@app.route('/')
-@validate_request
-def home():
-    if session.get('lang') == None:
-        setlang()
-        
+def render_home(section=None):
     languageID = getLangID()
     # result = sqlSelect(sqlQuery, sqlValTuple, True)
     newCSRFtoken = generate_csrf()
-    return render_template('index.html', result=[], contacts=contact_urls(),  languageID=languageID, supported_langs=json.dumps(supported_langs()), ensure_ascii=False, MAIN_CURRENCY=MAIN_CURRENCY, newCSRFtoken=newCSRFtoken, current_locale=get_locale()) # current_locale is babel variable for multilingual purposes
+    # Each language's home page has its own address, so search engines can list all of them. A section
+    # is the same page scrolled further, so its canonical address is its language's home page.
+    homeUrls = [{'lang': prefix, 'url': home_url(prefix, external=True)} for prefix in getSupportedLangsPrefixes()]
+    return render_template('index.html', scrollTo=section, result=[], contacts=contact_urls(),  languageID=languageID, supported_langs=json.dumps(supported_langs()), ensure_ascii=False, MAIN_CURRENCY=MAIN_CURRENCY, newCSRFtoken=newCSRFtoken, homeUrls=homeUrls, homeRootUrl=home_url(HOME_ROOT_LANG, external=True), homeCanonicalUrl=home_url(get_locale(), external=True), current_locale=get_locale()) # current_locale is babel variable for multilingual purposes
+
+
+def show_landing(section=None):
+    # Sends each visitor to the page in their language (same rules as resolve_language).
+    # Crawlers send no language, so they stay here and read the English page.
+    lang = request.args.get('lang')
+    if lang not in getSupportedLangsPrefixes():
+        lang = visitor_choice() or session['lang']
+    if lang != HOME_ROOT_LANG:
+        query = urlencode([(key, value) for key, value in request.args.items(multi=True) if key != 'lang'])
+        return redirect(home_url(lang, section=section) + ('?' + query if query else ''))
+    session['lang'] = lang
+    return render_home(section)
+
+
+@app.route('/')
+@validate_request
+def home():
+    return show_landing()
+
+
+# /hy, /ru, /ru/about...; and /en, /en/about, which only lead to the addresses without a language
+@validate_request
+def home_language(lang, section=None):
+    # A language the visitor picked wins; otherwise the address decides, like a product link
+    choice = visitor_choice()
+    if choice and choice != lang:
+        return redirect(home_url(choice, section=section))
+    # The note stays only if this is the language their browser asked for ("/" sent them here)
+    if session.get('lang') != lang:
+        session.pop('lang_notice', None)
+    session['lang'] = lang
+    if lang == HOME_ROOT_LANG:
+        return redirect(home_url(lang, section=section))
+    return render_home(section)
+
+for _prefix in getSupportedLangsPrefixes():
+    app.add_url_rule('/' + _prefix, 'home_language', home_language, defaults={'lang': _prefix}, strict_slashes=False)
+    app.add_url_rule('/' + _prefix + '/<any(' + ','.join(LANDING_SECTIONS) + '):section>', 'section_language', home_language,
+                     defaults={'lang': _prefix}, strict_slashes=False)
+
 
 @app.route('/get_home_slides', methods=["POST"])
 @validate_request
@@ -632,8 +769,6 @@ def get_home_slides():
 @login_required
 @validate_request
 def edit_slide(HS_Ref_Key):
-    if session.get('lang') == None:
-        setlang()
     
     newCSRFtoken = generate_csrf()
     languageID = getLangID()
@@ -1083,46 +1218,25 @@ def slides():
 @app.route('/contacts')
 @validate_request
 def contacts():
-    if session.get('lang') == None:
-        setlang()
-        
-    languageID = getLangID()
-    # result = sqlSelect(sqlQuery, sqlValTuple, True)
-    newCSRFtoken = generate_csrf()
-    return render_template('index.html', scrollTo='contacts', result=[], contacts=contact_urls(), languageID=languageID, supported_langs=json.dumps(supported_langs()), ensure_ascii=False, MAIN_CURRENCY=MAIN_CURRENCY, newCSRFtoken=newCSRFtoken, current_locale=get_locale()) # current_locale is babel variable for multilingual purposes
+    return show_landing('contacts')
 
 
 @app.route('/events')
 @validate_request
 def events():
-    if session.get('lang') == None:
-        setlang()
-        
-    languageID = getLangID()
-    newCSRFtoken = generate_csrf()
-    return render_template('index.html', scrollTo='events', result=[], contacts=contact_urls(), languageID=languageID, supported_langs=json.dumps(supported_langs()), ensure_ascii=False, MAIN_CURRENCY=MAIN_CURRENCY, newCSRFtoken=newCSRFtoken, current_locale=get_locale()) # current_locale is babel variable for multilingual purposes
+    return show_landing('events')
 
 
 @app.route('/activities')
 @validate_request
 def activities():
-    if session.get('lang') == None:
-        setlang()
-        
-    languageID = getLangID()
-    newCSRFtoken = generate_csrf()
-    return render_template('index.html', scrollTo='activities', result=[], contacts=contact_urls(), languageID=languageID, supported_langs=json.dumps(supported_langs()), ensure_ascii=False, MAIN_CURRENCY=MAIN_CURRENCY, newCSRFtoken=newCSRFtoken, current_locale=get_locale()) # current_locale is babel variable for multilingual purposes
+    return show_landing('activities')
 
 
 @app.route('/about')
 @validate_request
 def about():
-    if session.get('lang') == None:
-        setlang()
-        
-    languageID = getLangID()
-    newCSRFtoken = generate_csrf()
-    return render_template('index.html', scrollTo='about', result=[], contacts=contact_urls(), languageID=languageID, supported_langs=json.dumps(supported_langs()), ensure_ascii=False, MAIN_CURRENCY=MAIN_CURRENCY, newCSRFtoken=newCSRFtoken, current_locale=get_locale()) # current_locale is babel variable for multilingual purposes
+    return show_landing('about')
 
 
 @app.route('/favorites')
@@ -1261,8 +1375,6 @@ def pr_thumbnail(RefKey):
 @app.route('/buy-now/<surl>', methods=['GET'])
 @validate_request
 def buy_now(surl):
-    if session.get('lang') == None:
-        setlang()
     newCSRFtoken = generate_csrf()
     mainCurrency = MAIN_CURRENCY
     key, val = surl.split('-')
@@ -1316,8 +1428,6 @@ def buy_now(surl):
 @validate_request
 def checkout():
     newCSRFtoken = generate_csrf()
-    if session.get('lang') == None:
-        setlang()
     languageID = getLangID()
     if request.method == 'GET':
         mainCurrency = MAIN_CURRENCY
@@ -7330,8 +7440,6 @@ def typeof(var):
 @validate_request
 def cart(productTypesQuantity=None):
     if request.method == "GET":
-        if session.get('lang') == None:
-            setlang()
         # the cart of bookings (cart.py); the old /cart/<ptID-quantity> links open it too
         if productTypesQuantity is not None:
             return redirect(url_for('cart'))
@@ -7465,8 +7573,6 @@ def lead_contact_from(data):
 @app.route("/cart/checkout", methods=["GET", "POST"])
 @validate_request
 def cart_checkout():
-    if session.get('lang') == None:
-        setlang()
     languageID = getLangID()
     cart = read_cart(request)
     bookings = cart_bookings(cart, languageID)
@@ -8604,10 +8710,23 @@ def index(path):
     metaTags = ''
     ptID = ''
     prHeader = {}
+    hreflangLinks = []
     
     if content is not None:  
         langData = getLangdatabyID(content['LanguageID'])
+
+        # A visitor who picked a language gets this product in it, when it is published in that language.
+        # Otherwise the link's language applies: someone sent an Armenian link stays in Armenian,
+        # whatever their browser says. Staff open exactly the version they asked for.
+        choice = visitor_choice()
+        if choice and choice != langData['Prefix']:
+            translatedUrl = get_published_product_url(content['RefKey'], getLangdata(choice)['ID'], content['ptID'])
+            if translatedUrl:
+                query = request.query_string.decode()
+                return redirect(url_for('index', path=translatedUrl) + ('?' + query if query else ''))
+
         session['lang'] = langData['Prefix']
+        session.pop('lang_notice', None)
 
         if content['ptID']:
             ptID = content['ptID']
@@ -8638,7 +8757,8 @@ def index(path):
                 RefKey = content['RefKey']
                 sqlQueryL = """
                             SELECT 
-                                `product_relatives`.`Language_ID`
+                                `product_relatives`.`Language_ID`,
+                                `product`.`Url`
                             FROM `product_relatives`
                                 LEFT JOIN `product` ON `product`.`ID` = `product_relatives`.`P_ID`
                             WHERE `P_Ref_Key` = %s AND `product`.`Product_Status` = 2;
@@ -8653,6 +8773,9 @@ def index(path):
                         for lang in langueges:
                             if lang['Language_ID'] == langdata[0]:
                                 supportedLangsData.append(lang)
+                                # <link rel="alternate" hreflang> in product_client.html: search engines
+                                # send each searcher to the version in their language
+                                hreflangLinks.append({'lang': lang['Prefix'], 'url': url_for('index', path=langdata[1], _external=True)})
             else:
                 myHtml = 'error.html'            
     else:
@@ -8666,7 +8789,7 @@ def index(path):
 
     languageID = getLangID()
     jsonifiedSupportedLangsData = json.dumps(supportedLangsData, ensure_ascii=False)
-    return render_template(myHtml, cartMessage=cartMessage, prData=prData, prHeader=prHeader, ptID=ptID, languageID=languageID, slideShow=slideShow, supportedLangsData=supportedLangsData, jsonifiedSupportedLangsData=jsonifiedSupportedLangsData, metaTags=metaTags, current_locale=get_locale())
+    return render_template(myHtml, cartMessage=cartMessage, prData=prData, prHeader=prHeader, ptID=ptID, languageID=languageID, slideShow=slideShow, supportedLangsData=supportedLangsData, jsonifiedSupportedLangsData=jsonifiedSupportedLangsData, hreflangLinks=hreflangLinks, metaTags=metaTags, current_locale=get_locale())
 
 
 @app.route("/get_langs", methods=["POST"])
