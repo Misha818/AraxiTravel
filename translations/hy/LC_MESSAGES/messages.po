@@ -4166,6 +4166,19 @@ msgstr ""
 "Ցուցադրման հերթականություն՝ մյուս տրանսպորտային միջոցները տեղաշարժվում են"
 " մեկ դիրքով վեր կամ վար՝ տեղ բացելու համար։"
 
+msgid "Online booking opens soon, contact us to book"
+msgstr "Առցանց ամրագրումը շուտով կբացվի։ Ամրագրելու համար կապվեք մեզ հետ"
+
+#, python-format
+msgid "Hello! I would like to book: %(tour)s"
+msgstr "Բարև Ձեզ։ Ցանկանում եմ ամրագրել՝ %(tour)s"
+
+msgid "Hello! I would like to book a tour."
+msgstr "Բարև Ձեզ։ Ցանկանում եմ ամրագրել տուր։"
+
+msgid "Your saved bookings. Contact us to book them."
+msgstr "Ձեր պահպանված ամրագրումները։ Դրանք ամրագրելու համար կապվեք մեզ հետ։"
+
 #~ msgid "Something went wrong. Please try again! 2"
 #~ msgstr "Ինչ-որ բան սխալ է։ Խնդրում ենք փորձել ավելի ուշ։"
 

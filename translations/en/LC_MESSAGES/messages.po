@@ -4155,6 +4155,19 @@ msgstr ""
 msgid "Display order: the other vehicles move one place up or down to make room."
 msgstr "Display order: the other vehicles move one place up or down to make room."
 
+msgid "Online booking opens soon, contact us to book"
+msgstr "Online booking opens soon, contact us to book"
+
+#, python-format
+msgid "Hello! I would like to book: %(tour)s"
+msgstr "Hello! I would like to book: %(tour)s"
+
+msgid "Hello! I would like to book a tour."
+msgstr "Hello! I would like to book a tour."
+
+msgid "Your saved bookings. Contact us to book them."
+msgstr "Your saved bookings. Contact us to book them."
+
 #~ msgid "Something went wrong. Please try again! 2"
 #~ msgstr "Something went wrong. Please try again!"
 

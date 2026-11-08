@@ -4148,6 +4148,19 @@ msgstr ""
 "Порядок отображения: остальные транспортные средства сдвинутся на одну "
 "позицию вверх или вниз, чтобы освободить место."
 
+msgid "Online booking opens soon, contact us to book"
+msgstr "Онлайн-бронирование скоро откроется. Чтобы забронировать, свяжитесь с нами"
+
+#, python-format
+msgid "Hello! I would like to book: %(tour)s"
+msgstr "Здравствуйте! Я хочу забронировать: %(tour)s"
+
+msgid "Hello! I would like to book a tour."
+msgstr "Здравствуйте! Я хочу забронировать тур."
+
+msgid "Your saved bookings. Contact us to book them."
+msgstr "Ваши сохранённые бронирования. Чтобы забронировать их, свяжитесь с нами."
+
 #~ msgid "Something went wrong. Please try again! 2"
 #~ msgstr "Что-то пошло не так. Пожалуйста, попробуйте еще раз!"
 

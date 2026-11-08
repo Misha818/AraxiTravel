@@ -1,9 +1,10 @@
 {% extends 'public.html' %}
 {% from '_booking_text.html' import booking_text with context %}
+{% from '_book_contact.html' import book_contact with context %}
 {#- The cart: the bookings added with "Add to cart" on the service pages (cart.py cart_view: each priced
-    now by booking.py). Each one is booked on its own buy-now page ("Book Now"), with its choices, or all
-    together in one order ("Book all", /cart/checkout). "Edit" changes a booking's choices and notes with
-    the service page's controls (static/JS/booking.js initCartPage, POST /cart/update). -#}
+    now by booking.py). Online booking being closed, each one shows how to contact us to book it.
+    "Edit" changes a booking's choices and notes with the service page's controls
+    (static/JS/booking.js initCartPage, POST /cart/update). -#}
 {% block title %}
   {{ _('Your Travel Cart') }}
 {% endblock %}
@@ -42,13 +43,7 @@
   <h1 class="bk-cart__title">{{ _('Your Travel Cart') }}</h1>
 
   {% if items %}
-  <p class="bk-cart__lead">{{ _('Your saved bookings. Book each one on its own, or all of them in one order.') }}</p>
-  {% if items | length > 1 %}
-  <div class="bk-cart__all" data-cart-all>
-    <p>{{ _('Book every experience in your cart in one order, with one payment.') }}</p>
-    <a class="bk-btn bk-btn--solid" href="{{ url_for('cart_checkout') }}">{{ _('Book all') }} ({{ items | length }})</a>
-  </div>
-  {% endif %}
+  <p class="bk-cart__lead">{{ _('Your saved bookings. Contact us to book them.') }}</p>
   <ul class="bk-cart__list">
     {% for item in items %}
     {% set prLink = url_for('home') ~ item.prUrl ~ '&' ~ (item.ptTitle | replace(' ', '-')) %}
@@ -125,10 +120,9 @@
           {% if item.available %}
           <button type="button" class="bk-btn bk-cart-item__edit-btn" data-cart-edit="{{ item.id }}" aria-expanded="false"
                   aria-controls="edit-{{ item.id }}">{{ _('Edit') }}</button>
-          {% set b = item.buyNow %}
-          <a class="bk-btn bk-btn--book" href="{{ url_for('buy_now', surl=b.surl) }}?{{ b.query | urlencode }}">{{ _('Book Now') }}</a>
           {% endif %}
         </div>
+        {% if item.available %}{{ book_contact(item.prTitle ~ ': ' ~ item.ptTitle) }}{% endif %}
       </div>
       {% if item.available %}
       {#- the service page's controls for this booking (booking.js initCartPage) -#}
@@ -193,13 +187,6 @@
           if (!answer.count) {
             page.querySelectorAll('.bk-cart__lead, .bk-cart__list').forEach(el => el.remove());
             page.querySelector('[data-cart-empty]').hidden = false;
-          }
-          // "Book all" is for more than one booking
-          const all = page.querySelector('[data-cart-all]');
-          if (all && answer.count < 2) {
-            all.remove();
-          } else if (all) {
-            all.querySelector('a').textContent = all.querySelector('a').textContent.replace(/\(\d+\)/, '(' + answer.count + ')');
           }
         })
         .catch(error => {

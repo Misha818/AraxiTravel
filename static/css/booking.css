@@ -481,6 +481,48 @@
     gap: 10px;
 }
 
+/* Online booking is closed: how to contact us to book (templates/_book_contact.html) */
+.bk-buy-hidden {
+    display: none !important;
+}
+
+#slides .productType .cart-container:has(.bk-contact) {
+    flex-wrap: wrap;
+}
+
+#slides .productType .cart-container .bk-contact .bk-btn {
+    flex: 1 1 auto;
+    height: 44px;
+}
+
+.bk-contact {
+    flex: 1 1 100%;
+    order: -1;
+    margin-top: 6px;
+}
+
+.bk-contact .bk-btn {
+    padding: 0 16px;
+    font-size: 14px;
+}
+
+.bk-contact__text {
+    margin: 0 0 10px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--navy-900, #072339);
+}
+
+.bk-contact__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+a.bk-btn {
+    text-decoration: none;
+}
+
 /* "Added to your cart" (the card's message, just above the buttons), with a link to the cart */
 .bk-message a {
     margin-left: 6px;

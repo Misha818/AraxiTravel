@@ -64,16 +64,6 @@ body {
   border-radius: 5px!important;
 }
 
-#cc-number {
-  -moz-appearance: textfield;
-}
-
-#cc-number::-webkit-outer-spin-button,
-#cc-number::-webkit-inner-spin-button {
-  
-  -webkit-appearance: none;
-  margin: 0;
-}
 
 .text-primary {
     color: #000 !important;
@@ -1740,96 +1730,6 @@ async function get_pt_quantity(ptID, quantity) {
   });
 
 
-  function createCreditDebitPaymentFields() {
-    const container = document.getElementById("payment_container");
-    container.innerHTML = '';
-
-
-    // Template for each field
-    const fields = [
-      {
-        col: "col-md-6",
-        labelFor: "cc-name",
-        label: "Name on card *",
-        type: "text",
-        id: "cc-name",
-        invalid: "Name on card is required."
-      },
-      {
-        col: "col-md-6",
-        labelFor: "cc-number",
-        label: "Credit card number *",
-        type: "number",
-        id: "cc-number",
-        extraAttr: 'oninput="validateNumericInput(this)" inputmode="numeric"',
-        invalid: "Credit card number is required."
-      },
-      {
-        col: "col-md-3",
-        labelFor: "cc-expiration",
-        label: "Expiration *",
-        type: "text",
-        id: "cc-expiration",
-        invalid: "Expiration date required."
-      },
-      {
-        col: "col-md-3",
-        labelFor: "cc-cvv",
-        label: "CVV *",
-        type: "text",
-        id: "cc-cvv",
-        invalid: "Security code required."
-      }
-    ];
-
-    // Build and append each field
-    fields.forEach(f => {
-      const wrapper = document.createElement("div");
-      wrapper.className = f.col;
-
-      wrapper.innerHTML = `
-        <label for="${f.labelFor}" class="form-label">${f.label}</label>
-        <input type="${f.type}" class="form-control" id="${f.id}" ${f.extraAttr || ""} required>
-        <div class="invalid-feedback">${f.invalid}</div>
-      `;
-
-      container.appendChild(wrapper);
-  });
-}
-
-  function createIdramPaymentFields() {
-    return ''
-  }
-
-  function createTelCellPaymentFields() {
-    return ''
-  }
-
-  document.querySelector('#payment_methods').addEventListener("change", function() {
-    let peyMethodID = this.value;
-    if (peyMethodID == "") {
-      document.getElementById("payment_container").innerHTML = '';
-    } 
-
-    if (peyMethodID == "1") {
-      createCreditDebitPaymentFields();
-    }
-    
-    if (peyMethodID == "2") {
-      createIdramPaymentFields();
-    }
-    
-    if (peyMethodID == "3") {
-      createTelCellPaymentFields();
-    }
-
-  });
-
-
-// Example numeric validation
-function validateNumericInput(el) {
-  el.value = el.value.replace(/[^0-9]/g, '');
-}
 
 
 });

@@ -1,0 +1,15 @@
+{#- How to book while online booking is closed: the links set in .env (app.py book_contact_links), the
+    contacts page when none is set. tour: the tour's name, for the chat links' message. Styles: css/booking.css.
+    Import with context: {% from '_book_contact.html' import book_contact with context %} -#}
+{% macro book_contact(tour='') -%}
+<div class="bk-contact">
+  <p class="bk-contact__text">{{ _('Online booking opens soon, contact us to book') }}</p>
+  <div class="bk-contact__links">
+    {% for link in book_contact_links(tour) %}
+    <a class="bk-btn" href="{{ link.href }}"{% if link.external %} target="_blank" rel="noopener"{% endif %}>{{ link.label }}</a>
+    {% else %}
+    <a class="bk-btn" href="{{ url_for('contacts') }}">{{ _('Contacts') }}</a>
+    {% endfor %}
+  </div>
+</div>
+{%- endmacro %}

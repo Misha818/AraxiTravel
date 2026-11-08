@@ -14,14 +14,18 @@
   {%- endif -%}
 {%- endmacro %}
 
-{#- A price card's actions (static/JS/booking.js): "Add to cart" keeps the choices in the cart, "Book Now"
-    opens the buy-now page with them. .buy-btn's value is the price slideshow.js fills the stock for -#}
-{% macro booking_buttons(ptID) -%}
+{% from '_book_contact.html' import book_contact with context %}
+
+{#- A price card's actions (static/JS/booking.js): "Add to cart" keeps the choices in the cart, and online
+    booking being closed, the customer is shown how to contact us. The hidden .buy-btn's value is the price
+    slideshow.js fills the stock for -#}
+{% macro booking_buttons(ptID, ptTitle) -%}
   <button type="button" class="bk-btn bk-btn--cart" value="{{ ptID }}" data-cart-add aria-label="{{ _('Add to cart') }}">
     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 20a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2"/><path d="M8 18V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v14"/><path d="M10 20h4"/><circle cx="16" cy="20" r="2"/><circle cx="8" cy="20" r="2"/></svg>
     <span data-cart-label>{{ _('Cart') }}</span>
   </button>
-  <button type="button" class="buy-btn bk-btn bk-btn--book" value="{{ ptID }}">{{ _('Book Now') }}</button>
+  <button type="button" class="buy-btn bk-buy-hidden" value="{{ ptID }}" hidden></button>
+  {{ book_contact(Title ~ ': ' ~ ptTitle) }}
 {%- endmacro %}
 
 {#- A price card's price before anything is chosen: "From" the cheapest booking it takes (booking.py
@@ -219,7 +223,7 @@
           <i class="fas fa-shopping-cart cart-icon"></i>
           {{ _('Add to cart') }}
         </button>
-          {{ booking_buttons(resultSpss.data[0].ptID) }}
+          {{ booking_buttons(resultSpss.data[0].ptID, resultSpss.data[0].ptTitle) }}
           {% set purchaseQty = resultSpss.data[0].Quantity %}
           <p>{{ _("For+1") }}</p>
           <!-- <input type="number" class="quantity" name="quantity" value="1" min="1"> -->
@@ -266,7 +270,7 @@
                   <i class="fas fa-shopping-cart cart-icon"></i>
                   {{ _('Add to cart') }}
                 </button>
-                {{ booking_buttons(row['ptID']) }}
+                {{ booking_buttons(row['ptID'], row['ptTitle']) }}
                 {% set purchaseQty = row['Quantity'] %}
                 <p>{{ _("For+1") }}</p>
                 <!-- <input type="number" class="quantity" name="quantity" value="1" min="1"> -->

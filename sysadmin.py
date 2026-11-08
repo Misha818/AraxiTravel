@@ -1227,25 +1227,12 @@ def calculate_price(products):
 
 
 # priceOverrides: {ptRefKey: price of one unit} instead of product_type.Price (a booking's price, booking.py)
-def insertIntoBuffer(data, pdID, smthWrong, languageID, paymentMethod, priceState, priceOverrides=None):
+def insertIntoBuffer(data, pdID, smthWrong, languageID, paymentMethod, priceOverrides=None):
     # IMPORTANT
     # Do not forget to take into consideration the max quantity as well
     # data['ptData']: [{ptID (PT_Ref_Key), quantity}]. A row with 'unitPrice' (the cart's "Book all", one row
     # per booking, the same price may come twice) reserves its own quantity at that price; without it (the
     # buy-now page) every row is for len(data['contact_list']) units at priceOverrides / the stored price.
-        
-    if paymentMethod and priceState == True:
-        # Check credentials for credit/debit card
-        if paymentMethod == '1':
-            if not data['cc-name']:
-                return {'status': '3', 'answer': gettext("Name on card is required.")}
-            if not data['cc-number']:
-                return {'status': '3', 'answer': gettext("Credit card number is required.")}
-            if not data['cc-expiration']:
-                return {'status': '3', 'answer': gettext("Expiration date required.")}
-            if not data['cc-cvv']:
-                return {'status': '3', 'answer': gettext("Security code required.")}
-        
 
     bufferQuantities = []
     ptIDs = ''

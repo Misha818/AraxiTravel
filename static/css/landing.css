@@ -684,6 +684,15 @@ body.landing {
 .contact-links__item .icon { color: var(--ochre-600); transition: transform .3s var(--ease-out); }
 .contact-links__item:hover span { text-decoration: underline; text-underline-offset: 4px; }
 .contact-links__item:hover .icon { transform: translate(2px, -2px); }
+/* Brand logos (index.html contacts): filled, in each brand's own colour instead of the ochre outline */
+.contact-links__item .icon--brand { width: 1.4em; height: 1.4em; stroke: none; }
+.contact-links__item .icon--whatsapp { color: #25D366; fill: #25D366; }
+.contact-links__item .icon--viber { color: #7360F2; fill: #7360F2; }
+.contact-links__item .icon--telegram { color: #26A5E4; fill: #26A5E4; }
+.contact-links__item .icon--linkedin { color: #0A66C2; fill: #0A66C2; }
+.contact-links__item .icon--facebook { color: #0866FF; fill: #0866FF; }
+.contact-links__item .icon--instagram,
+.contact-links__item .icon--tiktok { fill: none; }   /* their colours are set inside the SVG */
 
 .newsletter {
     margin-top: 2.75rem;

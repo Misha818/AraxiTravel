@@ -1,4 +1,4 @@
-from urllib.parse import urlencode, urlsplit
+from urllib.parse import quote, urlencode, urlsplit
 from flask import Flask, render_template, request, jsonify, session, redirect, g, url_for, make_response
 from araxitravel_db import get_db, close_db
 from mysql.connector.pooling import PoolError
@@ -199,7 +199,7 @@ MAIN_CURRENCY = os.getenv('MAIN_CURRENCY')
 # MAX_ALLOWED_QUANTITY (from .env) is defined in sysadmin.py, which the checkout code there also uses
 from sysadmin import MAX_ALLOWED_QUANTITY, INFO_EMAIL, HOME_URL
 from booking import get_bookings, order_tickets, booking_options, booking_quote, booking_choices_error, save_booking, client_options, parse_booking_date, to_int, NO_GUIDE
-from cart import read_cart, write_cart, cart_count, cart_view, cart_items_on, cart_bookings, new_cart_item, same_booking, parse_age_counts, iso_date, MAX_CART_ITEMS
+from cart import read_cart, write_cart, cart_count, cart_view, cart_items_on, cart_bookings, new_cart_item, same_booking, parse_age_counts, iso_date, product_rows, MAX_CART_ITEMS
 
 SMAIL_API_KEY = os.getenv('SMAIL_API_KEY')
 SMAIL_API = os.getenv('SMAIL_API')
@@ -674,7 +674,34 @@ def inject_locale():
     return {'get_locale': get_locale}
 
 def contact_urls():
-    return {'TG': os.getenv('TG_URL'), 'FB': os.getenv('FB_URL'), 'INS': os.getenv('INS_URL'), 'IN': os.getenv('IN_URL')}
+    # PHONE is shown as written in .env; TEL is its tel: link (digits and a leading + only)
+    phone = os.getenv('CONTACT_PHONE')
+    return {'TG': os.getenv('TG_URL'), 'WA': os.getenv('WA_URL'), 'VB': os.getenv('VB_URL'), 'PHONE': phone,
+            'TEL': 'tel:' + re.sub(r'[^\d+]', '', phone) if phone else None,
+            'FB': os.getenv('FB_URL'), 'INS': os.getenv('INS_URL'), 'TKT': os.getenv('TKT_URL'), 'IN': os.getenv('IN_URL')}
+
+# No bank is connected yet (complete_order): the buy-now and "Book all" pages send customers to the tour or the
+# cart, which show how to contact us. Set to True with the bank, and bring their buttons back to the service
+# page (slideshow.html booking_buttons) and the cart (cart.html)
+ONLINE_BOOKING_OPEN = False
+
+# How to book while online booking is closed (templates/_book_contact.html): the WhatsApp, Telegram and phone
+# links that are set in .env (WA_URL = https://wa.me/<number>, TG_URL = https://t.me/<username>, CONTACT_PHONE).
+# The chat links start the customer's message with the tour's name
+def book_contact_links(tour=''):
+    message = gettext('Hello! I would like to book: %(tour)s', tour=tour) if tour else gettext('Hello! I would like to book a tour.')
+    links = []
+    for label, url in (('WhatsApp', os.getenv('WA_URL')), ('Telegram', os.getenv('TG_URL'))):
+        if url:
+            links.append({'label': label, 'href': url + ('&' if '?' in url else '?') + urlencode({'text': message}, quote_via=quote), 'external': True})
+    phone = os.getenv('CONTACT_PHONE')
+    if phone:
+        links.append({'label': phone, 'href': 'tel:' + re.sub(r'[^\d+]', '', phone), 'external': False})
+    return links
+
+@app.context_processor
+def inject_book_contact_links():
+    return {'book_contact_links': book_contact_links}
 
 @app.context_processor
 def inject_cart_count():
@@ -1381,6 +1408,11 @@ def buy_now(surl):
     # actually ptID referrs for RefKey: it is not ptID in reality but RefKey
     prDataGlobal = {'ptID': int(key), 'quantity': int(val) }
 
+    if not ONLINE_BOOKING_OPEN:
+        # an old link: the tour's page shows how to contact us to book it
+        product = product_rows([int(key)], getLangID()).get(int(key))
+        return redirect(url_for('home') + product['prUrl'] if product and product['prUrl'] else url_for('activities'))
+
     payment_methods = get_pt_payment_methods(int(key))
     if payment_methods['length'] == 0:
         payment_methods = get_payment_methods('`ID`, `method`')
@@ -1514,7 +1546,7 @@ def checkout():
 
         pmData = get_payment_methods('`ID`, `method`', False)
         allowedPaymentMethods = [str(x[0]) for x in pmData.get('data')]
-        paymentMethod, priceState = [False, False]
+        paymentMethod = False
         for key, value in data.items():
             if key == "payment_method" and value in allowedPaymentMethods:
                 paymentMethod = value
@@ -1522,10 +1554,6 @@ def checkout():
                 answer = gettext('Invalid value for ') + key
                 return jsonify({'status': "0", 'answer': answer, 'newCSRFtoken': newCSRFtoken})    
 
-        
-        # if paymentMethod == False and priceState == True or paymentMethod and priceState == False:
-            # return jsonify({'status': "0", 'answer': gettext('Something went wrong. Please try again!'), 'newCSRFtoken': newCSRFtoken})   
-        
         # End of checking payment availbility and methods
         # End of Validation
 
@@ -1610,7 +1638,7 @@ def checkout():
         
         # insert data into table buffer
         # This also checks if specified amount of product exists
-        buffer = insertIntoBuffer(data, pdID, gettext('Something went wrong. Please try again!'), languageID, paymentMethod, priceState, priceOverrides)
+        buffer = insertIntoBuffer(data, pdID, gettext('Something went wrong. Please try again!'), languageID, paymentMethod, priceOverrides)
         if buffer['status'] != "1":
             # Nothing was reserved (insertIntoBuffer takes stock all or nothing): the order
             # created above is cancelled instead of being left "waiting for payment"
@@ -1634,41 +1662,23 @@ def checkout():
         return complete_order(pdID, amount, newCSRFtoken)
 
 
-# The order pdID, its stock reserved (insertIntoBuffer) for `amount`: paid (the bank step is still a stand-in)
-# and recorded, with its confirmation-page link. Returns the answer for the page, as jsonify: status 1 with
-# pdID (the link's code; None when it couldn't be saved, the answer says what to do), or status 0
+# The order pdID, its stock reserved (insertIntoBuffer) for `amount`: paid at the bank and recorded, with its
+# confirmation-page link. Returns the answer for the page, as jsonify: status 1 with pdID (the link's code;
+# None when it couldn't be saved, the answer says what to do), or status 0
 def complete_order(pdID, amount, newCSRFtoken):
-    # Send data to bank api
-    # recive answer from api 
-    bank_answer_status = 1
-    # insert data to purchace_history
+    # The bank's answer for a paid order, as insertPUpdateP takes it: {finalPrice, paymentMethod, CMD, paymentStatus}.
+    # No bank is connected yet, so nothing can be paid: the order is cancelled below and its stock given back
+    paymentData = None
 
-    if bank_answer_status == 1:
-        paymentData = {
-            'finalPrice': amount,
-            'paymentMethod': 'Visa',
-            'CMD': 4242,
-            'paymentStatus': 1
-        }
+    if paymentData:
         purchseData = insertPUpdateP(pdID, paymentData)
         if purchseData['status'] == '0':
-            # Recording the sale failed and was rolled back: nothing of the order was saved,
-            # but its stock is still reserved. What happens to that stock depends on the money:
-            # the bank step above is a stand-in that takes no money; when a real bank is
-            # connected, set this from its answer
-            paymentTaken = False
-
-            if paymentTaken:
-                # The customer has paid: don't cancel. The order stays "waiting for payment"
-                # with its stock reserved, so staff can finish recording it or refund it
-                app.logger.error("Order %s: payment received but recording the sale failed. "
-                              "Stock stays reserved; finish the order or refund it", pdID)
-                return jsonify({'status': "0", 'answer': gettext("Your payment was received, but we couldn't complete your order. Please don't pay again: our team will contact you."), 'newCSRFtoken': newCSRFtoken})
-
-            # No money taken: give the stock back and cancel the order (removing any sale
-            # records, though after the rollback there should be none)
-            deletePUpdateP(pdID, removeSaleRecords=True)
-            return jsonify({'status': "0", 'answer': gettext('Something went wrong. Please try again!'), 'newCSRFtoken': newCSRFtoken})
+            # The customer has paid but recording the sale failed and was rolled back: don't cancel.
+            # The order stays "waiting for payment" with its stock reserved, so staff can finish
+            # recording it or refund it
+            app.logger.error("Order %s: payment received but recording the sale failed. "
+                             "Stock stays reserved; finish the order or refund it", pdID)
+            return jsonify({'status': "0", 'answer': gettext("Your payment was received, but we couldn't complete your order. Please don't pay again: our team will contact you."), 'newCSRFtoken': newCSRFtoken})
 
 
         # answer = gettext('Payment passed successfully') + ' ' + str(amount) + ' ' + MAIN_CURRENCY
@@ -1703,8 +1713,8 @@ def complete_order(pdID, amount, newCSRFtoken):
 
     # delete from bufer and update table quantity
     # update payment_details with id pdID
-    deletePUpdateP(pdID)        
-    answer = gettext('Payment failed')
+    deletePUpdateP(pdID)
+    answer = gettext('Online booking opens soon, contact us to book')
     return jsonify({'status': "0", 'answer': answer, 'newCSRFtoken': newCSRFtoken})
 
 
@@ -7577,7 +7587,7 @@ def cart_checkout():
     cart = read_cart(request)
     bookings = cart_bookings(cart, languageID)
     if request.method == 'GET':
-        if not bookings:
+        if not bookings or not ONLINE_BOOKING_OPEN:
             return redirect(url_for('cart'))
         return render_template('cart-checkout.html', bookings=bookings, left=len(cart) - len(bookings),
                                paymentMethods=cart_payment_methods(bookings), total=sum(b['quote']['total'] for b in bookings),
@@ -7636,7 +7646,7 @@ def cart_checkout():
     order = {'promo': promo, 'contact_list': [contact],
              'ptData': [{'ptID': b['options']['ptRefKey'], 'quantity': b['quote']['people'],
                          'unitPrice': b['quote']['total'] / b['quote']['people']} for b in bookings]}
-    buffer = insertIntoBuffer(order, pdID, somethingWrong, languageID, paymentMethod, False)
+    buffer = insertIntoBuffer(order, pdID, somethingWrong, languageID, paymentMethod)
     if buffer['status'] != '1':
         # nothing was reserved: the order is cancelled instead of being left "waiting for payment"
         sqlUpdate("UPDATE `payment_details` SET `Status` = 0 WHERE `ID` = %s AND `Status` = 1;", (pdID,))
